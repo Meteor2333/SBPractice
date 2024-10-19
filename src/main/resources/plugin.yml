@@ -1,0 +1,5 @@
+name: SBPractice
+version: '1.0.0'
+main: com.meteor.SBPractice.Main
+api-version: '1.13'
+softdepend: [PlaceholderAPI]
