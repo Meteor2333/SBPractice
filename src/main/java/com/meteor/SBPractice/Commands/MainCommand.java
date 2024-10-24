@@ -1,8 +1,7 @@
 package com.meteor.SBPractice.Commands;
 
-import com.meteor.SBPractice.Commands.SubCommands.*;
-import com.meteor.SBPractice.Main;
-import org.bukkit.ChatColor;
+import com.meteor.SBPractice.Commands.SubCommands.Main.*;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
@@ -11,36 +10,31 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainCommand extends BukkitCommand {
+public class MainCommand extends BukkitCommand implements ParentCommand {
     private static List<SubCommand> subCommands = new ArrayList<>();
 
     public MainCommand(String name) {
         super(name);
         setAliases(Arrays.asList("sbpractice", "speedbuilderspractice"));
-        new Admin(this, "admin");
-        new BufferBuild(this, "bufferBuild");
 
-        //Add #4
+        new Admin(this, "admin");
+        new BufferBuilding(this, "bufferBuild");
         new Clear(this, "clear");
         new HighJump(this, "highjump");
-
-        //Add #2
+        new AddPlot(this, "addPlot");
+        new Help(this, "help");
+        new Countdown(this, "countdown");
+        new PreStart(this, "prestart");
         new Platform(this, "platform");
-        new SetupSpawnPoint(this, "spawnPoint");
-        new SetupBuildArea(this, "buildArea");
-        new ShowBuild(this, "showBuild");
-
-        //Add #3
-        new Spectator(this, "spec");
+        new AddPlot(this, "setup");
+        new ShowBuilding(this, "showBuild");
     }
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player)) return true;
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.DARK_GRAY + "> " + ChatColor.BLUE + ChatColor.BOLD +
-                    Main.getPlugin().getDescription().getName() + ChatColor.GOLD +
-                    " v" + Main.getPlugin().getDescription().getVersion());
+            Bukkit.dispatchCommand(sender, "sbp help");
             return true;
         } for (SubCommand subCommand : getSubCommands()) {
             if (subCommand.getName().equalsIgnoreCase(args[0])) {
@@ -64,10 +58,12 @@ public class MainCommand extends BukkitCommand {
         } return null;
     }
 
+    @Override
     public void addSubCommand(SubCommand subCommand) {
         subCommands.add(subCommand);
     }
 
+    @Override
     public List<SubCommand> getSubCommands() {
         return subCommands;
     }

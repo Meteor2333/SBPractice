@@ -1,7 +1,7 @@
 package com.meteor.SBPractice.Hooks;
 
 import com.meteor.SBPractice.Plot;
-import com.meteor.SBPractice.PlotStatus;
+import com.meteor.SBPractice.Messages;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.jetbrains.annotations.NotNull;
@@ -29,33 +29,42 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
     @Override
     public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
+        Plot plot = Plot.getPlotByOwner((Player) player);
+        if (plot == null) {
+            plot = Plot.getPlotByGuest((Player) player);
+        }
 
-        return switch (params) {
-            case "destroyed" -> String.valueOf(Main.getRemoteDatabase().getDestructions(player.getUniqueId()));
-            case "placed" -> String.valueOf(Main.getRemoteDatabase().getPlacements(player.getUniqueId()));
-            case "restored" -> String.valueOf(Main.getRemoteDatabase().getRestores(player.getUniqueId()));
-            case "plot-total" -> String.valueOf(Plot.getPlots().size());
-            case "plot-occupied" -> {
+        switch (params) {
+            case "destroyed":
+                return String.valueOf(Main.getRemoteDatabase().getDestructions(player.getUniqueId()));
+            case "placed":
+                return String.valueOf(Main.getRemoteDatabase().getPlacements(player.getUniqueId()));
+            case "restored":
+                return String.valueOf(Main.getRemoteDatabase().getRestores(player.getUniqueId()));
+            case "owner":
+                if (plot != null) return String.valueOf(plot.getPlayer().getName());
+                else return "None";
+            case "plot-total":
+                return String.valueOf(Plot.getPlots().size());
+            case "plot-total-player":
+                if (plot != null) return String.valueOf(plot.getGuests().size() + 1);
+                else return "None";
+            case "plot-occupied":
                 int sum = 0;
-                for (Plot plot : Plot.getPlots()) {
-                    if (plot.getPlotStatus().equals(PlotStatus.OCCUPIED)) sum++;
-                } yield String.valueOf(sum);
-            }
-            case "current-time" -> {
-                Plot plot = Plot.getPlotByPlayer((Player) player);
-                if (plot == null) plot = Plot.getPlotByGuest((Player) player);
-                if (plot == null) yield String.format("%.3f", 0F);
-                else yield String.format("%.3f", plot.getTime());
-            } case "current-blocks" -> {
+                for (Plot p : Plot.getPlots()) {
+                    if (p.getPlotStatus().equals(Plot.PlotStatus.OCCUPIED)) sum++;
+                } return String.valueOf(sum);
+            case "current-time":
+                if (plot != null) return String.format("%.3f", plot.getTime()) + (plot.getCountdown() == 0 ? "" : " " + Messages.getMessage("countdown-mode"));
+                else return String.format("%.3f", 0F);
+            case "current-blocks":
                 int num = 0;
-                Plot plot = Plot.getPlotByPlayer((Player) player);
-                if (plot == null) plot = Plot.getPlotByGuest((Player) player);
                 if (plot != null) {
                     for (BlockState bs : plot.getBufferBuildBlock()) {
                         if (bs != null && bs.getType() != Material.AIR) num++;
                     }
-                } yield String.valueOf(num);
-            } default -> null;
-        };
+                } return String.valueOf(num);
+            default: return null;
+        }
     }
 }

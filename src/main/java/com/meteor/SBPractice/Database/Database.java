@@ -5,8 +5,6 @@ import java.util.UUID;
 public interface Database {
     void initialize();
 
-    //Add #1////////////////////////////////////////////////////
-
     void setDestructions(UUID key, int value);
 
     int getDestructions(UUID key);
@@ -14,8 +12,6 @@ public interface Database {
     void setPlacements(UUID key, int value);
 
     int getPlacements(UUID key);
-
-    ////////////////////////////////////////////////////////////
 
     void setRestores(UUID key, int value);
 

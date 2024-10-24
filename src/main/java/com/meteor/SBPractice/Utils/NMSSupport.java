@@ -1,22 +1,28 @@
 package com.meteor.SBPractice.Utils;
 
-import net.minecraft.server.v1_8_R3.IChatBaseComponent;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
-import net.minecraft.server.v1_8_R3.PacketPlayOutChat;
-import net.minecraft.server.v1_8_R3.PacketPlayOutTitle;
+import com.meteor.SBPractice.Main;
+import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Field;
+
+// 懒 没做跨版本 你说咋办吧
 public class NMSSupport {
     public static String getServerVersion() {
         String sv = Bukkit.getServer().getClass().getPackage().getName();
         return sv.substring(sv.lastIndexOf(".") + 1);
     }
 
-    public static ItemStack setTag(ItemStack itemStack, String key, String value) {
+    public static ItemStack setTag(@NotNull ItemStack itemStack, String key, String value) {
         net.minecraft.server.v1_8_R3.ItemStack is = CraftItemStack.asNMSCopy(itemStack);
         NBTTagCompound tag = is.getTag();
         if (tag == null) {
@@ -28,7 +34,7 @@ public class NMSSupport {
         return CraftItemStack.asBukkitCopy(is);
     }
 
-    public static String getTag(ItemStack itemStack, String key) {
+    public static String getTag(@NotNull ItemStack itemStack, String key) {
         net.minecraft.server.v1_8_R3.ItemStack i = CraftItemStack.asNMSCopy(itemStack);
         NBTTagCompound tag = i.getTag();
         return tag == null ? "" : (tag.hasKey(key) ? tag.getString(key) : "");
@@ -50,13 +56,52 @@ public class NMSSupport {
                 ((CraftPlayer) p).getHandle().playerConnection.sendPacket(tit);
                 ((CraftPlayer) p).getHandle().playerConnection.sendPacket(length);
             }
-        }
-        if (subtitle != null) {
+        } if (subtitle != null) {
             IChatBaseComponent bc = IChatBaseComponent.ChatSerializer.a("{\"text\": \"" + subtitle + "\"}");
             PacketPlayOutTitle tit = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE, bc);
             PacketPlayOutTitle length = new PacketPlayOutTitle(fadeIn, stay, fadeOut);
             ((CraftPlayer) p).getHandle().playerConnection.sendPacket(tit);
             ((CraftPlayer) p).getHandle().playerConnection.sendPacket(length);
         }
+    }
+
+    public static void hidePlayer(Player player, boolean antispam) {
+        if (player.hasMetadata("hidden") && antispam) return;
+        player.setMetadata("hidden", new FixedMetadataValue(Main.getPlugin(), true));
+        player.spigot().setCollidesWithEntities(false);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false));
+//        ((CraftPlayer) player).getHandle().playerInteractManager.setGameMode(WorldSettings.EnumGamemode.SPECTATOR);
+//        for (Player p : Bukkit.getOnlinePlayers()) {
+//            p.hidePlayer(player);
+//            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, ((CraftPlayer) player).getHandle()));
+//        } ((CraftPlayer) player).getHandle().server.getPlayerList().sendAll(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_GAME_MODE, ((CraftPlayer) player).getHandle()), ((CraftPlayer) player).getHandle());
+
+        try {
+            Field PIManager = Class.forName("net.minecraft.server.v1_8_R3.PlayerInteractManager").getDeclaredField("gamemode");
+            PIManager.setAccessible(true);
+
+            PIManager.set(((CraftPlayer) player).getHandle().playerInteractManager, WorldSettings.EnumGamemode.SPECTATOR);
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                p.hidePlayer(player);
+                ((CraftPlayer) p).getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, ((CraftPlayer) player).getHandle()));
+            }
+            //((CraftPlayer) player).getHandle().server.getPlayerList().sendAll(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_GAME_MODE, ((CraftPlayer) player).getHandle()), ((CraftPlayer) player).getHandle());
+
+            PIManager.set(((CraftPlayer) player).getHandle().playerInteractManager, WorldSettings.EnumGamemode.CREATIVE);
+            ((CraftPlayer) player).getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_GAME_MODE, ((CraftPlayer) player).getHandle()));
+        } catch (Exception ignored) { }
+    }
+
+    public static void showPlayer(Player player, boolean antispam) {
+        if (!player.hasMetadata("hidden") && antispam) return;
+        player.removeMetadata("hidden", Main.getPlugin());
+        player.spigot().setCollidesWithEntities(true);
+        player.removePotionEffect(PotionEffectType.INVISIBILITY);
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            p.showPlayer(player);
+        } player.setGameMode(GameMode.CREATIVE);
+        ((CraftPlayer) player).getHandle().playerInteractManager.setGameMode(WorldSettings.EnumGamemode.CREATIVE);
+        ((CraftPlayer) player).getHandle().playerConnection.sendPacket(new PacketPlayOutGameStateChange(3, 1F));
+        ((CraftPlayer) player).getHandle().server.getPlayerList().sendAll(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_GAME_MODE, ((CraftPlayer) player).getHandle()), ((CraftPlayer) player).getHandle());
     }
 }
