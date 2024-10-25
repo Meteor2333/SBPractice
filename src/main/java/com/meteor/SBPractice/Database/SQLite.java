@@ -1,5 +1,6 @@
 package com.meteor.SBPractice.Database;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -11,14 +12,14 @@ import java.util.UUID;
 
 @SuppressWarnings({"CallToPrintStackTrace", "ResultOfMethodCallIgnored"})
 public class SQLite implements Database {
-    private String url;
+    private final String url;
 
     private Connection connection;
 
     public SQLite() {
         File dir = Main.getPlugin().getDataFolder();
         if (!dir.exists()) dir.mkdir();
-        File file = new File(dir, "data.db");
+        File file = new File(dir, "stats.db");
         if (!file.exists()) {
             try {
                 file.createNewFile();
@@ -30,7 +31,7 @@ public class SQLite implements Database {
             Class.forName("org.sqlite.JDBC");
             DriverManager.getConnection(url);
         } catch (ClassNotFoundException e) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[SBPractice] Could Not Found SQLite Driver on your system!");
+            Main.getPlugin().getLogger().severe(ChatColor.RED + "Could Not Found SQLite Driver on your system!");
             Bukkit.getPluginManager().disablePlugin(Main.getPlugin());
         } catch (SQLException e) {
             e.printStackTrace();
@@ -41,8 +42,8 @@ public class SQLite implements Database {
     public void initialize() {
         try {
             checkConnection();
-            String sql = "CREATE TABLE IF NOT EXISTS papi_data (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "uuid VARCHAR(36), destructions INTEGER(10), placements INTEGER(10), restores INTEGER(10));";
+            String sql = "CREATE TABLE IF NOT EXISTS stats (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "uuid VARCHAR(36), break_blocks INTEGER(10), place_blocks INTEGER(10), jumps INTEGER(10), restores INTEGER(10), online_times INTEGER(10));";
             try (Statement statement = connection.createStatement()) {
                 statement.executeUpdate(sql);
             }
@@ -52,148 +53,58 @@ public class SQLite implements Database {
     }
 
     @Override
-    public void setDestructions(UUID key, int value) {
+    public SBPPlayer.PlayerStats getPlayerStats(UUID uuid) {
+        String sql = "SELECT * FROM stats WHERE uuid = ?;";
+        try {
+            checkConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, uuid.toString());
+                try (ResultSet result = statement.executeQuery()) {
+                    if (result.next()) {
+                        return new SBPPlayer.PlayerStats(uuid, result.getInt("break_blocks"), result.getInt("place_blocks"), result.getInt("jumps"), result.getInt("restores"), result.getInt("online_times"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } return new SBPPlayer.PlayerStats(uuid, 0, 0, 0, 0, 0);
+    }
+
+    @Override
+    public void setPlayerStats(SBPPlayer.PlayerStats playerStats) {
         String sql;
         try {
             checkConnection();
-            if (hasData(key)) {
-                sql = "UPDATE papi_data SET destructions=?, placements=?, restores=? WHERE uuid = ?;";
+            if (hasData(playerStats.getUuid())) {
+                sql = "UPDATE stats SET break_blocks=?, place_blocks=?, jumps=?, restores=?, online_times=? WHERE uuid = ?;";
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setInt(1, value);
-                    statement.setInt(2, getPlacements(key));
-                    statement.setInt(3, getRestores(key));
-                    statement.setString(4, key.toString());
+                    statement.setInt(1, playerStats.getBreakBlocks());
+                    statement.setInt(2, playerStats.getPlaceBlocks());
+                    statement.setInt(3, playerStats.getJumps());
+                    statement.setInt(4, playerStats.getRestores());
+                    statement.setInt(5, playerStats.getOnlineTimes());
+                    statement.setString(6, playerStats.getUuid().toString());
                     statement.executeUpdate();
                 }
             } else {
-                sql = "INSERT INTO papi_data (uuid, destructions, placements, restores) VALUES(?, ?, ?, ?);";
+                sql = "INSERT INTO stats (uuid, break_blocks, place_blocks, jumps, restores, online_times) VALUES(?, ?, ?, ?, ?, ?);";
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setString(1, key.toString());
-                    statement.setInt(2, value);
-                    statement.setInt(3, getPlacements(key));
-                    statement.setInt(4, getRestores(key));
+                    statement.setString(1, playerStats.getUuid().toString());
+                    statement.setInt(2, playerStats.getBreakBlocks());
+                    statement.setInt(3, playerStats.getPlaceBlocks());
+                    statement.setInt(4, playerStats.getJumps());
+                    statement.setInt(5, playerStats.getRestores());
+                    statement.setInt(6, playerStats.getOnlineTimes());
                     statement.executeUpdate();
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public int getDestructions(UUID key) {
-        String sql = "SELECT * FROM papi_data WHERE uuid = ?;";
-        try {
-            checkConnection();
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, key.toString());
-                try (ResultSet result = statement.executeQuery()) {
-                    if (result.next()) {
-                        return result.getInt("destructions");
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } return 0;
-    }
-
-    @Override
-    public void setPlacements(UUID key, int value) {
-        String sql;
-        try {
-            checkConnection();
-            if (hasData(key)) {
-                sql = "UPDATE papi_data SET destructions=?, placements=?, restores=? WHERE uuid = ?;";
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setInt(1, getDestructions(key));
-                    statement.setInt(2, value);
-                    statement.setInt(3, getRestores(key));
-                    statement.setString(4, key.toString());
-                    statement.executeUpdate();
-                }
-            } else {
-                sql = "INSERT INTO papi_data (uuid, destructions, placements, restores) VALUES(?, ?, ?, ?);";
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setString(1, key.toString());
-                    statement.setInt(2, getDestructions(key));
-                    statement.setInt(3, value);
-                    statement.setInt(4, getRestores(key));
-                    statement.executeUpdate();
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public int getPlacements(UUID key) {
-        String sql = "SELECT * FROM papi_data WHERE uuid = ?;";
-        try {
-            checkConnection();
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, key.toString());
-                try (ResultSet result = statement.executeQuery()) {
-                    if (result.next()) {
-                        return result.getInt("placements");
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } return 0;
-    }
-
-    @Override
-    public void setRestores(UUID key, int value) {
-        String sql;
-        try {
-            checkConnection();
-            if (hasData(key)) {
-                sql = "UPDATE papi_data SET destructions=?, placements=?, restores=? WHERE uuid = ?;";
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setInt(1, getDestructions(key));
-                    statement.setInt(2, getPlacements(key));
-                    statement.setInt(3, value);
-                    statement.setString(4, key.toString());
-                    statement.executeUpdate();
-                }
-            } else {
-                sql = "INSERT INTO papi_data (uuid, destructions, placements, restores) VALUES(?, ?, ?, ?);";
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setString(1, key.toString());
-                    statement.setInt(2, getDestructions(key));
-                    statement.setInt(3, getPlacements(key));
-                    statement.setInt(4, value);
-                    statement.executeUpdate();
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public int getRestores(UUID key) {
-        String sql = "SELECT * FROM papi_data WHERE uuid = ?;";
-        try {
-            checkConnection();
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, key.toString());
-                try (ResultSet result = statement.executeQuery()) {
-                    if (result.next()) {
-                        return result.getInt("restores");
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } return 0;
     }
 
     private boolean hasData(UUID uuid) {
-        String sql = "SELECT uuid FROM papi_data WHERE uuid = ?;";
+        String sql = "SELECT uuid FROM stats WHERE uuid = ?;";
         try {
             checkConnection();
             try (PreparedStatement statement = connection.prepareStatement(sql)) {

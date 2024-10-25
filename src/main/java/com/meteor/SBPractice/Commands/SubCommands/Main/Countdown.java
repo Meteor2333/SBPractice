@@ -1,5 +1,6 @@
 package com.meteor.SBPractice.Commands.SubCommands.Main;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Commands.MainCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Main;
@@ -22,30 +23,31 @@ public class Countdown extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        Player player = (Player) sender;
+        SBPPlayer player = SBPPlayer.getPlayer((Player) sender);
+        if (player == null) return;
         Plot plot = Plot.getPlotByOwner(player);
         if (plot == null) {
-            player.sendMessage(Messages.getMessage("cannot-do-that"));
+            player.sendMessage(Messages.CANNOT_DO_THAT.getMessage());
             return;
         }
 
-        player.sendMessage(Messages.getMessage("set-countdown-hint"));
+        player.sendMessage(Messages.COUNTDOWN_SET_HINT.getMessage());
         Bukkit.getPluginManager().registerEvents(new Listener() {
             @EventHandler
             void onPlayerChat(AsyncPlayerChatEvent e) {
-                if (!e.getPlayer().equals(player)) return;
+                if (!e.getPlayer().equals(player.getPlayer())) return;
                 e.setCancelled(true);
                 HandlerList.unregisterAll(this);
                 try {
                     int time = Integer.parseInt(e.getMessage());
                     if (player.equals(plot.getPlayer())) {
-                        if (time != 0) player.sendMessage(Messages.getMessage("countdown-enabled").replace("%time%", String.valueOf(time)));
-                        else player.sendMessage(Messages.getMessage("countdown-disabled"));
+                        if (time != 0) player.sendMessage(Messages.COUNTDOWN_ENABLED.getMessage().replace("%time%", String.valueOf(time)));
+                        else player.sendMessage(Messages.COUNTDOWN_DISABLED.getMessage());
                         plot.setCountdown(time);
                     }
-                    else player.sendMessage(Messages.getMessage("cannot-do-that"));
+                    else player.sendMessage(Messages.CANNOT_DO_THAT.getMessage());
                 } catch (NumberFormatException ex) {
-                    player.sendMessage(Messages.getMessage("cannot-do-that"));
+                    player.sendMessage(Messages.CANNOT_DO_THAT.getMessage());
                 }
             }
 

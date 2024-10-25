@@ -1,8 +1,8 @@
 package com.meteor.SBPractice.Commands.SubCommands.Main;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Commands.MainCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
-import com.meteor.SBPractice.Listeners.PlayerListener;
 import com.meteor.SBPractice.Messages;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -14,19 +14,20 @@ public class HighJump extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        Player player = (Player) sender;
+        SBPPlayer player = SBPPlayer.getPlayer((Player) sender);
+        if (player == null) return;
         if (args.length == 0) {
-            if (PlayerListener.HighjumpToggled.getOrDefault(player.getUniqueId(), true)) {
-                player.sendMessage(Messages.getMessage("highjump-disabled"));
-                PlayerListener.HighjumpToggled.put(player.getUniqueId(), false);
+            if (player.isEnableHighjump()) {
+                player.sendMessage(Messages.HIGHJUMP_DISABLED.getMessage());
+                player.setEnableHighjump(false);
             } else {
-                player.sendMessage(Messages.getMessage("highjump-enabled"));
-                PlayerListener.HighjumpToggled.put(player.getUniqueId(), true);
+                player.sendMessage(Messages.HIGHJUMP_ENABLED.getMessage());
+                player.setEnableHighjump(true);
             }
         } else if (args[0].equals("intensity")) {
             try {
                 if (Double.parseDouble(args[1]) > 100D) return;
-                PlayerListener.HighjumpIntensity.put(player.getUniqueId(), Double.parseDouble(args[1]));
+                player.setHighjumpIntensity(Double.parseDouble(args[1]));
             } catch (Exception ignored) {}
         }
     }

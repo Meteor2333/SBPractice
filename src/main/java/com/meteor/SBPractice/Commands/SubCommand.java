@@ -1,11 +1,13 @@
 package com.meteor.SBPractice.Commands;
 
+import lombok.Getter;
 import org.bukkit.command.CommandSender;
 
+@Getter
 public abstract class SubCommand {
 
-    private String name;
-    private boolean perm;
+    private final String name;
+    private final boolean perm;
 
     public SubCommand(ParentCommand parent, String name, boolean perm) {
         this.name = name;
@@ -15,11 +17,4 @@ public abstract class SubCommand {
 
     public abstract void execute(CommandSender sender, String[] args);
 
-    public boolean requiresAdmin() {
-        return perm;
-    }
-
-    public String getName() {
-        return name;
-    }
 }

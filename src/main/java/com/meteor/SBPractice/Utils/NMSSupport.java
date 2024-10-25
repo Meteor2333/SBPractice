@@ -4,6 +4,8 @@ import com.meteor.SBPractice.Main;
 import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.command.Command;
+import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
@@ -15,11 +17,21 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
 
-// 懒 没做跨版本 你说咋办吧
+// 懒 没做跨版本
 public class NMSSupport {
     public static String getServerVersion() {
         String sv = Bukkit.getServer().getClass().getPackage().getName();
         return sv.substring(sv.lastIndexOf(".") + 1);
+    }
+
+    public static void registerCommand(String name, Command command) {
+        try {
+            Class<?> clazz = Class.forName("org.bukkit.craftbukkit." + getServerVersion() + ".CraftServer");
+            ((SimpleCommandMap) clazz.getMethod("getCommandMap").invoke(clazz.cast(Main.getPlugin().getServer()))).register(name, command);
+        } catch (Exception e) {
+            //noinspection CallToPrintStackTrace
+            e.printStackTrace();
+        }
     }
 
     public static ItemStack setTag(@NotNull ItemStack itemStack, String key, String value) {
@@ -70,14 +82,9 @@ public class NMSSupport {
         player.setMetadata("hidden", new FixedMetadataValue(Main.getPlugin(), true));
         player.spigot().setCollidesWithEntities(false);
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false));
-//        ((CraftPlayer) player).getHandle().playerInteractManager.setGameMode(WorldSettings.EnumGamemode.SPECTATOR);
-//        for (Player p : Bukkit.getOnlinePlayers()) {
-//            p.hidePlayer(player);
-//            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, ((CraftPlayer) player).getHandle()));
-//        } ((CraftPlayer) player).getHandle().server.getPlayerList().sendAll(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_GAME_MODE, ((CraftPlayer) player).getHandle()), ((CraftPlayer) player).getHandle());
 
         try {
-            Field PIManager = Class.forName("net.minecraft.server.v1_8_R3.PlayerInteractManager").getDeclaredField("gamemode");
+            Field PIManager = Class.forName("net.minecraft.server." + getServerVersion() + ".PlayerInteractManager").getDeclaredField("gamemode");
             PIManager.setAccessible(true);
 
             PIManager.set(((CraftPlayer) player).getHandle().playerInteractManager, WorldSettings.EnumGamemode.SPECTATOR);
@@ -85,7 +92,6 @@ public class NMSSupport {
                 p.hidePlayer(player);
                 ((CraftPlayer) p).getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, ((CraftPlayer) player).getHandle()));
             }
-            //((CraftPlayer) player).getHandle().server.getPlayerList().sendAll(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_GAME_MODE, ((CraftPlayer) player).getHandle()), ((CraftPlayer) player).getHandle());
 
             PIManager.set(((CraftPlayer) player).getHandle().playerInteractManager, WorldSettings.EnumGamemode.CREATIVE);
             ((CraftPlayer) player).getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_GAME_MODE, ((CraftPlayer) player).getHandle()));

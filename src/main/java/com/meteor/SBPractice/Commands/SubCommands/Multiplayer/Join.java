@@ -1,5 +1,6 @@
 package com.meteor.SBPractice.Commands.SubCommands.Multiplayer;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Commands.MultiplayerCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Main;
@@ -27,49 +28,53 @@ public class Join extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        Player player = (Player) sender;
+        SBPPlayer player = SBPPlayer.getPlayer((Player) sender);
+        if (player == null) return;
         if (args.length == 0) {
-            Bukkit.dispatchCommand(player, "sbp help");
+            Bukkit.dispatchCommand(player.getPlayer(), "sbp help");
             return;
         }
 
-        Player target = Bukkit.getPlayer(args[0]);
+        SBPPlayer target = SBPPlayer.getPlayer(Bukkit.getPlayer(args[0]));
         if (target == null) {
-            sender.sendMessage(Messages.getMessage("player-not-found"));
+            sender.sendMessage(Messages.PLAYER_NOT_FOUND.getMessage());
             return;
         }
 
         if (target.getName().equalsIgnoreCase(player.getName())) {
-            player.sendMessage(Messages.getMessage("cannot-do-that"));
+            player.sendMessage(Messages.CANNOT_DO_THAT.getMessage());
             return;
         }
 
         if (joins.getOrDefault(player.getName(), new ArrayList<>()).contains(target.getName()) ||
                 Invite.invites.getOrDefault(player.getName(), new ArrayList<>()).contains(target.getName())) {
-            player.sendMessage(Messages.getMessage("already-requested").replace("%player%", target.getName()));
+            player.sendMessage(Messages.ALREADY_REQUESTED.getMessage().replace("%player%", target.getName()));
             return;
         }
 
         if (Invite.invites.getOrDefault(target.getName(), new ArrayList<>()).contains(player.getName())) {
-            player.sendMessage(Messages.getMessage("anti-conflict"));
+            player.sendMessage(Messages.ANTI_CONFLICT.getMessage());
             return;
         }
 
         if (System.currentTimeMillis() - Deny.denys.getOrDefault(target.getName(), new HashMap<>()).getOrDefault(player.getName(), 0L) < 10000) {
-            player.sendMessage(Messages.getMessage("denied"));
+            player.sendMessage(Messages.DENIED.getMessage());
             return;
         }
 
         Plot plot = Plot.getPlotByOwner(target);
         if (plot == null) {
-            sender.sendMessage(Messages.getMessage("plot-not-found"));
-            return;
+            plot = Plot.getPlotByGuest(target);
+            if (plot == null) {
+                sender.sendMessage(Messages.PLOT_NOT_FOUND.getMessage());
+                return;
+            } target = plot.getPlayer();
         }
 
         plot = Plot.getPlotByGuest(player);
         if (plot != null) {
-            if (target.equals(plot.getPlayer()) && plot.getGuests().contains(target)) {
-                player.sendMessage(Messages.getMessage("victim-already-in-plot").replace("%player%", target.getName()));
+            if (plot.getGuests().contains(target)) {
+                player.sendMessage(Messages.VICTIM_ALREADY_IN_PLOT.getMessage().replace("%player%", target.getName()));
                 return;
             }
         }
@@ -77,22 +82,23 @@ public class Join extends SubCommand {
         List<String> players = joins.getOrDefault(player.getName(), new ArrayList<>());
         players.add(target.getName());
         joins.put(player.getName(), players);
-        player.sendMessage(Messages.getMessage("requested").replace("%player%", target.getName()));
+        player.sendMessage(Messages.REQUESTED.getMessage().replace("%player%", target.getName()));
 
-        target.sendMessage(Messages.getMessage("join-message").replace("%player%", player.getName()));
-        TextComponent accept = new TextComponent(Messages.getMessage("requeste-click-text-accept"));
-        accept.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(Messages.getMessage("requeste-hover-text-accept").replace("%player%", player.getName()))));
+        target.sendMessage(Messages.JOIN_MESSAGE.getMessage().replace("%player%", player.getName()));
+        TextComponent accept = new TextComponent(Messages.REQUEST_CLICK_TEXT_ACCEPT.getMessage());
+        accept.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(Messages.REQUEST_HOVER_TEXT_ACCEPT.getMessage().replace("%player%", player.getName()))));
         accept.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mp accept " + player.getName()));
-        TextComponent deny = new TextComponent(Messages.getMessage("requeste-click-text-deny"));
-        deny.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(Messages.getMessage("requeste-hover-text-deny").replace("%player%", player.getName()))));
+        TextComponent deny = new TextComponent(Messages.REQUEST_CLICK_TEXT_DENY.getMessage());
+        deny.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(Messages.REQUEST_HOVER_TEXT_DENY.getMessage().replace("%player%", player.getName()))));
         deny.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mp deny " + player.getName()));
-        target.spigot().sendMessage(accept, new TextComponent("   "), deny);
+        target.getPlayer().spigot().sendMessage(accept, new TextComponent("   "), deny);
 
+        String targetName = target.getName();
         Bukkit.getScheduler().runTaskLater(Main.getPlugin(), () -> {
             List<String> playersfinal = joins.getOrDefault(player.getName(), new ArrayList<>());
-            if (!playersfinal.remove(target.getName())) return;
+            if (!playersfinal.remove(targetName)) return;
             joins.put(player.getName(), playersfinal);
-            player.sendMessage(Messages.getMessage("requeste-expires").replace("%player%", target.getName()));
+            player.sendMessage(Messages.REQUEST_EXPIRES.getMessage().replace("%player%", targetName));
         }, 1200L);
     }
 }

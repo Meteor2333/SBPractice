@@ -1,22 +1,22 @@
 package com.meteor.SBPractice.Listeners;
 
+import com.meteor.SBPractice.Api.Events.PlayerPerfectRestoreEvent;
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Commands.SubCommands.Main.Admin;
 import com.meteor.SBPractice.Main;
 import com.meteor.SBPractice.Plot;
 import com.meteor.SBPractice.Messages;
 import com.meteor.SBPractice.Utils.NMSSupport;
 import com.meteor.SBPractice.Utils.Region;
+import com.meteor.SBPractice.Utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.material.Bed;
@@ -24,7 +24,8 @@ import org.bukkit.material.Bed;
 public class BlockListener implements Listener {
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent e) {
-        Player player = e.getPlayer();
+        SBPPlayer player = SBPPlayer.getPlayer(e.getPlayer());
+        if (player == null) return;
         Plot plot = Plot.getPlotByOwner(player);
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
@@ -32,9 +33,7 @@ public class BlockListener implements Listener {
                 if (!Admin.check(player)) e.setCancelled(true);
                 return;
             }
-        }
-        if (!plot.getSpawnPoint().getWorld().equals(player.getWorld())) return;
-        if (!checkArea(plot, e.getBlockClicked().getRelative(e.getBlockFace()).getLocation())) {
+        } if (!checkArea(plot, e.getBlockClicked().getRelative(e.getBlockFace()))) {
             e.setCancelled(true);
             return;
         }
@@ -45,7 +44,8 @@ public class BlockListener implements Listener {
 
     @EventHandler
     public void onBucketFill(PlayerBucketFillEvent e) {
-        Player player = e.getPlayer();
+        SBPPlayer player = SBPPlayer.getPlayer(e.getPlayer());
+        if (player == null) return;
         Plot plot = Plot.getPlotByOwner(player);
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
@@ -53,9 +53,7 @@ public class BlockListener implements Listener {
                 if (!Admin.check(player)) e.setCancelled(true);
                 return;
             }
-        }
-        if (!plot.getSpawnPoint().getWorld().equals(player.getWorld())) return;
-        if (!checkArea(plot, e.getBlockClicked().getRelative(e.getBlockFace()).getLocation())) {
+        } if (!checkArea(plot, e.getBlockClicked().getRelative(e.getBlockFace()))) {
             e.setCancelled(true);
             return;
         }
@@ -64,14 +62,15 @@ public class BlockListener implements Listener {
         Bukkit.getScheduler().runTaskLater(Main.getPlugin(), () -> {
             if (checkFull(finalPlot, e.getBlockClicked().getRelative(e.getBlockFace()))) {
                 finalPlot.stopTimer();
-                finalPlot.canStart(true);
+                finalPlot.setCanStart(true);
             } checkBuild(player, finalPlot);
         }, 1L);
     }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
-        Player player = e.getPlayer();
+        SBPPlayer player = SBPPlayer.getPlayer(e.getPlayer());
+        if (player == null) return;
         Plot plot = Plot.getPlotByOwner(player);
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
@@ -79,21 +78,20 @@ public class BlockListener implements Listener {
                 if (!Admin.check(player)) e.setCancelled(true);
                 return;
             }
-        }
-        if (!plot.getSpawnPoint().getWorld().equals(player.getWorld())) return;
-        if (!checkArea(plot, e.getBlockPlaced().getLocation())) {
+        } if (!checkArea(plot, e.getBlockPlaced())) {
             e.setCancelled(true);
             return;
         }
 
         plot.startTimer();
         checkBuild(player, plot);
-        Main.getRemoteDatabase().setPlacements(player.getUniqueId(), Main.getRemoteDatabase().getPlacements(player.getUniqueId()) + 1);
+        player.getStats().setPlaceBlocks(player.getStats().getPlaceBlocks() + 1);
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
-        Player player = e.getPlayer();
+        SBPPlayer player = SBPPlayer.getPlayer(e.getPlayer());
+        if (player == null) return;
         Plot plot = Plot.getPlotByOwner(player);
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
@@ -101,9 +99,7 @@ public class BlockListener implements Listener {
                 if (!Admin.check(player)) e.setCancelled(true);
                 return;
             }
-        }
-        if (!plot.getSpawnPoint().getWorld().equals(player.getWorld())) return;
-        if (!checkArea(plot, e.getBlock().getLocation())) {
+        } if (!checkArea(plot, e.getBlock())) {
             e.setCancelled(true);
             return;
         }
@@ -112,28 +108,48 @@ public class BlockListener implements Listener {
         Bukkit.getScheduler().runTaskLater(Main.getPlugin(), () -> {
             if (checkFull(finalPlot, e.getBlock())) {
                 finalPlot.stopTimer();
-                finalPlot.canStart(true);
+                finalPlot.setCanStart(true);
             } checkBuild(player, finalPlot);
         }, 1L);
-        Main.getRemoteDatabase().setDestructions(player.getUniqueId(), Main.getRemoteDatabase().getDestructions(player.getUniqueId()) + 1);
+        player.getStats().setBreakBlocks(player.getStats().getBreakBlocks() + 1);
     }
 
-    private static boolean checkArea(Plot plot, Location location) {
+    @EventHandler
+    public void onBlockExtendPiston(BlockPistonExtendEvent e) {
+        if (e.getBlock().getWorld().getPlayers() != null) e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onBlockRetractPiston(BlockPistonRetractEvent e) {
+        if (e.getBlock().getWorld().getPlayers() != null) e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onLiquidFlow(BlockFromToEvent e) {
+        e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onBlockDispense(BlockDispenseEvent e) {
+        e.setCancelled(true);
+    }
+
+    private static boolean checkArea(Plot plot, Block block) {
+
         //Fix bed
-        if (plot.getRegion().isInside(location, false)) {
-            if (location.getBlock().getType().equals(Material.BED)) {
-                Bed bed = (Bed) location.getBlock().getState().getData();
-                if (bed.isHeadOfBed()) return true;
+        if (plot.getRegion().isInside(block.getLocation(), false)) {
+            if (block.getType().equals(Material.BED_BLOCK)) {
+                Bed bed = (Bed) block.getState().getData();
                 switch (bed.getFacing()) {
                     case NORTH:
-                        return plot.getRegion().isInside(location.add(0, 0, -1), false);
+                        return plot.getRegion().isInside(block.getLocation().add(0, 0, -1), false);
                     case EAST:
-                        return plot.getRegion().isInside(location.add(1, 0, 0), false);
+                        return plot.getRegion().isInside(block.getLocation().add(1, 0, 0), false);
                     case SOUTH:
-                        return plot.getRegion().isInside(location.add(0, 0, 1), false);
+                        return plot.getRegion().isInside(block.getLocation().add(0, 0, 1), false);
                     case WEST:
-                        return plot.getRegion().isInside(location.add(-1, 0, 0), false);
-                    default:
+                        return plot.getRegion().isInside(block.getLocation().add(-1, 0, 0), false);
+                    default: return false;
                 }
             } return true;
         } return false;
@@ -148,9 +164,9 @@ public class BlockListener implements Listener {
         return isFull;
     }
 
-    private static void checkBuild(Player pl, Plot plot) {
-        if (plot.timeIsNull()) return;
-        Player player = plot.getPlayer();
+    private static void checkBuild(SBPPlayer pl, Plot plot) {
+        if (plot.getCurrentTime() == 0L) return;
+        SBPPlayer player = plot.getPlayer();
         if (player == null) return;
 
         boolean isFull = true;
@@ -168,21 +184,25 @@ public class BlockListener implements Listener {
         }
 
         if (isPerfect && !isFull) {
-            plot.canStart(false);
+            PlayerPerfectRestoreEvent event;
+            Bukkit.getPluginManager().callEvent(event = new PlayerPerfectRestoreEvent(plot, pl, Double.parseDouble(String.format("%.3f", (plot.getTime() < 0 && plot.getCountdown() != 0) ? Math.abs(plot.getTime()) : plot.getTime())), plot.getCountdown() != 0));
+            if (event.isCancelled()) return;
+
+            plot.setCanStart(false);
             plot.stopTimer();
 
-            for (Player p : Bukkit.getOnlinePlayers()) {
+            for (SBPPlayer p : SBPPlayer.getPlayers()) {
                 Region region = plot.getRegion();
                 int range = Main.getPlugin().getConfig().getInt("plot-check-add-range");
                 if (new Region(
                         new Location(region.getWorld(), region.getXMax() + range, 0, region.getZMax() + range),
                         new Location(region.getWorld(), region.getXMin() - range, 0, region.getZMin() - range)
                 ).isInside(p.getLocation(), true)) {
-                    p.playSound(p.getLocation(), Sound.LEVEL_UP, 1.0F, 1.0F);
-                    p.playSound(p.getLocation(), Sound.NOTE_PLING, 1.0F, 1.0F);
-                    NMSSupport.sendTitle(p, Messages.getMessage("perfect-match-title"), (plot.getTime() < 0 && plot.getCountdown() != 0) ? (Messages.getMessage("timeout-perfect-match-subtitle").replace("%time%", String.format("%.3f", Math.abs(plot.getTime())))) : (Messages.getMessage("perfect-match-subtitle").replace("%time%", String.format("%.3f", plot.getTime())) + (plot.getCountdown() == 0 ? "" : " " + Messages.getMessage("countdown-mode"))), 0, 40, 10);
+                    p.playSound(Utils.Sounds.LEVEL_UP);
+                    p.playSound(Utils.Sounds.NOTE_PLING);
+                    NMSSupport.sendTitle(p.getPlayer(), Messages.PERFECT_MATCH_TITLE.getMessage(), (plot.getTime() < 0 && plot.getCountdown() != 0) ? (Messages.TIMEOUT_PERFECT_MATCH_SUBTITLE.getMessage()).replace("%time%", String.format("%.3f", Math.abs(plot.getTime()))) : (Messages.PERFECT_MATCH_SUBTITLE.getMessage().replace("%time%", String.format("%.3f", plot.getTime())) + (plot.getCountdown() == 0 ? "" : " " + Messages.COUNTDOWN_MODE.getMessage())), 0, 40, 10);
                 }
-            } Main.getRemoteDatabase().setRestores(pl.getUniqueId(), Main.getRemoteDatabase().getRestores(pl.getUniqueId()) + 1);
+            } pl.getStats().setRestores(pl.getStats().getRestores() + 1);
         }
     }
 }

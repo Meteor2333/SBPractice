@@ -1,5 +1,6 @@
 package com.meteor.SBPractice.Utils;
 
+import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 //By WoolWars
+@Getter
 public class Region {
 
     private final World world;
@@ -23,34 +25,6 @@ public class Region {
         this.yMax = Math.max(first.getBlockY(), second.getBlockY());
         this.zMin = Math.min(first.getBlockZ(), second.getBlockZ());
         this.zMax = Math.max(first.getBlockZ(), second.getBlockZ());
-    }
-
-    public World getWorld() {
-        return world;
-    }
-
-    public int getXMin() {
-        return xMin;
-    }
-
-    public int getXMax() {
-        return xMax;
-    }
-
-    public int getYMin() {
-        return yMin;
-    }
-
-    public int getYMax() {
-        return yMax;
-    }
-
-    public int getZMin() {
-        return zMin;
-    }
-
-    public int getZMax() {
-        return zMax;
     }
 
     public List<Block> getBlocks() {
@@ -103,5 +77,4 @@ public class Region {
     public int getBlockCount() {
         return (xMax - xMin + 1) * (yMax - yMin + 1) * (zMax - zMin + 1);
     }
-
 }

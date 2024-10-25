@@ -1,5 +1,6 @@
 package com.meteor.SBPractice.Hooks;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Plot;
 import com.meteor.SBPractice.Messages;
 import org.bukkit.Material;
@@ -29,35 +30,53 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
     @Override
     public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
-        Plot plot = Plot.getPlotByOwner((Player) player);
-        if (plot == null) {
-            plot = Plot.getPlotByGuest((Player) player);
+        SBPPlayer sbpPlayer = SBPPlayer.getPlayer((Player) player);
+        Plot plot = null;
+        if (sbpPlayer != null) {
+            plot = Plot.getPlotByOwner(sbpPlayer);
+            if (plot == null) {
+                plot = Plot.getPlotByGuest(sbpPlayer);
+            }
         }
 
         switch (params) {
-            case "destroyed":
-                return String.valueOf(Main.getRemoteDatabase().getDestructions(player.getUniqueId()));
-            case "placed":
-                return String.valueOf(Main.getRemoteDatabase().getPlacements(player.getUniqueId()));
-            case "restored":
-                return String.valueOf(Main.getRemoteDatabase().getRestores(player.getUniqueId()));
-            case "owner":
-                if (plot != null) return String.valueOf(plot.getPlayer().getName());
-                else return "None";
+            case "total-break-blocks":
+                if (sbpPlayer != null) return String.valueOf(sbpPlayer.getStats().getBreakBlocks());
+                return String.valueOf(Main.getRemoteDatabase().getPlayerStats(player.getUniqueId()).getBreakBlocks());
+            case "total-place-blocks":
+                if (sbpPlayer != null) return String.valueOf(sbpPlayer.getStats().getPlaceBlocks());
+                return String.valueOf(Main.getRemoteDatabase().getPlayerStats(player.getUniqueId()).getPlaceBlocks());
+            case "total-jumps":
+                if (sbpPlayer != null) return String.valueOf(sbpPlayer.getStats().getJumps());
+                return String.valueOf(Main.getRemoteDatabase().getPlayerStats(player.getUniqueId()).getJumps());
+            case "total-restores":
+                if (sbpPlayer != null) return String.valueOf(sbpPlayer.getStats().getRestores());
+                return String.valueOf(Main.getRemoteDatabase().getPlayerStats(player.getUniqueId()).getRestores());
+            case "total-online-times":
+                if (sbpPlayer != null) return String.valueOf(sbpPlayer.getStats().getOnlineTimes());
+                return String.valueOf(Main.getRemoteDatabase().getPlayerStats(player.getUniqueId()).getOnlineTimes());
             case "plot-total":
                 return String.valueOf(Plot.getPlots().size());
+            case "plot-total-occupied":
+                int sum1 = 0;
+                for (Plot p : Plot.getPlots()) {
+                    if (p.getPlotStatus().equals(Plot.PlotStatus.OCCUPIED)) sum1++;
+                } return String.valueOf(sum1);
+            case "plot-total-not-occupied":
+                int sum2 = 0;
+                for (Plot p : Plot.getPlots()) {
+                    if (p.getPlotStatus().equals(Plot.PlotStatus.NOT_OCCUPIED)) sum2++;
+                } return String.valueOf(sum2);
+            case "plot-owner":
+                if (plot != null) return String.valueOf(plot.getPlayer().getName());
+                else return "None";
             case "plot-total-player":
                 if (plot != null) return String.valueOf(plot.getGuests().size() + 1);
                 else return "None";
-            case "plot-occupied":
-                int sum = 0;
-                for (Plot p : Plot.getPlots()) {
-                    if (p.getPlotStatus().equals(Plot.PlotStatus.OCCUPIED)) sum++;
-                } return String.valueOf(sum);
             case "current-time":
-                if (plot != null) return String.format("%.3f", plot.getTime()) + (plot.getCountdown() == 0 ? "" : " " + Messages.getMessage("countdown-mode"));
+                if (plot != null) return String.format("%.3f", plot.getTime()) + (plot.getCountdown() == 0 ? "" : " " + Messages.COUNTDOWN_MODE.getMessage());
                 else return String.format("%.3f", 0F);
-            case "current-blocks":
+            case "current-building-blocks":
                 int num = 0;
                 if (plot != null) {
                     for (BlockState bs : plot.getBufferBuildBlock()) {

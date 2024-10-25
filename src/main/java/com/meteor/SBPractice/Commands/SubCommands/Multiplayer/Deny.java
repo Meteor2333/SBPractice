@@ -1,5 +1,6 @@
 package com.meteor.SBPractice.Commands.SubCommands.Multiplayer;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Commands.MultiplayerCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Messages;
@@ -22,41 +23,42 @@ public class Deny extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        Player player = (Player) sender;
+        SBPPlayer player = SBPPlayer.getPlayer((Player) sender);
+        if (player == null) return;
         if (args.length == 0) {
-            Bukkit.dispatchCommand(player, "sbp help");
+            Bukkit.dispatchCommand(player.getPlayer(), "sbp help");
             return;
         }
 
         Player target = Bukkit.getPlayer(args[0]);
         if (target == null) {
-            sender.sendMessage(Messages.getMessage("player-not-found"));
+            sender.sendMessage(Messages.PLAYER_NOT_FOUND.getMessage());
             return;
         }
 
         if (target.getName().equalsIgnoreCase(player.getName())) {
-            player.sendMessage(Messages.getMessage("cannot-do-that"));
+            player.sendMessage(Messages.CANNOT_DO_THAT.getMessage());
             return;
         }
 
         if (Invite.invites.getOrDefault(target.getName(), new ArrayList<>()).contains(player.getName())) {
-            List<String> players = Invite.invites.getOrDefault(player.getName(), new ArrayList<>());
-            players.remove(target.getName());
-            Invite.invites.put(player.getName(), players);
-        } else if (Join.joins.getOrDefault(target.getName(), new ArrayList<>()).contains(target.getName())) {
-            List<String> players = Join.joins.getOrDefault(player.getName(), new ArrayList<>());
-            players.remove(target.getName());
-            Join.joins.put(player.getName(), players);
+            List<String> players = Invite.invites.getOrDefault(target.getName(), new ArrayList<>());
+            players.remove(player.getName());
+            Invite.invites.put(target.getName(), players);
+        } else if (Join.joins.getOrDefault(target.getName(), new ArrayList<>()).contains(player.getName())) {
+            List<String> players = Join.joins.getOrDefault(target.getName(), new ArrayList<>());
+            players.remove(player.getName());
+            Join.joins.put(target.getName(), players);
         } else {
-            player.sendMessage(Messages.getMessage("requeste-not-found").replace("%player%", target.getName()));
+            player.sendMessage(Messages.REQUEST_NOT_FOUND.getMessage().replace("%player%", target.getName()));
             return;
         }
 
-        Map<String, Long> players = denys.get(player.getName());
+        Map<String, Long> players = denys.getOrDefault(player.getName(), new HashMap<>());
         players.put(target.getName(), System.currentTimeMillis());
         denys.put(player.getName(), players);
 
-        player.sendMessage(Messages.getMessage("receiver-denyed").replace("%player%", target.getName()));
-        target.sendMessage(Messages.getMessage("victim-denyed").replace("%player%", player.getName()));
+        player.sendMessage(Messages.RECEIVER_DENYED.getMessage().replace("%player%", target.getName()));
+        target.sendMessage(Messages.VICTIM_DENYED.getMessage().replace("%player%", player.getName()));
     }
 }

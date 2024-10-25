@@ -1,9 +1,12 @@
 package com.meteor.SBPractice.Commands.SubCommands.Main;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Commands.MainCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Plot;
 import com.meteor.SBPractice.Messages;
+import com.meteor.SBPractice.Utils.Region;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -17,26 +20,29 @@ public class Clear extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        Player player = (Player) sender;
+        SBPPlayer player = SBPPlayer.getPlayer((Player) sender);
+        if (player == null) return;
         Plot plot = Plot.getPlotByOwner(player);
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
             if (plot == null) {
-                player.sendMessage(Messages.getMessage("cannot-do-that"));
+                player.sendMessage(Messages.CANNOT_DO_THAT.getMessage());
                 return;
             }
         }
 
         for (Entity entity : plot.getSpawnPoint().getWorld().getEntities()) {
             if (!plot.getRegion().isInside(entity.getLocation(), false)) continue;
-            EntityType type = entity.getType();
-            if (type == EntityType.PLAYER || type == EntityType.ITEM_FRAME || type == EntityType.PAINTING) {
-                continue;
-            } entity.remove();
+            if (entity.getType() == EntityType.PLAYER) continue;
+            entity.remove();
         }
 
-        plot.getRegion().fill(Material.AIR);
+        Region region = plot.getRegion();
+        new Region(
+                new Location(region.getWorld(), region.getXMax(), region.getYMax() + 1, region.getZMax()),
+                new Location(region.getWorld(), region.getXMin(), region.getYMin(), region.getZMin())
+        ).fill(Material.AIR);
         plot.stopTimer();
-        plot.canStart(true);
+        plot.setCanStart(true);
     }
 }

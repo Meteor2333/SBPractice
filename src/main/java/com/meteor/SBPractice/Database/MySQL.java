@@ -1,5 +1,6 @@
 package com.meteor.SBPractice.Database;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Main;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -58,8 +59,8 @@ public class MySQL implements Database {
     @Override
     public void initialize() {
         try (Connection connection = dataSource.getConnection()) {
-            String sql = "CREATE TABLE IF NOT EXISTS papi_data (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " +
-                    "uuid VARCHAR(200), destructions INT(200), placements INT(200), restores INT(200));";
+            String sql = "CREATE TABLE IF NOT EXISTS stats (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " +
+                    "uuid VARCHAR(200), break_blocks INT(200), place_blocks INT(200), jumps INT(200), restores INT(200), online_times INT(200));";
 
             try (Statement statement = connection.createStatement()) {
                 statement.executeUpdate(sql);
@@ -70,142 +71,56 @@ public class MySQL implements Database {
     }
 
     @Override
-    public void setDestructions(UUID key, int value) {
+    public SBPPlayer.PlayerStats getPlayerStats(UUID uuid) {
+        String sql = "SELECT break_blocks, place_blocks, jumps, restores, online_times FROM stats WHERE uuid = ?;";
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, uuid.toString());
+                try (ResultSet result = statement.executeQuery()) {
+                    if (result.next()) {
+                        return new SBPPlayer.PlayerStats(uuid, result.getInt(1), result.getInt(2), result.getInt(3), result.getInt(4), result.getInt(5));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } return new SBPPlayer.PlayerStats(uuid, 0, 0, 0, 0, 0);
+    }
+
+    @Override
+    public void setPlayerStats(SBPPlayer.PlayerStats playerStats) {
         String sql;
         try (Connection connection = dataSource.getConnection()) {
-            if (hasData(key)) {
-                sql = "UPDATE papi_data SET destructions=?, placements=?, restores=? WHERE uuid = ?;";
+            if (hasData(playerStats.getUuid())) {
+                sql = "UPDATE stats SET break_blocks=?, place_blocks=?, jumps=?, restores=?, online_times=? WHERE uuid = ?;";
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setInt(1, value);
-                    statement.setInt(2, getPlacements(key));
-                    statement.setInt(3, getRestores(key));
-                    statement.setString(4, key.toString());
+                    statement.setInt(1, playerStats.getBreakBlocks());
+                    statement.setInt(2, playerStats.getPlaceBlocks());
+                    statement.setInt(3, playerStats.getJumps());
+                    statement.setInt(4, playerStats.getRestores());
+                    statement.setInt(5, playerStats.getOnlineTimes());
+                    statement.setString(6, playerStats.getUuid().toString());
                     statement.executeUpdate();
                 }
             } else {
-                sql = "INSERT INTO papi_data (uuid, destructions, placements, restores) VALUES (?, ?, ?, ?);";
+                sql = "INSERT INTO stats (uuid, break_blocks, place_blocks, jumps, restores, online_times) VALUES (?, ?, ?, ?, ?, ?);";
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setString(1, key.toString());
-                    statement.setInt(2, value);
-                    statement.setInt(3, getPlacements(key));
-                    statement.setInt(4, getRestores(key));
+                    statement.setString(1, playerStats.getUuid().toString());
+                    statement.setInt(2, playerStats.getBreakBlocks());
+                    statement.setInt(3, playerStats.getPlaceBlocks());
+                    statement.setInt(4, playerStats.getJumps());
+                    statement.setInt(5, playerStats.getRestores());
+                    statement.setInt(6, playerStats.getOnlineTimes());
                     statement.executeUpdate();
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public int getDestructions(UUID key) {
-        String sql = "SELECT destructions, placements, restores FROM papi_data WHERE uuid = ?;";
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, key.toString());
-                try (ResultSet result = statement.executeQuery()) {
-                    if (result.next()) {
-                        return result.getInt(1);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } return 0;
-    }
-
-    @Override
-    public void setPlacements(UUID key, int value) {
-        String sql;
-        try (Connection connection = dataSource.getConnection()) {
-            if (hasData(key)) {
-                sql = "UPDATE papi_data SET destructions=?, placements=?, restores=? WHERE uuid = ?;";
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setInt(1, getDestructions(key));
-                    statement.setInt(2, value);
-                    statement.setInt(3, getRestores(key));
-                    statement.setString(4, key.toString());
-                    statement.executeUpdate();
-                }
-            } else {
-                sql = "INSERT INTO papi_data (uuid, destructions, placements, restores) VALUES (?, ?, ?, ?);";
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setString(1, key.toString());
-                    statement.setInt(2, getDestructions(key));
-                    statement.setInt(3, value);
-                    statement.setInt(4, getRestores(key));
-                    statement.executeUpdate();
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public int getPlacements(UUID key) {
-        String sql = "SELECT destructions, placements, restores FROM papi_data WHERE uuid = ?;";
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, key.toString());
-                try (ResultSet result = statement.executeQuery()) {
-                    if (result.next()) {
-                        return result.getInt(2);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } return 0;
-    }
-
-    @Override
-    public void setRestores(UUID key, int value) {
-        String sql;
-        try (Connection connection = dataSource.getConnection()) {
-            if (hasData(key)) {
-                sql = "UPDATE papi_data SET destructions=?, placements=?, restores=? WHERE uuid = ?;";
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setInt(1, getDestructions(key));
-                    statement.setInt(2, getPlacements(key));
-                    statement.setInt(3, value);
-                    statement.setString(4, key.toString());
-                    statement.executeUpdate();
-                }
-            } else {
-                sql = "INSERT INTO papi_data (uuid, destructions, placements, restores) VALUES (?, ?, ?, ?);";
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setString(1, key.toString());
-                    statement.setInt(2, getDestructions(key));
-                    statement.setInt(3, getPlacements(key));
-                    statement.setInt(4, value);
-                    statement.executeUpdate();
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public int getRestores(UUID key) {
-        String sql = "SELECT destructions, placements, restores FROM papi_data WHERE uuid = ?;";
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, key.toString());
-                try (ResultSet result = statement.executeQuery()) {
-                    if (result.next()) {
-                        return result.getInt(3);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } return 0;
     }
 
     private boolean hasData(UUID uuid) {
-        String sql = "SELECT uuid FROM papi_data WHERE uuid = ?;";
+        String sql = "SELECT uuid FROM stats WHERE uuid = ?;";
         try (Connection connection = dataSource.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, uuid.toString());

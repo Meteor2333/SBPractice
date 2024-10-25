@@ -1,10 +1,15 @@
 package com.meteor.SBPractice.Utils;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Main;
 import com.meteor.SBPractice.Plot;
+import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 public class Utils {
@@ -36,16 +41,24 @@ public class Utils {
     public static void updatePlots() {
         for (Plot plot : Plot.getPlots()) {
             if (plot.getPlayer() == null) resetPlot(plot);
-            else if (!plot.getPlayer().isOnline()) resetPlot(plot);
-            for (Player player : plot.getGuests()) {
-                if (!player.isOnline()) plot.removeGuest(player);
+            else if (Bukkit.getPlayer(plot.getPlayer().getName()) == null) resetPlot(plot);
+            for (SBPPlayer player : plot.getGuests()) {
+                if (Bukkit.getPlayer(player.getName()) == null) plot.removeGuest(player);
             }
         }
     }
 
     public static void resetPlot(Plot plot) {
         Region region = plot.getRegion();
-        region.fill(Material.AIR);
+        for (Entity entity : plot.getSpawnPoint().getWorld().getEntities()) {
+            if (!region.isInside(entity.getLocation(), false)) continue;
+            if (entity.getType() == EntityType.PLAYER) continue;
+            entity.remove();
+        }
+        new Region(
+                new Location(region.getWorld(), region.getXMax(), region.getYMax() + 1, region.getZMax()),
+                new Location(region.getWorld(), region.getXMin(), region.getYMin(), region.getZMin())
+        ).fill(Material.AIR);
         new Region(
                 new Location(region.getWorld(), region.getXMax(), region.getYMin() - 1, region.getZMax()),
                 new Location(region.getWorld(), region.getXMin(), region.getYMin() - 1, region.getZMin())
@@ -55,12 +68,15 @@ public class Utils {
         plot.stopTimer();
         plot.setTime(0D);
         plot.setCountdown(0);
-        plot.canStart(true);
+        plot.setCanStart(true);
         plot.setPlayer(null);
+        plot.getGuests().clear();
     }
 
     public static void refreshAllPlayerVisibility() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            SBPPlayer player = SBPPlayer.getPlayer(p);
+            if (player == null) continue;
             Plot plot = Plot.getPlotByOwner(player);
             if (plot == null) {
                 plot = Plot.getPlotByGuest(player);
@@ -72,8 +88,38 @@ public class Utils {
             if (new Region(
                     new Location(region.getWorld(), region.getXMax() + range, 0, region.getZMax() + range),
                     new Location(region.getWorld(), region.getXMin() - range, 0, region.getZMin() - range)
-            ).isInside(player.getLocation(), true)) NMSSupport.showPlayer(player, false);
-            else NMSSupport.hidePlayer(player, false);
+            ).isInside(player.getPlayer().getLocation(), true)) NMSSupport.showPlayer(p, false);
+            else NMSSupport.hidePlayer(p, false);
         }
+    }
+
+    public static void playSound(Player player, Sounds sound, float volume, float pitch) {
+        String s = sound.v13;
+        switch (NMSSupport.getServerVersion().substring(1).split("_")[1]) {
+            case "8":
+                s = sound.v8;
+                break;
+            case "9":
+            case "10":
+            case "11":
+            case "12":
+                s = sound.v12;
+                break;
+        } try {
+            player.playSound(player.getLocation(), Sound.valueOf(s), volume, pitch);
+        } catch (IllegalArgumentException ignored) {}
+    }
+
+    @RequiredArgsConstructor
+    public enum Sounds {
+
+        ORB_PICKUP("ORB_PICKUP", "ENTITY_EXPERIENCE_ORB_PICKUP", "ENTITY_EXPERIENCE_ORB_PICKUP"),
+        NOTE_PLING("NOTE_PLING", "BLOCK_NOTE_PLING", "BLOCK_NOTE_BLOCK_PLING"),
+        NOTE_STICKS("NOTE_STICKS", "BLOCK_NOTE_HAT", "BLOCK_NOTE_BLOCK_HAT"),
+        LEVEL_UP("LEVEL_UP", "ENTITY_PLAYER_LEVELUP", "ENTITY_PLAYER_LEVELUP"),
+        BLAZE_SHOOT("GHAST_FIREBALL", "ENTITY_BLAZE_SHOOT", "ENTITY_BLAZE_SHOOT");
+
+        private final String v8, v12, v13;
+
     }
 }

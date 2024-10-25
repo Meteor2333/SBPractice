@@ -1,5 +1,6 @@
 package com.meteor.SBPractice.Commands.SubCommands.Multiplayer;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Commands.MultiplayerCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Messages;
@@ -16,40 +17,43 @@ public class Kick extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        Player player = (Player) sender;
+        SBPPlayer player = SBPPlayer.getPlayer((Player) sender);
+        if (player == null) return;
         if (args.length == 0) {
-            Bukkit.dispatchCommand(player, "sbp help");
+            Bukkit.dispatchCommand(player.getPlayer(), "sbp help");
             return;
         }
 
-        Player target = Bukkit.getPlayer(args[0]);
+        SBPPlayer target = SBPPlayer.getPlayer(Bukkit.getPlayer(args[0]));
         if (target == null) {
-            sender.sendMessage(Messages.getMessage("player-not-found"));
+            sender.sendMessage(Messages.PLAYER_NOT_FOUND.getMessage());
             return;
         }
 
         if (target.getName().equalsIgnoreCase(player.getName())) {
-            player.sendMessage(Messages.getMessage("cannot-do-that"));
+            player.sendMessage(Messages.CANNOT_DO_THAT.getMessage());
             return;
         }
 
         Plot plot = Plot.getPlotByOwner(player);
         if (plot == null) {
-            player.sendMessage(Messages.getMessage("cannot-do-that"));
+            player.sendMessage(Messages.CANNOT_DO_THAT.getMessage());
             return;
         }
 
         if (!plot.getGuests().contains(target)) {
-            player.sendMessage(Messages.getMessage("player-not-in-plot").replace("%player%", target.getName()));
+            player.sendMessage(Messages.PLAYER_NOT_IN_PLOT.getMessage().replace("%player%", target.getName()));
             return;
         }
 
-        if (!Plot.autoAddPlayerFromPlot(player, null, false)) {
-            NMSSupport.hidePlayer(player, true);
-            player.sendMessage(Messages.getMessage("plot-full"));
-            player.teleport(Plot.getPlots().get(0).getSpawnPoint());
-        } plot.removeGuest(target);
-        player.sendMessage(Messages.getMessage("receiver-kicked").replace("%player%", target.getName()));
-        target.sendMessage(Messages.getMessage("victim-kicked").replace("%player%", player.getName()));
+        player.sendMessage(Messages.RECEIVER_KICKED.getMessage().replace("%player%", target.getName()));
+        target.sendMessage(Messages.VICTIM_KICKED.getMessage().replace("%player%", player.getName()));
+        plot.removeGuest(target);
+
+        if (!Plot.autoAddPlayerFromPlot(target, null, false)) {
+            NMSSupport.hidePlayer(target.getPlayer(), true);
+            target.sendMessage(Messages.PLOT_FULL.getMessage());
+            target.teleport(Plot.getPlots().get(0).getSpawnPoint());
+        }
     }
 }

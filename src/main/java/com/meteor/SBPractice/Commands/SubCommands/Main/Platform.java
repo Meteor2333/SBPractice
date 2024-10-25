@@ -1,12 +1,13 @@
 package com.meteor.SBPractice.Commands.SubCommands.Main;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Commands.MainCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Main;
 import com.meteor.SBPractice.Plot;
 import com.meteor.SBPractice.Messages;
+import com.meteor.SBPractice.Utils.Utils;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
@@ -19,12 +20,13 @@ public class Platform extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        Player player = (Player) sender;
+        SBPPlayer player = SBPPlayer.getPlayer((Player) sender);
+        if (player == null) return;
         Plot plot = Plot.getPlotByOwner(player);
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
             if (plot == null) {
-                player.sendMessage(Messages.getMessage("cannot-do-that"));
+                player.sendMessage(Messages.CANNOT_DO_THAT.getMessage());
                 return;
             }
         }
@@ -41,7 +43,7 @@ public class Platform extends SubCommand {
                     }
                 }
             }
-        } player.playSound(player.getLocation(), Sound.ORB_PICKUP, 1F, 1F);
-        player.sendMessage(Messages.getMessage("platform-adapt"));
+        } player.playSound(Utils.Sounds.ORB_PICKUP);
+        player.sendMessage(Messages.PLATFORM_ADAPT.getMessage());
     }
 }

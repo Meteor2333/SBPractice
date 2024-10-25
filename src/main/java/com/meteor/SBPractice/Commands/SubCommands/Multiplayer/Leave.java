@@ -1,5 +1,6 @@
 package com.meteor.SBPractice.Commands.SubCommands.Multiplayer;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Commands.MultiplayerCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Messages;
@@ -15,19 +16,21 @@ public class Leave extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        Player player = (Player) sender;
+        SBPPlayer player = SBPPlayer.getPlayer((Player) sender);
+        if (player == null) return;
         Plot plot = Plot.getPlotByGuest(player);
         if (plot == null) {
-            player.sendMessage(Messages.getMessage("cannot-do-that"));
+            player.sendMessage(Messages.CANNOT_DO_THAT.getMessage());
             return;
         }
 
+        player.sendMessage(Messages.LEAVE.getMessage().replace("%player%", plot.getPlayer().getName()));
+        plot.removeGuest(player);
+
         if (!Plot.autoAddPlayerFromPlot(player, null, false)) {
-            NMSSupport.hidePlayer(player, true);
-            player.sendMessage(Messages.getMessage("plot-full"));
+            NMSSupport.hidePlayer(player.getPlayer(), true);
+            player.sendMessage(Messages.PLOT_FULL.getMessage());
             player.teleport(Plot.getPlots().get(0).getSpawnPoint());
-        } plot.removeGuest(player);
-        Plot.autoAddPlayerFromPlot(player, null, false);
-        player.sendMessage(Messages.getMessage("leave").replace("%player%", plot.getPlayer().getName()));
+        }
     }
 }

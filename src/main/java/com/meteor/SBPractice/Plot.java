@@ -1,13 +1,15 @@
 package com.meteor.SBPractice;
 
+import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Utils.NMSSupport;
 import com.meteor.SBPractice.Utils.Region;
 import com.meteor.SBPractice.Utils.Utils;
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,159 +17,94 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
+@Setter
 public class Plot {
     private double time = 0F;
     private long currentTime = 0L;
     private boolean canStart = true;
     private int countdown = 0;
-    private Player player = null;
-    private List<Player> guests = new ArrayList<>();
+    private SBPPlayer player = null;
+    private List<SBPPlayer> guests = new ArrayList<>();
     private Timer displayTask = null;
     private Region region;
     private Location spawnPoint;
     private PlotStatus plotStatus = PlotStatus.NOT_OCCUPIED;
     private List<BlockState> bufferBuildBlock = new ArrayList<>();
 
+    @Getter
     private static List<Plot> plots = new ArrayList<>();
 
-    public Plot(Location spawnPoints, Location firstPoint, Location secondPoint) {
-        this.spawnPoint = spawnPoints;
+    public Plot(Location spawnPoint, Location firstPoint, Location secondPoint) {
+        this.spawnPoint = spawnPoint;
         this.region = new Region(firstPoint, secondPoint);
         plots.add(this);
     }
 
-    public void setTime(double time) {
-        this.time = time;
-    }
-
-    public void setCurrentTime(long currentTime) {
-        this.currentTime = currentTime;
-    }
-
-    public void canStart(boolean value) {
-        this.canStart = value;
-    }
-
-    public void setPlayer(@Nullable Player player) {
+    public void setPlayer(@Nullable SBPPlayer player) {
         this.player = player;
         if (player != null) {
-            player.getInventory().setItem(8, new ItemStack(Material.SNOW_BALL));
-            player.updateInventory();
-            player.setGameMode(GameMode.CREATIVE);
-            player.teleport(getSpawnPoint());
-            player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
+            player.resetPlayer();
+            player.sendPlotItem();
+            player.getPlayer().teleport(getSpawnPoint());
         }
     }
 
-    public void setCountdown(int countdown) {
-        this.countdown = countdown;
+    public void addGuest(@NotNull SBPPlayer player) {
+        guests.add(player);
+        player.resetPlayer();
+        player.sendPlotItem();
+        player.getPlayer().teleport(getSpawnPoint());
     }
 
-    public void addGuest(@NotNull Player player) {
-        this.guests.add(player);
-        player.getInventory().setItem(8, new ItemStack(Material.SNOW_BALL));
-        player.updateInventory();
-        player.setGameMode(GameMode.CREATIVE);
-        player.teleport(getSpawnPoint());
-        player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
-    }
-
-    public void removeGuest(Player player) {
-        this.guests.remove(player);
-    }
-
-    public void setPlotStatus(PlotStatus plotStatus) {
-        this.plotStatus = plotStatus;
-    }
-
-    public void setBufferBuildBlock(List<BlockState> blocks) {
-        this.bufferBuildBlock = blocks;
-    }
-
-    public double getTime() {
-        return this.time;
-    }
-
-    public boolean timeIsNull() {
-        return this.currentTime == 0L;
-    }
-
-    public int getCountdown() {
-        return this.countdown;
-    }
-
-    public Player getPlayer() {
-        return this.player;
-    }
-
-    public List<Player> getGuests() {
-        return this.guests;
-    }
-
-    public Location getSpawnPoint() {
-        return this.spawnPoint;
-    }
-
-    public Region getRegion() {
-        return this.region;
-    }
-
-    public PlotStatus getPlotStatus() {
-        return this.plotStatus;
-    }
-
-    public List<BlockState> getBufferBuildBlock() {
-        return this.bufferBuildBlock;
+    public void removeGuest(SBPPlayer player) {
+        player.resetPlayer();
+        guests.remove(player);
     }
 
     public void startTimer() {
-        if (this.currentTime != 0L || !canStart) return;
-        this.currentTime = System.currentTimeMillis();
-        this.time = 0F;
+        if (currentTime != 0L || !canStart) return;
+        currentTime = System.currentTimeMillis();
+        time = 0F;
     }
 
     public void stopTimer() {
-        if (this.currentTime == 0L) return;
+        if (currentTime == 0L) return;
 
-        this.time = (double) (System.currentTimeMillis() - this.currentTime) / 1000;
-        if (this.countdown != 0) this.time = (this.countdown - this.time);
+        time = (double) (System.currentTimeMillis() - currentTime) / 1000;
+        if (countdown != 0) time = (countdown - time);
 
-        this.currentTime = 0L;
+        currentTime = 0L;
     }
 
     public void displayAction() {
-        if (this.displayTask != null) return;
-        this.displayTask = new Timer(() -> {
-            if (this.player != null) {
-                if (this.currentTime != 0L && canStart) {
-                    this.time = (double) (System.currentTimeMillis() - this.currentTime) / 1000;
-                    if (this.countdown != 0) this.time = (this.countdown - this.time);
-                } for (Player player : Bukkit.getOnlinePlayers()) {
+        if (displayTask != null) return;
+        displayTask = new Timer(() -> {
+            if (player != null) {
+                if (currentTime != 0L && canStart) {
+                    time = (double) (System.currentTimeMillis() - currentTime) / 1000;
+                    if (countdown != 0) time = (countdown - time);
+                } for (SBPPlayer player : SBPPlayer.getPlayers()) {
                     int range = Main.getPlugin().getConfig().getInt("plot-check-add-range");
                     if (new Region(
                             new Location(region.getWorld(), region.getXMax() + range, 0, region.getZMax() + range),
                             new Location(region.getWorld(), region.getXMin() - range, 0, region.getZMin() - range)
                     ).isInside(player.getLocation(), true)) {
-
-                        NMSSupport.playAction(player, Messages.getMessage("actionbar-time").replace("%time%", (this.time < 0 && this.countdown != 0) ? Messages.getMessage("countdown-timeout") : String.format("%.3f", this.time)) + (this.countdown == 0 ? "" : " " + Messages.getMessage("countdown-mode")));
+                        NMSSupport.playAction(player.getPlayer(), Messages.ACTIONBAR_TIME.getMessage().replace("%time%", (time < 0 && countdown != 0) ? Messages.COUNTDOWN_TIMEOUT.getMessage() : String.format("%.3f", time)) + (countdown == 0 ? "" : " " + Messages.COUNTDOWN_MODE.getMessage()));
                     }
                 }
             }
         });
-        this.displayTask.startTimer(1L);
+        displayTask.startTimer(1L);
     }
 
     public void outAction() {
-        if (this.displayTask == null) return;
-        this.displayTask.stopTimer();
-        this.displayTask = null;
+        if (displayTask == null) return;
+        displayTask.stopTimer();
+        displayTask = null;
     }
 
-    public static List<Plot> getPlots() {
-        return plots;
-    }
-
-    public static Plot getPlotByOwner(Player player) {
+    public static Plot getPlotByOwner(@NotNull SBPPlayer player) {
         for (Plot plot : getPlots()) {
             if (plot.getPlayer() == null) continue;
             if (plot.getPlayer().equals(player)) {
@@ -176,10 +113,10 @@ public class Plot {
         } return null;
     }
 
-    public static Plot getPlotByGuest(Player player) {
+    public static Plot getPlotByGuest(@NotNull SBPPlayer player) {
         for (Plot plot : getPlots()) {
             if (plot.getPlayer() == null) continue;
-            for (Player p : plot.getGuests()) {
+            for (SBPPlayer p : plot.getGuests()) {
                 if (p.equals(player)) {
                     return plot;
                 }
@@ -187,28 +124,19 @@ public class Plot {
         } return null;
     }
 
-    public static boolean autoAddPlayerFromPlot(@NotNull Player player, Plot plot, boolean guest) {
-
-        player.setAllowFlight(true);
-        player.setExp(0.0F);
-        player.setFireTicks(0);
-        player.setFlying(false);
-        player.setFoodLevel(20);
-        player.setHealth(20.0D);
-        player.setLevel(0);
-        player.getInventory().setArmorContents(null);
-        player.getInventory().clear();
-        player.updateInventory();
-        NMSSupport.showPlayer(player, true);
+    public static boolean autoAddPlayerFromPlot(@NotNull SBPPlayer player, Plot plot, boolean guest) {
+        Utils.updatePlots();
+        player.resetPlayer();
 
         if (plot == null) {
+            boolean isFull = true;
             for (Plot p : Plot.getPlots()) {
                 if (p.getPlotStatus().equals(PlotStatus.NOT_OCCUPIED)) {
                     p.setPlotStatus(PlotStatus.OCCUPIED);
                     p.stopTimer();
                     p.setTime(0D);
                     p.setCountdown(0);
-                    p.canStart(true);
+                    p.setCanStart(true);
 
                     List<BlockState> blocks = new ArrayList<>();
                     for (Block block : p.getRegion().getBlocks()) {
@@ -218,44 +146,48 @@ public class Plot {
                     p.setBufferBuildBlock(blocks);
                     p.displayAction();
 
-                    if (guest) p.addGuest(player);
-                    else p.setPlayer(player);
-                    return true;
+                    plot = p;
+                    isFull = false;
+                    break;
                 }
-            } return false;
-        } else {
-            if (guest) plot.addGuest(player);
-            else plot.setPlayer(player);
-            return true;
+            } if (isFull) return false;
         }
+
+        if (guest) plot.addGuest(player);
+        else plot.setPlayer(player);
+        return true;
     }
 
-    public static void autoRemovePlayerFromPlot(@NotNull Player player) {
+    public static void autoRemovePlayerFromPlot(@NotNull SBPPlayer player) {
         Plot plot = Plot.getPlotByOwner(player);
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
             if (plot != null) {
                 plot.removeGuest(player);
             } return;
-        } Utils.resetPlot(plot);
-
-        List<Player> guests = plot.getGuests();
-        if (guests == null || guests.isEmpty()) return;
-        for (Player guest : guests) {
-            guest.sendMessage(Messages.getMessage("owner-leave"));
-            plot.removeGuest(guest);
-            if (!Plot.autoAddPlayerFromPlot(guest, null, false)) {
-                guest.setGameMode(GameMode.SPECTATOR);
-                guest.sendMessage(Messages.getMessage("plot-full"));
-                guest.teleport(guest.getWorld().getSpawnLocation());
-            }
         }
+
+        List<SBPPlayer> guests = plot.getGuests();
+        if (!(guests == null || guests.isEmpty())) {
+            for (SBPPlayer guest : guests) {
+                guest.sendMessage(Messages.OWNER_LEAVE.getMessage());
+                plot.removeGuest(guest);
+                if (!Plot.autoAddPlayerFromPlot(guest, null, false)) {
+                    NMSSupport.hidePlayer(player.getPlayer(), true);
+                    player.sendMessage(Messages.PLOT_FULL.getMessage());
+                    player.getPlayer().teleport(Plot.getPlots().get(0).getSpawnPoint());
+                }
+            }
+        } Utils.resetPlot(plot);
+        Utils.updatePlots();
     }
 
     public enum PlotStatus {
         OCCUPIED, NOT_OCCUPIED
     }
 
+    @Getter
+    @Setter
     public static class SetupSession {
         private final Player player;
         private Location buildPos1, buildPos2, spawnPoint;
@@ -267,46 +199,22 @@ public class Plot {
             sessions.add(this);
         }
 
-        public void setBuildAreaPos1(Location loc) {
-            this.buildPos1 = loc.getBlock().getLocation();
-        }
-
-        public void setBuildAreaPos2(Location loc) {
-            this.buildPos2 = loc.getBlock().getLocation();
-        }
-
-        public void setSpawnPoint(Location loc) {
-            this.spawnPoint = Utils.simplifyLocation(loc);
-        }
-
-        public Location getBuildAreaPos1() {
-            return this.buildPos1;
-        }
-
-        public Location getBuildAreaPos2() {
-            return this.buildPos2;
-        }
-
-        public Location getSpawnPoint() {
-            return this.spawnPoint;
-        }
-
         public boolean save() {
-            if (this.buildPos1 == null) return false;
-            if (this.buildPos2 == null) return false;
-            if (this.spawnPoint == null) return false;
+            if (buildPos1 == null) return false;
+            if (buildPos2 == null) return false;
+            if (spawnPoint == null) return false;
 
-            this.buildPos1.setWorld(this.spawnPoint.getWorld());
-            this.buildPos2.setWorld(this.spawnPoint.getWorld());
+            buildPos1.setWorld(spawnPoint.getWorld());
+            buildPos2.setWorld(spawnPoint.getWorld());
 
             List<String> plots = Main.getPlugin().getConfig().getStringList("plots");
             if (plots == null) plots = new ArrayList<>();
-            plots.add(Utils.formatLocation(this.spawnPoint) + ";" + Utils.formatLocation(this.buildPos1) + ";" + Utils.formatLocation(this.buildPos2));
+            plots.add(Utils.formatLocation(spawnPoint) + ";" + Utils.formatLocation(buildPos1) + ";" + Utils.formatLocation(buildPos2));
             Main.getPlugin().getConfig().set("plots", plots);
             Main.getPlugin().saveConfig();
 
-            this.player.sendMessage(ChatColor.GREEN + "Added successfully!");
-            new Plot(this.spawnPoint, this.buildPos1, this.buildPos2);
+            player.sendMessage(ChatColor.GREEN + "Added successfully!");
+            new Plot(spawnPoint, buildPos1, buildPos2);
             sessions.remove(this);
             return true;
         }
@@ -321,7 +229,7 @@ public class Plot {
     }
 
     private static class Timer extends BukkitRunnable {
-        private Runnable runnable;
+        private final Runnable runnable;
 
         public Timer(Runnable runnable) {
             this.runnable = runnable;
@@ -329,15 +237,15 @@ public class Plot {
 
         @Override
         public void run() {
-            this.runnable.run();
+            runnable.run();
         }
 
         public void startTimer(long value) {
-            this.runTaskTimerAsynchronously(Main.getPlugin(), 0, value);
+            runTaskTimerAsynchronously(Main.getPlugin(), 0, value);
         }
 
         public void stopTimer() {
-            this.cancel();
+            cancel();
         }
     }
 }
