@@ -5,7 +5,7 @@ import com.meteor.SBPractice.Commands.MainCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Plot;
 import com.meteor.SBPractice.Messages;
-import com.meteor.SBPractice.Utils.Utils;
+import com.meteor.SBPractice.Utils.VersionSupport;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -25,7 +25,7 @@ public class ShowBuilding extends SubCommand {
         } plot.stopTimer();
 
         plot.getRegion().setBlocks(plot.getBufferBuildBlock());
-        player.playSound(Utils.Sounds.ORB_PICKUP);
+        player.playSound(VersionSupport.SOUND_ORB_PICKUP.getForCurrentVersionSupport());
         player.sendMessage(Messages.SHOW_BUILD.getMessage());
     }
 }

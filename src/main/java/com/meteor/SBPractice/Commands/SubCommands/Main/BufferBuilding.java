@@ -5,7 +5,7 @@ import com.meteor.SBPractice.Commands.MainCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Plot;
 import com.meteor.SBPractice.Messages;
-import com.meteor.SBPractice.Utils.Utils;
+import com.meteor.SBPractice.Utils.VersionSupport;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
@@ -34,6 +34,6 @@ public class BufferBuilding extends SubCommand {
             blocks.add(block.getState());
         } plot.setBufferBuildBlock(blocks);
         player.sendMessage(Messages.SUCCESSFUL_BUFFER.getMessage());
-        player.playSound(Utils.Sounds.ORB_PICKUP);
+        player.playSound(VersionSupport.SOUND_ORB_PICKUP.getForCurrentVersionSupport());
     }
 }

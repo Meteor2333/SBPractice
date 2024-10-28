@@ -2,13 +2,10 @@ package com.meteor.SBPractice.Api;
 
 import com.meteor.SBPractice.Main;
 import com.meteor.SBPractice.Messages;
-import com.meteor.SBPractice.Utils.NMSSupport;
-import com.meteor.SBPractice.Utils.Utils;
+import com.meteor.SBPractice.Utils.VersionSupport;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -23,6 +20,7 @@ import java.util.UUID;
 public class SBPPlayer {
     private final Player player;
     private PlayerStats stats;
+    private boolean hidden;
 
     private boolean enableHighjump = true;
     private long highjumpCooldown = 0L;
@@ -49,6 +47,18 @@ public class SBPPlayer {
         return player.getName();
     }
 
+    public void setVisibility(boolean visible) {
+        if (visible) {
+            if (!hidden) return;
+            hidden = false;
+            VersionSupport.showPlayer(player);
+        } else {
+            if (hidden) return;
+            hidden = true;
+            VersionSupport.hidePlayer(player);
+        }
+    }
+
     public void resetPlayer() {
         player.setGameMode(GameMode.CREATIVE);
         player.setAllowFlight(true);
@@ -62,7 +72,7 @@ public class SBPPlayer {
         player.getInventory().clear();
         player.updateInventory();
         player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
-        NMSSupport.showPlayer(player, true);
+        setVisibility(true);
     }
 
     public void sendPlotItem() {
@@ -80,11 +90,13 @@ public class SBPPlayer {
     }
 
     public void sendMessage(String message) {
-        player.sendMessage(message.replaceAll("&", "§").replace("§§", "&"));
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
     }
 
-    public void playSound(Utils.Sounds sound) {
-        Utils.playSound(player, sound, 1.0F, 1.0F);
+    public void playSound(String sound) {
+        try {
+            player.playSound(player.getLocation(), Sound.valueOf(sound), 1.0F, 1.0F);
+        } catch (IllegalArgumentException ignored) { }
     }
 
     public static @Nullable SBPPlayer getPlayer(Player player) {

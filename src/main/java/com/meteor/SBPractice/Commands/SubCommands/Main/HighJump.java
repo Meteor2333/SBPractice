@@ -28,7 +28,7 @@ public class HighJump extends SubCommand {
             try {
                 if (Double.parseDouble(args[1]) > 100D) return;
                 player.setHighjumpIntensity(Double.parseDouble(args[1]));
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) { }
         }
     }
 }

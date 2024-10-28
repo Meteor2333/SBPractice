@@ -5,15 +5,17 @@ import com.meteor.SBPractice.Commands.MainCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Plot;
 import com.meteor.SBPractice.Messages;
-import com.meteor.SBPractice.Utils.Utils;
+import com.meteor.SBPractice.Utils.VersionSupport;
+import lombok.Getter;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 public class Admin extends SubCommand {
-    private static final ArrayList<UUID> adminList = new ArrayList<>();
+
+    @Getter
+    private static final ArrayList<String> adminList = new ArrayList<>();
 
     public Admin(MainCommand parent, String name) {
         super(parent, name, true);
@@ -23,25 +25,18 @@ public class Admin extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         SBPPlayer player = SBPPlayer.getPlayer((Player) sender);
         if (player == null) return;
-        player.playSound(Utils.Sounds.ORB_PICKUP);
-        if (adminList.contains(player.getPlayer().getUniqueId())) {
+        player.playSound(VersionSupport.SOUND_ORB_PICKUP.getForCurrentVersionSupport());
+        if (adminList.contains(player.getPlayer().getName())) {
             if (Plot.autoAddPlayerFromPlot(player, null, false)) {
-                adminList.remove(player.getPlayer().getUniqueId());
+                adminList.remove(player.getPlayer().getName());
                 player.sendMessage(Messages.ADMIN_MODE_DISABLED.getMessage());
             } else player.sendMessage(Messages.PLOT_FULL.getMessage());
         } else {
-            adminList.add(player.getPlayer().getUniqueId());
-            player.getPlayer().setAllowFlight(true);
+            adminList.add(player.getPlayer().getName());
+            player.resetPlayer();
             player.sendMessage(Messages.ADMIN_MODE_ENABLED.getMessage());
             Plot.autoRemovePlayerFromPlot(player);
         }
     }
 
-    public static boolean check(SBPPlayer player) {
-        return adminList.contains(player.getPlayer().getUniqueId());
-    }
-
-    public static void removeFromAdminList(UUID key) {
-        adminList.remove(key);
-    }
 }

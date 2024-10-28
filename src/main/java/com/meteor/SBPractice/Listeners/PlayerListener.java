@@ -5,13 +5,11 @@ import com.meteor.SBPractice.Commands.SubCommands.Main.Admin;
 import com.meteor.SBPractice.Main;
 import com.meteor.SBPractice.Messages;
 import com.meteor.SBPractice.Plot;
-import com.meteor.SBPractice.Utils.NMSSupport;
+import com.meteor.SBPractice.Utils.VersionSupport;
 import com.meteor.SBPractice.Utils.Region;
 import com.meteor.SBPractice.Utils.Utils;
 import net.md_5.bungee.api.chat.*;
-import net.minecraft.server.v1_8_R3.PacketPlayOutPlayerInfo;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Egg;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
@@ -22,7 +20,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -46,7 +43,7 @@ public class PlayerListener implements Listener {
                 Bukkit.dispatchCommand(player.getPlayer(), "sbp admin");
             } return;
         } if (!Plot.autoAddPlayerFromPlot(player, null, false)) {
-            NMSSupport.hidePlayer(player.getPlayer(), true);
+            player.setVisibility(false);
             player.sendMessage(Messages.PLOT_FULL.getMessage());
             player.teleport(Plot.getPlots().get(0).getSpawnPoint());
         } Utils.refreshAllPlayerVisibility();
@@ -54,18 +51,14 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) {
-        Admin.removeFromAdminList(e.getPlayer().getUniqueId());
-        ((CraftPlayer) e.getPlayer()).getHandle().server.getPlayerList().sendAll(
-                new PacketPlayOutPlayerInfo(
-                        PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, ((CraftPlayer) e.getPlayer()).getHandle()
-                ), ((CraftPlayer) e.getPlayer()).getHandle()
-        );
+        Admin.getAdminList().remove(e.getPlayer().getName());
         SBPPlayer player = SBPPlayer.getPlayer(e.getPlayer());
         if (player == null) return;
         player.resetPlayer();
         Plot.autoRemovePlayerFromPlot(player);
         SBPPlayer.removePlayer(player);
         Utils.refreshAllPlayerVisibility();
+        VersionSupport.togglePlayerTab(player.getPlayer(), false);
     }
 
     @EventHandler
@@ -74,9 +67,8 @@ public class PlayerListener implements Listener {
         if (player == null) return;
 
         if (e.getItem() == null) return;
-        if (Admin.check(player)) {
-            if (NMSSupport.getTag(e.getItem(), "sbp-setup") == null) return;
-            if (NMSSupport.getTag(e.getItem(), "sbp-setup").equals("setup-build-area")) {
+        if (Admin.getAdminList().contains(player.getName())) {
+            if (VersionSupport.getTag(e.getItem(), "sbpractice").equals("setup-build-area")) {
                 e.setCancelled(true);
                 Plot.SetupSession session = Plot.SetupSession.getSessionByPlayer(player.getPlayer());
                 if (session == null) return;
@@ -84,23 +76,17 @@ public class PlayerListener implements Listener {
                 if (e.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
                     player.sendMessage(ChatColor.GREEN + "First point selected!");
                     session.setBuildPos1(e.getClickedBlock().getLocation());
-                    player.playSound(Utils.Sounds.ORB_PICKUP);
+                    player.playSound(VersionSupport.SOUND_ORB_PICKUP.getForCurrentVersionSupport());
                 } else if (e.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
                     player.sendMessage(ChatColor.GREEN + "Second point selected!");
                     session.setBuildPos2(e.getClickedBlock().getLocation());
-                    player.playSound(Utils.Sounds.ORB_PICKUP);
+                    player.playSound(VersionSupport.SOUND_ORB_PICKUP.getForCurrentVersionSupport());
                 } if (session.getBuildPos1() != null && session.getBuildPos2() != null) {
-                    for (ItemStack is : player.getPlayer().getInventory()) {
-                        if (is == null) continue;
-                        if (NMSSupport.getTag(is, "sbp-setup") == null) continue;
-                        is.setType(Material.AIR);
-                    } if (!session.save()) {
+                    if (!session.save()) {
                         TextComponent text = new TextComponent(ChatColor.YELLOW + "" + ChatColor.BOLD + "[Click Here]");
-                        text.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "sbp setup spawnpoint"));
+                        text.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/sbp setup spawnpoint"));
                         text.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click Here").create()));
-                        BaseComponent[] bc = TextComponent.fromLegacyText(ChatColor.GREEN + "Stand at the plot spawn point, then ");
-                        bc[bc.length - 1].addExtra(text);
-                        player.getPlayer().spigot().sendMessage(bc);
+                        player.getPlayer().spigot().sendMessage(new TextComponent(ChatColor.GREEN + "Stand at the plot spawn point, then "), text);
                     }
                 }
             } return;
@@ -115,26 +101,15 @@ public class PlayerListener implements Listener {
             }
         }
 
-        Region region = plot.getRegion();
-        int range = Main.getPlugin().getConfig().getInt("plot-check-add-range");
-        if (!new Region(
-                new Location(region.getWorld(), region.getXMax() + range, 0, region.getZMax() + range),
-                new Location(region.getWorld(), region.getXMin() - range, 0, region.getZMin() - range)
-        ).isInside(player.getLocation(), true)) {
+        if (player.isHidden()) {
             e.setCancelled(true);
             player.getPlayer().updateInventory();
             return;
         }
 
-        if (e.getItem().getType().equals(Material.SNOW_BALL)) {
-            if (e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
-                Bukkit.dispatchCommand(player.getPlayer(), "sbp clear");
-            }
-        }
-
         if (e.getAction().equals(Action.RIGHT_CLICK_BLOCK) || e.getAction().equals(Action.RIGHT_CLICK_AIR)) {
-            if (e.getItem().getType().equals(Material.SNOW_BALL)) Bukkit.dispatchCommand(player.getPlayer(), "sbp clear");
-            if (e.getItem().getType().equals(Material.EGG)) Bukkit.dispatchCommand(player.getPlayer(), "sbp prestart");
+            if (e.getItem().getType().equals(Material.valueOf(Main.getPlugin().getConfig().getString("item.clear")))) Bukkit.dispatchCommand(player.getPlayer(), "sbp clear");
+            if (e.getItem().getType().equals(Material.valueOf(Main.getPlugin().getConfig().getString("item.prestart")))) Bukkit.dispatchCommand(player.getPlayer(), "sbp prestart");
             Arrays.asList("ARMOR_STAND", "MINECART", "BOAT", "MAP", "INK_SACK", "PAINTING", "POTION", "MILK", "ITEM_FRAME")
                     .forEach(type -> {if (e.getItem().getType().toString().contains(type)) e.setCancelled(true);});
         } player.getPlayer().updateInventory();
@@ -144,7 +119,7 @@ public class PlayerListener implements Listener {
     public void onPlayerMove(PlayerMoveEvent e) {
         SBPPlayer player = SBPPlayer.getPlayer(e.getPlayer());
         if (player == null) return;
-        if (Admin.check(player)) return;
+        if (Admin.getAdminList().contains(player.getName())) return;
         Plot plot = Plot.getPlotByOwner(player);
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
@@ -153,11 +128,10 @@ public class PlayerListener implements Listener {
 
         Region region = plot.getRegion();
         int range = Main.getPlugin().getConfig().getInt("plot-check-add-range");
-        if (new Region(
+        player.setVisibility(new Region(
                 new Location(region.getWorld(), region.getXMax() + range, 0, region.getZMax() + range),
                 new Location(region.getWorld(), region.getXMin() - range, 0, region.getZMin() - range)
-        ).isInside(e.getTo(), true)) NMSSupport.showPlayer(player.getPlayer(), true);
-        else NMSSupport.hidePlayer(player.getPlayer(), true);
+        ).isInside(e.getTo(), true));
     }
 
     @EventHandler
@@ -165,7 +139,7 @@ public class PlayerListener implements Listener {
         if (!(e.getWhoClicked() instanceof Player)) return;
         SBPPlayer player = SBPPlayer.getPlayer((Player) e.getWhoClicked());
         if (player == null) return;
-        if (Admin.check(player)) return;
+        if (Admin.getAdminList().contains(player.getName())) return;
         Plot plot = Plot.getPlotByOwner(player);
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
@@ -176,12 +150,7 @@ public class PlayerListener implements Listener {
             }
         }
 
-        Region region = plot.getRegion();
-        int range = Main.getPlugin().getConfig().getInt("plot-check-add-range");
-        if (!new Region(
-                new Location(region.getWorld(), region.getXMax() + range, 0, region.getZMax() + range),
-                new Location(region.getWorld(), region.getXMin() - range, 0, region.getZMin() - range)
-        ).isInside(player.getLocation(), true)) {
+        if (player.isHidden()) {
             e.setCancelled(true);
             player.getPlayer().updateInventory();
         }
@@ -206,16 +175,14 @@ public class PlayerListener implements Listener {
 
         if (player.isEnableHighjump()) {
             e.setCancelled(true);
-            if (System.currentTimeMillis() - player.getHighjumpCooldown() >= 1000) {
+            if (System.currentTimeMillis() - player.getHighjumpCooldown() >= 1250) {
                 player.setHighjumpCooldown(System.currentTimeMillis());
-
-                player.playSound(Utils.Sounds.BLAZE_SHOOT);
+                player.playSound(VersionSupport.SOUND_BLAZE_SHOOT.getForCurrentVersionSupport());
                 player.getPlayer().setVelocity((new Vector(0, 1, 0)).multiply(player.getHighjumpIntensity()));
-
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        if (player.getLocation().add(0, -1, 0).getBlock().getType() == Material.AIR) player.getPlayer().setAllowFlight(false);
+                        if (player.getLocation().add(0, -1, 0).getBlock().getType().equals(Material.AIR)) player.getPlayer().setAllowFlight(false);
                         else {
                             player.getPlayer().setAllowFlight(true);
                             this.cancel();

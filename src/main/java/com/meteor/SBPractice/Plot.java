@@ -1,7 +1,7 @@
 package com.meteor.SBPractice;
 
 import com.meteor.SBPractice.Api.SBPPlayer;
-import com.meteor.SBPractice.Utils.NMSSupport;
+import com.meteor.SBPractice.Utils.VersionSupport;
 import com.meteor.SBPractice.Utils.Region;
 import com.meteor.SBPractice.Utils.Utils;
 import lombok.Getter;
@@ -9,7 +9,10 @@ import lombok.Setter;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -90,7 +93,7 @@ public class Plot {
                             new Location(region.getWorld(), region.getXMax() + range, 0, region.getZMax() + range),
                             new Location(region.getWorld(), region.getXMin() - range, 0, region.getZMin() - range)
                     ).isInside(player.getLocation(), true)) {
-                        NMSSupport.playAction(player.getPlayer(), Messages.ACTIONBAR_TIME.getMessage().replace("%time%", (time < 0 && countdown != 0) ? Messages.COUNTDOWN_TIMEOUT.getMessage() : String.format("%.3f", time)) + (countdown == 0 ? "" : " " + Messages.COUNTDOWN_MODE.getMessage()));
+                        VersionSupport.playAction(player.getPlayer(), Messages.ACTIONBAR_TIME.getMessage().replace("%time%", (time < 0 && countdown != 0) ? Messages.COUNTDOWN_TIMEOUT.getMessage() : String.format("%.3f", time)) + (countdown == 0 ? "" : " " + Messages.COUNTDOWN_MODE.getMessage()));
                     }
                 }
             }
@@ -102,6 +105,18 @@ public class Plot {
         if (displayTask == null) return;
         displayTask.stopTimer();
         displayTask = null;
+    }
+
+    public void clear() {
+        Region region = new Region(
+                new Location(getRegion().getWorld(), getRegion().getXMax() + 1, getRegion().getYMax() + 1, getRegion().getZMax() + 1),
+                new Location(getRegion().getWorld(), getRegion().getXMin() - 1, getRegion().getYMin(), getRegion().getZMin() - 1)
+        );
+        for (Entity entity : getSpawnPoint().getWorld().getEntities()) {
+            if (!region.isInside(entity.getLocation(), false)) continue;
+            if (entity.getType() == EntityType.PLAYER) continue;
+            entity.remove();
+        } region.fill(Material.AIR);
     }
 
     public static Plot getPlotByOwner(@NotNull SBPPlayer player) {
@@ -173,7 +188,7 @@ public class Plot {
                 guest.sendMessage(Messages.OWNER_LEAVE.getMessage());
                 plot.removeGuest(guest);
                 if (!Plot.autoAddPlayerFromPlot(guest, null, false)) {
-                    NMSSupport.hidePlayer(player.getPlayer(), true);
+                    player.setVisibility(false);
                     player.sendMessage(Messages.PLOT_FULL.getMessage());
                     player.getPlayer().teleport(Plot.getPlots().get(0).getSpawnPoint());
                 }
@@ -212,6 +227,13 @@ public class Plot {
             plots.add(Utils.formatLocation(spawnPoint) + ";" + Utils.formatLocation(buildPos1) + ";" + Utils.formatLocation(buildPos2));
             Main.getPlugin().getConfig().set("plots", plots);
             Main.getPlugin().saveConfig();
+
+            PlayerInventory inv = player.getPlayer().getInventory();
+            for (int i = 0; i < inv.getSize(); i++) {
+                if (inv.getItem(i) == null) continue;
+                if (VersionSupport.getTag(inv.getItem(i), "sbpractice").isEmpty()) continue;
+                inv.clear(i);
+            }
 
             player.sendMessage(ChatColor.GREEN + "Added successfully!");
             new Plot(spawnPoint, buildPos1, buildPos2);

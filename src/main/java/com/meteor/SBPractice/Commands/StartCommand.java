@@ -13,7 +13,11 @@ public class StartCommand extends BukkitCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player)) return true;
-        Bukkit.dispatchCommand(sender, "sbp prestart");
+        try {
+            Bukkit.dispatchCommand(sender, "sbp prestart " + (args.length == 0 ? "" : Integer.parseInt(args[0])));
+        } catch (NumberFormatException e) {
+            Bukkit.dispatchCommand(sender, "sbp prestart");
+        }
         return true;
     }
 }

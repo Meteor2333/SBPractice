@@ -6,9 +6,8 @@ import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Main;
 import com.meteor.SBPractice.Plot;
 import com.meteor.SBPractice.Messages;
-import com.meteor.SBPractice.Utils.NMSSupport;
+import com.meteor.SBPractice.Utils.VersionSupport;
 import com.meteor.SBPractice.Utils.Region;
-import com.meteor.SBPractice.Utils.Utils;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -39,11 +38,16 @@ public class PreStart extends SubCommand {
             if (System.currentTimeMillis() - cooldowns.get(player.getPlayer().getUniqueId()) <= 5000) return;
         cooldowns.put(player.getPlayer().getUniqueId(), System.currentTimeMillis());
         plot.getRegion().setBlocks(plot.getBufferBuildBlock());
+        try {
+            args = new String[]{String.valueOf(Integer.parseInt(args[0]) + 1)};
+        } catch (Exception e) {
+            args = new String[]{"3"};
+        } String[] finalArgs = args;
         new BukkitRunnable() {
-            int count = 4;
+            int count = Integer.parseInt(finalArgs[0]);
 
             public void run() {
-                if (--this.count <= 0) {
+                if (--count <= 0) {
                     plot.getRegion().fill(Material.AIR);
                     plot.setCanStart(true);
                     plot.setCurrentTime(0L);
@@ -57,18 +61,18 @@ public class PreStart extends SubCommand {
                             new Location(region.getWorld(), region.getXMin() - range, 0, region.getZMin() - range)
                     ).isInside(p.getLocation(), true)) {
                         if (count <= 0) {
-                            NMSSupport.sendTitle(p.getPlayer(), null, null, 0, 0, 0);
+                            VersionSupport.sendTitle(p.getPlayer(), null, null, 0, 0, 0);
                             new BukkitRunnable() {
                                 int remaining = 3;
                                 public void run() {
-                                    p.playSound(Utils.Sounds.NOTE_PLING);
+                                    p.playSound(VersionSupport.SOUND_NOTE_PLING.getForCurrentVersionSupport());
                                     if (--this.remaining <= 0) this.cancel();
                                 }
                             }.runTaskTimer(Main.getPlugin(), 0, 2);
                         } else {
-                            p.playSound(Utils.Sounds.NOTE_STICKS);
+                            p.playSound(VersionSupport.SOUND_NOTE_STICKS.getForCurrentVersionSupport());
                             p.sendMessage(Messages.PRE_START.getMessage().replace("%time%", String.valueOf(count)));
-                            NMSSupport.sendTitle(p.getPlayer(), ChatColor.AQUA + "" + ChatColor.BOLD + count, null, 0, 20, 0);
+                            VersionSupport.sendTitle(p.getPlayer(), ChatColor.AQUA + "" + ChatColor.BOLD + count, null, 0, 20, 0);
                         }
                     }
                 }

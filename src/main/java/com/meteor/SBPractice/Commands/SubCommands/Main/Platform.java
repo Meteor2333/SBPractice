@@ -6,12 +6,16 @@ import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Main;
 import com.meteor.SBPractice.Plot;
 import com.meteor.SBPractice.Messages;
-import com.meteor.SBPractice.Utils.Utils;
+import com.meteor.SBPractice.Utils.Region;
+import com.meteor.SBPractice.Utils.VersionSupport;
+import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Platform extends SubCommand {
     public Platform(MainCommand parent, String name) {
@@ -31,19 +35,22 @@ public class Platform extends SubCommand {
             }
         }
 
-        for (int i = plot.getRegion().getXMin(); i <= plot.getRegion().getXMax(); i++) {
-            for (int j = plot.getRegion().getYMin(); j <= plot.getRegion().getXMax(); j++) {
-                for (int k = plot.getRegion().getZMin(); k <= plot.getRegion().getZMax(); k++) {
-                    if (j == plot.getRegion().getYMin()) {
-                        World world = plot.getSpawnPoint().getWorld();
-                        BlockState blockState = world.getBlockAt(i, j, k).getState();
-                        if (blockState.getType().equals(Material.AIR)) blockState.setType(Material.valueOf(Main.getPlugin().getConfig().getString("default-platform-block")));
-                        //noinspection deprecation
-                        world.getBlockAt(i, j - 1, k).setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
-                    }
-                }
-            }
-        } player.playSound(Utils.Sounds.ORB_PICKUP);
+        Region region = plot.getRegion();
+        List<BlockState> blocks = new ArrayList<>();
+        new Region(
+                new Location(region.getWorld(), region.getXMax(), region.getYMin(), region.getZMax()),
+                new Location(region.getWorld(), region.getXMin(), region.getYMin(), region.getZMin())
+        ).getBlocks().forEach(block -> {
+            BlockState blockState = block.getState();
+            if (blockState.getType() == Material.AIR) blockState.setType(Material.valueOf(Main.getPlugin().getConfig().getString("default-platform-block")));
+            blocks.add(blockState);
+        });
+        new Region(
+                new Location(region.getWorld(), region.getXMax(), region.getYMin() - 1, region.getZMax()),
+                new Location(region.getWorld(), region.getXMin(), region.getYMin() - 1, region.getZMin())
+        ).setBlocks(blocks);
+
+        player.playSound(VersionSupport.SOUND_ORB_PICKUP.getForCurrentVersionSupport());
         player.sendMessage(Messages.PLATFORM_ADAPT.getMessage());
     }
 }

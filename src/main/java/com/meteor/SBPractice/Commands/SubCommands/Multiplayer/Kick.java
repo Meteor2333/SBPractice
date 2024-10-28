@@ -5,7 +5,6 @@ import com.meteor.SBPractice.Commands.MultiplayerCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Messages;
 import com.meteor.SBPractice.Plot;
-import com.meteor.SBPractice.Utils.NMSSupport;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -51,7 +50,7 @@ public class Kick extends SubCommand {
         plot.removeGuest(target);
 
         if (!Plot.autoAddPlayerFromPlot(target, null, false)) {
-            NMSSupport.hidePlayer(target.getPlayer(), true);
+            player.setVisibility(false);
             target.sendMessage(Messages.PLOT_FULL.getMessage());
             target.teleport(Plot.getPlots().get(0).getSpawnPoint());
         }

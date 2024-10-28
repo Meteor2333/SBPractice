@@ -5,7 +5,7 @@ import com.meteor.SBPractice.Commands.MainCommand;
 import com.meteor.SBPractice.Commands.SubCommand;
 import com.meteor.SBPractice.Messages;
 import com.meteor.SBPractice.Plot;
-import com.meteor.SBPractice.Utils.NMSSupport;
+import com.meteor.SBPractice.Utils.VersionSupport;
 import com.meteor.SBPractice.Utils.Utils;
 import net.md_5.bungee.api.chat.*;
 import org.bukkit.ChatColor;
@@ -24,14 +24,14 @@ public class AddPlot extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         SBPPlayer player = SBPPlayer.getPlayer((Player) sender);
         if (player == null) return;
-        if (!Admin.check(player)) {
+        if (!Admin.getAdminList().contains(player.getName())) {
             player.sendMessage(ChatColor.RED + "Please switch to admin mode first!");
             return;
         } Plot.SetupSession session = Plot.SetupSession.getSessionByPlayer(player.getPlayer());
         if (args.length == 1 && args[0].equals("spawnpoint")) {
             if (session == null) return;
             session.setSpawnPoint(Utils.simplifyLocation(player.getLocation()));
-            player.playSound(Utils.Sounds.ORB_PICKUP);
+            player.playSound(VersionSupport.SOUND_ORB_PICKUP.getForCurrentVersionSupport());
             if (session.save()) return;
             player.sendMessage(ChatColor.GREEN + "Use the iron axe in the first slot of the hotbar to set the build area!");
 
@@ -39,7 +39,7 @@ public class AddPlot extends SubCommand {
             ItemMeta im = is.getItemMeta();
             im.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Select two points");
             is.setItemMeta(im);
-            player.getPlayer().getInventory().setItem(0, NMSSupport.setTag(is, "sbp-setup", "setup-build-area"));
+            player.getPlayer().getInventory().setItem(0, VersionSupport.setTag(is, "sbpractice", "setup-build-area"));
         } else {
             if (session != null) {
                 player.sendMessage(Messages.CANNOT_DO_THAT.getMessage());
@@ -48,10 +48,8 @@ public class AddPlot extends SubCommand {
             TextComponent text = new TextComponent(ChatColor.YELLOW + "" + ChatColor.BOLD + "[Click Here]");
             text.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/sbp setup spawnpoint"));
             text.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click Here").create()));
-            BaseComponent[] bc = TextComponent.fromLegacyText(ChatColor.GREEN + "Stand at the plot spawn point, then ");
-            bc[bc.length - 1].addExtra(text);
-            player.getPlayer().spigot().sendMessage(bc);
-            player.playSound(Utils.Sounds.ORB_PICKUP);
+            player.getPlayer().spigot().sendMessage(new TextComponent(ChatColor.GREEN + "Stand at the plot spawn point, then "), text);
+            player.playSound(VersionSupport.SOUND_ORB_PICKUP.getForCurrentVersionSupport());
         }
     }
 }

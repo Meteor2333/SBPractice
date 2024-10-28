@@ -6,9 +6,8 @@ import com.meteor.SBPractice.Commands.SubCommands.Main.Admin;
 import com.meteor.SBPractice.Main;
 import com.meteor.SBPractice.Plot;
 import com.meteor.SBPractice.Messages;
-import com.meteor.SBPractice.Utils.NMSSupport;
+import com.meteor.SBPractice.Utils.VersionSupport;
 import com.meteor.SBPractice.Utils.Region;
-import com.meteor.SBPractice.Utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -30,7 +29,7 @@ public class BlockListener implements Listener {
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
             if (plot == null) {
-                if (!Admin.check(player)) e.setCancelled(true);
+                if (!Admin.getAdminList().contains(player.getName())) e.setCancelled(true);
                 return;
             }
         } if (!checkArea(plot, e.getBlockClicked().getRelative(e.getBlockFace()))) {
@@ -50,7 +49,7 @@ public class BlockListener implements Listener {
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
             if (plot == null) {
-                if (!Admin.check(player)) e.setCancelled(true);
+                if (!Admin.getAdminList().contains(player.getName())) e.setCancelled(true);
                 return;
             }
         } if (!checkArea(plot, e.getBlockClicked().getRelative(e.getBlockFace()))) {
@@ -75,7 +74,7 @@ public class BlockListener implements Listener {
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
             if (plot == null) {
-                if (!Admin.check(player)) e.setCancelled(true);
+                if (!Admin.getAdminList().contains(player.getName())) e.setCancelled(true);
                 return;
             }
         } if (!checkArea(plot, e.getBlockPlaced())) {
@@ -96,7 +95,7 @@ public class BlockListener implements Listener {
         if (plot == null) {
             plot = Plot.getPlotByGuest(player);
             if (plot == null) {
-                if (!Admin.check(player)) e.setCancelled(true);
+                if (!Admin.getAdminList().contains(player.getName())) e.setCancelled(true);
                 return;
             }
         } if (!checkArea(plot, e.getBlock())) {
@@ -138,7 +137,7 @@ public class BlockListener implements Listener {
 
         //Fix bed
         if (plot.getRegion().isInside(block.getLocation(), false)) {
-            if (block.getType().equals(Material.BED_BLOCK)) {
+            if (block.getState().getData() instanceof Bed) {
                 Bed bed = (Bed) block.getState().getData();
                 switch (bed.getFacing()) {
                     case NORTH:
@@ -198,9 +197,9 @@ public class BlockListener implements Listener {
                         new Location(region.getWorld(), region.getXMax() + range, 0, region.getZMax() + range),
                         new Location(region.getWorld(), region.getXMin() - range, 0, region.getZMin() - range)
                 ).isInside(p.getLocation(), true)) {
-                    p.playSound(Utils.Sounds.LEVEL_UP);
-                    p.playSound(Utils.Sounds.NOTE_PLING);
-                    NMSSupport.sendTitle(p.getPlayer(), Messages.PERFECT_MATCH_TITLE.getMessage(), (plot.getTime() < 0 && plot.getCountdown() != 0) ? (Messages.TIMEOUT_PERFECT_MATCH_SUBTITLE.getMessage()).replace("%time%", String.format("%.3f", Math.abs(plot.getTime()))) : (Messages.PERFECT_MATCH_SUBTITLE.getMessage().replace("%time%", String.format("%.3f", plot.getTime())) + (plot.getCountdown() == 0 ? "" : " " + Messages.COUNTDOWN_MODE.getMessage())), 0, 40, 10);
+                    p.playSound(VersionSupport.SOUND_LEVEL_UP.getForCurrentVersionSupport());
+                    p.playSound(VersionSupport.SOUND_NOTE_PLING.getForCurrentVersionSupport());
+                    VersionSupport.sendTitle(p.getPlayer(), Messages.PERFECT_MATCH_TITLE.getMessage(), (plot.getTime() < 0 && plot.getCountdown() != 0) ? (Messages.TIMEOUT_PERFECT_MATCH_SUBTITLE.getMessage()).replace("%time%", String.format("%.3f", Math.abs(plot.getTime()))) : (Messages.PERFECT_MATCH_SUBTITLE.getMessage().replace("%time%", String.format("%.3f", plot.getTime())) + (plot.getCountdown() == 0 ? "" : " " + Messages.COUNTDOWN_MODE.getMessage())), 0, 40, 10);
                 }
             } pl.getStats().setRestores(pl.getStats().getRestores() + 1);
         }

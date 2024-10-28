@@ -3,7 +3,6 @@ package com.meteor.SBPractice.Database;
 import com.meteor.SBPractice.Api.SBPPlayer;
 import com.meteor.SBPractice.Main;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +30,7 @@ public class SQLite implements Database {
             Class.forName("org.sqlite.JDBC");
             DriverManager.getConnection(url);
         } catch (ClassNotFoundException e) {
-            Main.getPlugin().getLogger().severe(ChatColor.RED + "Could Not Found SQLite Driver on your system!");
+            Main.getPlugin().getLogger().severe("§cCould Not Found SQLite Driver on your system!");
             Bukkit.getPluginManager().disablePlugin(Main.getPlugin());
         } catch (SQLException e) {
             e.printStackTrace();
