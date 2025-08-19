@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>cc.meteormc</groupId>
+        <artifactId>SBPractice</artifactId>
+        <version>5.8.4</version>
+    </parent>
+
+    <artifactId>sbp-plugin</artifactId>
+    <version>${project.parent.version}</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <relocations>
+<!--                        <relocation>-->
+<!--                            <pattern>com.cryptomorin.xseries</pattern>-->
+<!--                            <shadedPattern>cc.meteormc.sbpractice.libs.xseries</shadedPattern>-->
+<!--                        </relocation>-->
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.libs.bstats</shadedPattern>
+                        </relocation>
+<!--                        <relocation>-->
+<!--                            <pattern>com.zaxxer.hikari</pattern>-->
+<!--                            <shadedPattern>cc.meteormc.sbpractice.libs.hikari</shadedPattern>-->
+<!--                        </relocation>-->
+<!--                        <relocation>-->
+<!--                            <pattern>org.slf4j</pattern>-->
+<!--                            <shadedPattern>cc.meteormc.sbpractice.libs.slf4j</shadedPattern>-->
+<!--                        </relocation>-->
+<!--                        <relocation>-->
+<!--                            <pattern>net.querz</pattern>-->
+<!--                            <shadedPattern>cc.meteormc.sbpractice.libs.nbtapi</shadedPattern>-->
+<!--                        </relocation>-->
+                    </relocations>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>spigotmc-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>sonatype-repo</id>
+            <url>https://oss.sonatype.org/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>placeholderapi-repo</id>
+            <url>https://repo.extendedclip.com/releases/</url>
+        </repository>
+        <repository>
+            <id>worldedit-repo</id>
+            <url>https://maven.enginehub.org/repo/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!-- Spigot API  -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot</artifactId>
+            <version>1.8.8-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Plugin Annotations -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>plugin-annotations</artifactId>
+            <version>1.2.3-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bukkit</groupId>
+                    <artifactId>bukkit</artifactId>
+                </exclusion>
+            </exclusions>
+            <scope>provided</scope>
+        </dependency>
+        <!-- PlaceholderAPI -->
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>2.11.6</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jetbrains</groupId>
+                    <artifactId>annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.bstats</groupId>
+                    <artifactId>bstats-bukkit</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.kyori</groupId>
+                    <artifactId>adventure-platform-bukkit</artifactId>
+                </exclusion>
+            </exclusions>
+            <scope>provided</scope>
+        </dependency>
+        <!-- HikariCP -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>4.0.3</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- FastInv -->
+        <dependency>
+            <groupId>fr.mrmicky</groupId>
+            <artifactId>FastInv</artifactId>
+            <version>3.1.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- SignGui -->
+        <dependency>
+            <groupId>de.rapha149.signgui</groupId>
+            <artifactId>signgui</artifactId>
+            <version>2.3.6</version>
+        </dependency>
+        <!-- bStat -->
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>3.0.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- SBPractice API -->
+        <dependency>
+            <groupId>cc.meteormc</groupId>
+            <artifactId>sbp-api</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- SBPractice NMS v1.8.R3 -->
+        <dependency>
+            <groupId>cc.meteormc</groupId>
+            <artifactId>sbp-nms-v1_8_R3</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- SBPractice NMS v1.12.R1 -->
+        <dependency>
+            <groupId>cc.meteormc</groupId>
+            <artifactId>sbp-nms-v1_12_R1</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+</project>

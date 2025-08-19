@@ -1,6 +1,0 @@
-name: SBPractice
-version: ${project.version}
-main: com.meteor.SBPractice.Main
-api-version: '1.13'
-softdepend: [PlaceholderAPI]
-author: Meteor23333
