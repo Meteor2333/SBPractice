@@ -1,6 +1,6 @@
 package cc.meteormc.sbpractice.arena.session;
 
-import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.SBPractice;
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.storage.player.PlayerData;
 import cc.meteormc.sbpractice.config.Messages;
@@ -29,7 +29,7 @@ public class MultiplayerSession implements Listener {
     public MultiplayerSession(Player player) {
         this.player = player;
         SESSIONS.add(this);
-        Bukkit.getPluginManager().registerEvents(this, Main.getPlugin());
+        Bukkit.getPluginManager().registerEvents(this, SBPractice.getPlugin());
     }
 
     public void acceptPlayer(Player target) {

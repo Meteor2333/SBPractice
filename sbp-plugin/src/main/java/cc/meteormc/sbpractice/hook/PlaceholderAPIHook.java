@@ -1,6 +1,6 @@
 package cc.meteormc.sbpractice.hook;
 
-import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.SBPractice;
 import cc.meteormc.sbpractice.api.storage.player.PlayerData;
 import cc.meteormc.sbpractice.config.Messages;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -21,12 +21,12 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getAuthor() {
-        return Main.getPlugin().getDescription().getAuthors().get(0);
+        return SBPractice.getPlugin().getDescription().getAuthors().get(0);
     }
 
     @Override
     public @NotNull String getVersion() {
-        return Main.getPlugin().getDescription().getVersion();
+        return SBPractice.getPlugin().getDescription().getVersion();
     }
 
     @Override
@@ -34,15 +34,15 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         Optional<PlayerData> data = PlayerData.getData(player.getPlayer());
         if (data.isPresent()) {
             switch (params) {
-                case "total-restores":
+                case "restores":
                     return String.valueOf(data.get().getStats().getRestores());
-                case "island-owner":
+                case "owner":
                     return data.get().getIsland().getOwner().getName();
-                case "island-total-player":
+                case "total-player":
                     return String.valueOf(data.get().getIsland().getGuests().size() + 1);
-                case "current-time":
+                case "time":
                     return Messages.CURRENT_TIME.getMessage().replace("%time%", data.get().getIsland().getFormattedTime());
-                case "current-building-blocks":
+                case "blocks":
                     int num = 0;
                     for (BlockState state : data.get().getIsland().getRecordedBlocks().values()) {
                         if (state != null && state.getType() != Material.AIR) num++;

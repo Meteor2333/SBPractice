@@ -1,6 +1,6 @@
 package cc.meteormc.sbpractice.config;
 
-import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.SBPractice;
 import cc.meteormc.sbpractice.api.config.ConfigManager;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -20,28 +20,32 @@ public enum Messages {
     PERFECT_MATCH_SUBTITLE("basic.perfect-match-subtitle", "&6&l%time%"),
     START_COUNTDOWN("basic.start-countdown", "&e&lSTART"),
     START_COUNTDOWN_NUMBER("basic.start-countdown-number", "&6&l%number%"),
-    APPLY_PRESET("basic.apply-preset", "&aPreset applied: %preset%"),
-    CLEAR_ITEM_NAME("basic.item.clear", "&9&lUse &f&lSnowball &9&lto clear building"),
+    PRESET_APPLIED("basic.preset-applied", "&aPreset applied: %preset%"),
+    PRESET_FULL("basic.preset-full", "&cPreset slots are full!"),
+    INVENTORY_FULL("basic.inventory-full", "&cInventory is full. Some items may not have been added!"),
+    CLEAR_ITEM_NAME("basic.item.clear", "&9&lUse &f&lSnowball &9&lto clear"),
     START_ITEM_NAME("basic.item.start", "&d&lUse &e&lEgg &d&lto start"),
 
     COMMAND_USAGE("command.command-usage", "&cUsage: %usage%"),
     MAIN_COMMAND_HELP("command.main-command-help", Arrays.asList(
-            "&2▪ &7/&esbp adapt &8- &aAdapt to the current ground",
+            "&2▪ &7/&esbp ground &8- &aAdapt to the current ground",
             "&2▪ &7/&esbp arena <arenaName> &8- &aSelect a arena",
-            "&2▪ &7/&esbp caching &8- &aCache the current building",
+            "&2▪ &7/&esbp record &8- &aRecord the current building",
             "&2▪ &7/&esbp clear &8- &aClear the current building",
             "&2▪ &7/&esbp highjump &8- &aToggle highjump state",
-            "&2▪ &7/&esbp mode &8- &aToggle build mode",
-            "&2▪ &7/&esbp preset [presetName] &8- &aSelect preset building",
+            "&2▪ &7/&esbp mode &8- &aToggle mode",
+            "&2▪ &7/&esbp preset &8- &aSelect preset building",
             "&2▪ &7/&esbp start &8- &aStart the countdown",
-            "&2▪ &7/&esbp view &8- &aView the cached building")),
+            "&2▪ &7/&esbp preview &8- &aPreview the recorded building"
+    )),
     MULTIPLAYER_COMMAND_HELP("command.multiplayer-command-help", Arrays.asList(
             "&2▪ &7/&emp accept <player> &8- &aAccept a invite from a player",
             "&2▪ &7/&emp deny <player> &8- &aDeny a invite from a player",
             "&2▪ &7/&emp invite <player> &8- &aInvite another player to your island",
             "&2▪ &7/&emp join <player> &8- &aJoin another player's island",
             "&2▪ &7/&emp kick <player> &8- &aRemove a player from your island",
-            "&2▪ &7/&emp leave &8- &aLeaves your current island")),
+            "&2▪ &7/&emp leave &8- &aLeaves your current island"
+    )),
     NO_PERMISSION("command.no-permission", "&cYou don't have permission to do this!"),
     GROUND("command.ground", "&aThe ground has been adapted!"),
     RECORD("command.record", "&aThe building has been cached!"),
@@ -53,28 +57,35 @@ public enum Messages {
     TOGGLE_BUILD_MODE_COUNTDOWN_CONTINUOUS("command.build-mode.countdown-continuous", "&aSwitched to continuous countdown mode!"),
     TOGGLE_HIGHJUMP_ENABLE("command.highjump.enable", "&aHighjump has been enabled!"),
     TOGGLE_HIGHJUMP_DISABLE("command.highjump.disable", "&cHigh jump has been disabled!"),
-    VIEW_BUILDING("command.view-building", "&aViewing the building!"),
+    PREVIEW("command.preview", "&aViewing the building!"),
 
-    GUI_PREVIOUS_PAGE("gui.previous-page-item", "&ePrevious page"),
-    GUI_NEXT_PAGE("gui.next-page-item", "&eNext page"),
-    GUI_CLOSE("gui.close-item", "&cClose"),
+    GUI_PREVIOUS_PAGE("gui.previous-page", "&ePrevious page"),
+    GUI_NEXT_PAGE("gui.next-page", "&eNext page"),
+    GUI_CLOSE("gui.close", "&cClose"),
     GUI_PRESET_TITLE("gui.preset.title", "Select preset building"),
+    GUI_PRESET_SAVE_NAME("gui.preset.save.name", "&aSave preset"),
+    GUI_PRESET_SAVE_LORE("gui.preset.save.lore", Arrays.asList("&eClick to save to a preset.")),
+    GUI_PRESET_SAVE_GLOBAL_NAME("gui.preset.save-global.name", "&aSave preset globally"),
+    GUI_PRESET_SAVE_GLOBAL_LORE("gui.preset.save-global.lore", Arrays.asList("&eClick to save to a preset globally.")),
+    GUI_PRESET_SAVE_CUSTOMNAME("gui.preset.save.customname", "Enter name"),
+    GUI_PRESET_SAVE_CUSTOMICON("gui.preset.save.customicon", "&aPlease drop the icon for this preset."),
+    GUI_PRESET_SAVE_SUCCESS("gui.preset.save.success", "&aPreset saved successfully!"),
     GUI_PRESET_DESCRIPTION("gui.preset.description", Arrays.asList("Blocks: %blocks%", "", "&6Click to use this preset!")),
     GUI_PRESET_FILTER_NAME("gui.preset.filter.name", "&aSearch"),
     GUI_PRESET_FILTER_LORE("gui.preset.filter.lore", Arrays.asList("&7Find preset by name.", "", "&7Filtered: &e%filtered%", "", "&bRight-Click to clear!", "&eClick to edit filter!")),
     GUI_PRESET_FILTER_QUERY("gui.preset.filter.query", "Enter query"),
 
-    SIGN_ADAPT_GROUND("sign.adapt-ground", Arrays.asList("", "&aGround", "", "")),
-    SIGN_CACHING_CURRENT_BUILDING("sign.caching-current-building", Arrays.asList("", "&6Caching", "", "")),
-    SIGN_CLEAR_CURRENT_BUILDING("sign.clear-current-building", Arrays.asList("", "&dClear", "", "")),
-    SIGN_SELECT_ARENA("sign.select-arena", Arrays.asList("", "&0Select Arena", "", "")),
-    SIGN_SELECT_BUILD_MODE("sign.select-build-mode", Arrays.asList("", "&bMode", "%build_mode%", "")),
-    SIGN_OPTIONS_BUILD_MODE_DEFAULT("sign.options.build-mode.default", "&aDefault"),
-    SIGN_OPTIONS_BUILD_MODE_COUNTDOWN_ONCE("sign.options.build-mode.countdown-once", "&eOnce"),
-    SIGN_OPTIONS_BUILD_MODE_COUNTDOWN_CONTINUOUS("sign.options.build-mode.countdown-continuous", "&cContinuous"),
-    SIGN_SELECT_PRESET_BUILDING("sign.select-preset-building", Arrays.asList("", "&6Preset", "", "")),
-    SIGN_START_COUNTDOWN("sign.start-countdown", Arrays.asList("", "&0Start", "&0(Not available in default build mode)", "")),
-    SIGN_VIEW_CACHED_BUILDING("sign.view-cached-building", Arrays.asList("", "&eView", "", "")),
+    SIGN_GROUND("sign.ground", Arrays.asList("", "Ground", "", "")),
+    SIGN_RECORD("sign.record", Arrays.asList("", "Record", "", "")),
+    SIGN_CLEAR("sign.clear", Arrays.asList("", "Clear", "", "")),
+    SIGN_SELECT_ARENA("sign.select-arena", Arrays.asList("", "Select Arena", "", "")),
+    SIGN_MODE("sign.mode", Arrays.asList("", "Mode", "%build_mode%", "")),
+    SIGN_OPTIONS_MODE_DEFAULT("sign.options.mode.default", "Default"),
+    SIGN_OPTIONS_MODE_ONCE("sign.options.mode.once", "Once"),
+    SIGN_OPTIONS_MODE_CONTINUOUS("sign.options.mode.continuous", "Continuous"),
+    SIGN_PRESET("sign.preset", Arrays.asList("", "Preset", "", "")),
+    SIGN_START("sign.start", Arrays.asList("", "Start", "", "")),
+    SIGN_PREVIEW("sign.preview", Arrays.asList("", "Preview", "", "")),
 
     INVITE_MESSAGE("multiplayer.invite-message", "&5%player% has invited you to teleport to their island!"),
     JOIN_MESSAGE("multiplayer.join-message", "&5%player% has requested to teleport to your island"),
@@ -104,7 +115,7 @@ public enum Messages {
     private static final ConfigManager CONFIG;
 
     static {
-        CONFIG = new ConfigManager(Main.getPlugin(), Main.getPlugin().getDataFolder().getPath(), "Messages");
+        CONFIG = new ConfigManager(SBPractice.getPlugin(), SBPractice.getPlugin().getDataFolder().getPath(), "Messages");
 
         for (Messages value : values()) {
             CONFIG.addDefault(value.getPath(), value.getDefaultValue());

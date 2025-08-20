@@ -11,28 +11,26 @@ import java.util.List;
 
 @Getter
 public class Region implements Cloneable {
-    private final World world;
-    private Location pos1, pos2;
+    private Vector pos1, pos2;
     private int width, height, length;
     private int xMin, xMax, yMin, yMax, zMin, zMax;
 
-    public Region(World world, Vector pos1, Vector pos2) {
-        this.world = world;
-        this.pos1 = pos1.toLocation(world);
-        this.pos2 = pos2.toLocation(world);
+    public Region(Vector pos1, Vector pos2) {
+        this.pos1 = pos1;
+        this.pos2 = pos2;
         this.compute();
     }
 
     public Region inset(int radius) {
-        this.pos1 = this.getMinimumPos().toLocation(this.world).add(radius, radius, radius);
-        this.pos2 = this.getMaximumPos().toLocation(this.world).subtract(radius, radius, radius);
+        this.pos1 = this.getMinimumPos().add(new Vector(radius, radius, radius));
+        this.pos2 = this.getMaximumPos().subtract(new Vector(radius, radius, radius));
         this.compute();
         return this;
     }
 
     public Region outset(int radius) {
-        this.pos1 = this.getMinimumPos().toLocation(this.world).subtract(radius, radius, radius);
-        this.pos2 = this.getMaximumPos().toLocation(this.world).add(radius, radius, radius);
+        this.pos1 = this.getMinimumPos().subtract(new Vector(radius, radius, radius));
+        this.pos2 = this.getMaximumPos().add(new Vector(radius, radius, radius));
         this.compute();
         return this;
     }
@@ -58,9 +56,9 @@ public class Region implements Cloneable {
             && location.getBlockZ() <= this.zMax;
     }
 
-    public void fill(XMaterial type) {
+    public void fillBlock(World world, XMaterial type) {
         for (Vector vector : this.getVectors()) {
-            vector.toLocation(this.world).getBlock().setType(type.parseMaterial(), false);
+            vector.toLocation(world).getBlock().setType(type.parseMaterial(), false);
         }
     }
 
@@ -94,6 +92,6 @@ public class Region implements Cloneable {
 
     @Override
     public Region clone() {
-        return new Region(this.world, this.pos1.toVector(), this.pos2.toVector());
+        return new Region(this.pos1, this.pos2);
     }
 }

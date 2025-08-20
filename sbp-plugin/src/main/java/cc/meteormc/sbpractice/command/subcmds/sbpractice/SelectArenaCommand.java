@@ -1,6 +1,6 @@
 package cc.meteormc.sbpractice.command.subcmds.sbpractice;
 
-import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.SBPractice;
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.arena.Arena;
 import cc.meteormc.sbpractice.api.command.SubCommand;
@@ -20,7 +20,7 @@ public class SelectArenaCommand extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         if (sender instanceof Player) {
             Player player = (Player) sender;
-            for (Arena arena : Main.getArenas()) {
+            for (Arena arena : SBPractice.getArenas()) {
                 if (arena.getName().equals(args[0])) {
                     PlayerData.getData(player).ifPresent(data -> {
                         Island island = data.getIsland();

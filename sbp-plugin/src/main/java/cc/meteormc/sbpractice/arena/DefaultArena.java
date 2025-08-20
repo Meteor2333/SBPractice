@@ -1,7 +1,7 @@
 package cc.meteormc.sbpractice.arena;
 
 import cc.meteormc.sbpractice.DefaultIsland;
-import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.SBPractice;
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.arena.Arena;
 import cc.meteormc.sbpractice.api.arena.exception.ArenaCreationException;
@@ -45,10 +45,11 @@ public class DefaultArena extends ConfigManager implements Arena {
     private final List<PresetData> presets = new ArrayList<>();
 
     public DefaultArena(String name) {
-        super(Main.getPlugin(), Main.getPlugin().getDataFolder() + "/Arenas/" + name, "config");
+        super(SBPractice.getPlugin(), SBPractice.getPlugin().getDataFolder() + "/Arenas/" + name, "config");
+        String dir = SBPractice.getPlugin().getDataFolder() + "/Arenas/" + name;
         this.name = name;
-        this.schematicFile = new File(super.getFile().getParentFile(), "schematic.dat");
-        this.presetsDir = new File(super.getFile().getParentFile(), "Persets");
+        this.schematicFile = new File(dir, "schematic.dat");
+        this.presetsDir = new File(dir, "Presets");
         this.world = new WorldManager(name, World.Environment.NORMAL, WorldType.FLAT);
     }
 
@@ -68,7 +69,7 @@ public class DefaultArena extends ConfigManager implements Arena {
 
             this.schematic = Schematic.load(this.schematicFile);
 
-            File[] presetFiles = presetsDir.listFiles((dir, name) -> name.endsWith(".perset"));
+            File[] presetFiles = presetsDir.listFiles((dir, name) -> name.endsWith(".preset"));
             if (presetFiles != null) {
                 this.presets.addAll(
                         Arrays.stream(presetFiles)
@@ -81,6 +82,10 @@ public class DefaultArena extends ConfigManager implements Arena {
         } catch (IOException e) {
             throw new ArenaCreationException("Failed to create arena " + this.name + " because of the schematic file!", e);
         }
+    }
+
+    public World getWorld() {
+        return world.getWorld();
     }
 
     @Override
@@ -96,11 +101,11 @@ public class DefaultArena extends ConfigManager implements Arena {
 
         Island island = new DefaultIsland(player, this,
 
-                new Region(this.world.getWorld(),
+                new Region(
                         super.getLocation(ArenaConfigPath.MAP_AREA_POS1).toVector().add(reference.toVector()),
                         super.getLocation(ArenaConfigPath.MAP_AREA_POS2).toVector().add(reference.toVector())
                 ),
-                new Region(this.world.getWorld(),
+                new Region(
                         super.getLocation(ArenaConfigPath.MAP_BUILD_AREA_POS1).toVector().add(reference.toVector()),
                         super.getLocation(ArenaConfigPath.MAP_BUILD_AREA_POS2).toVector().add(reference.toVector())
                 ),
@@ -129,14 +134,14 @@ public class DefaultArena extends ConfigManager implements Arena {
                 .orElse(XMaterial.AIR))
                 .setDisplayName(Messages.CLEAR_ITEM_NAME.getMessage())
                 .build());
-        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 10, 0, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20, 0, false, false));
         player.teleport(island.getSpawnPoint());
         return island;
     }
 
     public void removeIsland(Island island) {
         if (this.islands.contains(island)) {
-            island.getArea().fill(XMaterial.AIR);
+            island.getArea().fillBlock(this.getWorld(), XMaterial.AIR);
             this.islands.set(this.islands.indexOf(island), null);
             this.islands.remove(island);
         }
@@ -148,5 +153,15 @@ public class DefaultArena extends ConfigManager implements Arena {
             if (island != null) island.remove();
         }
         this.world.unload();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof DefaultArena && this.name.equals(((DefaultArena) obj).name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }

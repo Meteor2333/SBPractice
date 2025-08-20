@@ -1,13 +1,12 @@
 package cc.meteormc.sbpractice.api.storage.player;
 
 import cc.meteormc.sbpractice.api.Island;
+import cc.meteormc.sbpractice.api.arena.Arena;
+import cc.meteormc.sbpractice.api.storage.preset.PresetData;
 import lombok.Data;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Data
 public class PlayerData {
@@ -15,18 +14,19 @@ public class PlayerData {
     private boolean hidden = false;
     private boolean enableHighjump = true;
     private long highjumpCooldown = System.currentTimeMillis();
+    private Map<Arena, List<PresetData>> presets = new HashMap<>();
 
-    private final Player player;
+    private final UUID uuid;
     private final PlayerStats stats;
 
     private static final Map<UUID, PlayerData> PLAYERS = new HashMap<>();
 
     public void register() {
-        PLAYERS.put(player.getUniqueId(), this);
+        PLAYERS.put(this.uuid, this);
     }
 
     public void unregister() {
-        PLAYERS.remove(this.player.getUniqueId());
+        PLAYERS.remove(this.uuid);
     }
 
     public static Optional<PlayerData> getData(Player player) {

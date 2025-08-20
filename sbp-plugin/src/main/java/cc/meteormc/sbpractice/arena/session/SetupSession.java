@@ -1,6 +1,6 @@
 package cc.meteormc.sbpractice.arena.session;
 
-import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.SBPractice;
 import cc.meteormc.sbpractice.api.config.paths.ArenaConfigPath;
 import cc.meteormc.sbpractice.api.storage.schematic.Schematic;
 import cc.meteormc.sbpractice.api.util.ItemBuilder;
@@ -12,9 +12,11 @@ import cc.meteormc.sbpractice.config.Messages;
 import cc.meteormc.sbpractice.gui.SetupArenaGui;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
+import fr.mrmicky.fastparticles.ParticleType;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -26,6 +28,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,7 +38,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Getter
-public class SetupSession implements Listener {
+public class SetupSession extends BukkitRunnable implements Listener {
     private final String name;
     private final Player player;
     private final SetupArenaGui gui;
@@ -59,7 +62,73 @@ public class SetupSession implements Listener {
         this.player = player;
         this.gui = new SetupArenaGui(this);
         SESSIONS.add(this);
-        Bukkit.getPluginManager().registerEvents(this, Main.getPlugin());
+        Bukkit.getPluginManager().registerEvents(this, SBPractice.getPlugin());
+    }
+
+    @Override
+    public void run() {
+        if (mapAreaPos1 != null || mapAreaPos2 != null) {
+            this.drawRegion(mapAreaPos1, mapAreaPos2, Color.GREEN);
+        }
+
+        if (mapBuildAreaPos1 != null || mapBuildAreaPos2 != null) {
+            this.drawRegion(mapBuildAreaPos1, mapBuildAreaPos2, Color.RED);
+        }
+
+        if (mapSpawnPoint != null) {
+            this.drawPoint(mapSpawnPoint, Color.ORANGE);
+        }
+    }
+
+    private void drawRegion(Location p1, Location p2, Color color) {
+        if (p1 == null && p2 == null) return;
+        if (p1 == null ^ p2 == null) {
+            Location base = p1 != null ? p1 : p2;
+            Location other = base.clone().add(1, 1, 1);
+            drawRegion(base, other, color);
+            return;
+        }
+
+        ParticleType particle = ParticleType.of("REDSTONE");
+
+        Region region = new Region(p1.toVector(), p2.toVector());
+        Vector[] corners = {
+                new Vector(region.getXMin(), region.getYMin(), region.getZMin()),
+                new Vector(region.getXMin(), region.getYMin(), region.getZMax()),
+                new Vector(region.getXMin(), region.getYMax(), region.getZMin()),
+                new Vector(region.getXMin(), region.getYMax(), region.getZMax()),
+                new Vector(region.getXMax(), region.getYMin(), region.getZMin()),
+                new Vector(region.getXMax(), region.getYMin(), region.getZMax()),
+                new Vector(region.getXMax(), region.getYMax(), region.getZMin()),
+                new Vector(region.getXMax(), region.getYMax(), region.getZMax())
+        };
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = i + 1; j < 8; j++) {
+                if (Integer.bitCount(i ^ j) != 1) continue;
+                Vector diff = corners[j].subtract(corners[i]);
+                int points = (int) (diff.length() * 4);
+                Vector step = diff.multiply(1.0 / points);
+                Vector current = corners[i].clone();
+                for (int k = 0; k <= points; k++) {
+                    particle.spawn(
+                            this.player,
+                            current.getX(),
+                            current.getY(),
+                            current.getZ(),
+                            1,
+                            color.getRed() / 255D,
+                            color.getGreen() / 255D,
+                            color.getBlue() / 255D
+                    );
+                    current.add(step);
+                }
+            }
+        }
+    }
+
+    private void drawPoint(Location loc, Color color) {
+        ParticleType.of("REDSTONE").spawn(this.player, loc, 1, color.getRed() / 255D, color.getGreen() / 255D, color.getBlue() / 255D);
     }
 
     public void openGui() {
@@ -125,7 +194,7 @@ public class SetupSession implements Listener {
         if (this.isComplete()) {
             try {
                 DefaultArena arena = new DefaultArena(this.name);
-                Region region = new Region(this.mapSpawnPoint.getWorld(), this.mapAreaPos1.toVector(), this.mapAreaPos2.toVector());
+                Region region = new Region(this.mapAreaPos1.toVector(), this.mapAreaPos2.toVector());
                 Vector reference = region.getMinimumPos();
                 arena.setObject(ArenaConfigPath.HEIGHT, this.mapAreaPos1.getBlockY());
                 arena.setLocation(ArenaConfigPath.MAP_AREA_POS1, this.mapAreaPos1.subtract(reference));
@@ -143,11 +212,17 @@ public class SetupSession implements Listener {
                 arena.setLocation(ArenaConfigPath.PREVIEW_SIGN, this.previewSign.subtract(reference));
                 arena.save();
 
-                Schematic.save(region.getMinimumPos(), region, arena.getSchematicFile());
+                Schematic.save(
+                        this.mapSpawnPoint.getWorld(),
+                        region.getMinimumPos(),
+                        region,
+                        arena.getSchematicFile()
+                );
                 arena.load();
 
-                Main.getArenas().add(arena);
-                this.player.sendMessage("§aSave was successful! If the settings are not applied, please try restarting the server.");
+                SBPractice.getArenas().add(arena);
+                this.player.sendMessage(ChatColor.GREEN + "Save was successful! " +
+                        "If the settings are not applied, please try restarting the server.");
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -157,9 +232,14 @@ public class SetupSession implements Listener {
     private void startSetMapBuildArea() {
         this.player.closeInventory();
         this.mapBuildAreaPos1 = this.mapBuildAreaPos2 = null;
-        Main.getNms().sendTitle(this.player, "", "§aUse the iron axe to select 2 points!", 0, 20, 5);
+        SBPractice.getNms().sendTitle(
+                this.player,
+                "",
+                ChatColor.GREEN + "Use the iron axe to select 2 points!",
+                0, 20, 5
+        );
         PlayerInventory inventory = this.player.getInventory();
-        inventory.setItem(inventory.getHeldItemSlot(), Main.getNms()
+        inventory.setItem(inventory.getHeldItemSlot(), SBPractice.getNms()
                 .setItemTag(new ItemBuilder(XMaterial.IRON_AXE)
                 .setDisplayName(SetupType.MAP_BUILD_AREA.getHint())
                 .build(), "sbpractice", "setup-build-area"));
@@ -175,10 +255,15 @@ public class SetupSession implements Listener {
         this.presetSign = null;
         this.startSign = null;
         this.previewSign = null;
-        Main.getNms().sendTitle(this.player, "", "§aPlace the oak sign to set sign!", 0, 20, 5);
+        SBPractice.getNms().sendTitle(
+                this.player,
+                "",
+                ChatColor.GREEN + "Place the oak sign to set sign!",
+                0, 20, 5
+        );
         final SetupType.SetupSignType sign = SetupType.SetupSignType.GROUND;
         PlayerInventory inventory = this.player.getInventory();
-        inventory.setItem(inventory.getHeldItemSlot(), Main.getNms()
+        inventory.setItem(inventory.getHeldItemSlot(), SBPractice.getNms()
                 .setItemTag(new ItemBuilder(XMaterial.OAK_SIGN)
                 .setDisplayName(sign.getHint())
                 .build(), "sbpractice", "setup-signs_" + sign.name()));
@@ -191,8 +276,8 @@ public class SetupSession implements Listener {
         Optional<SetupSession> optionalSession = getSession(player);
         if (optionalSession.isPresent()) {
             SetupSession session = optionalSession.get();
-            if (Main.getNms().hasItemTag(event.getItem(), "sbpractice")) {
-                if (Main.getNms().getItemTag(event.getItem(), "sbpractice").equals("setup-build-area")) {
+            if (SBPractice.getNms().hasItemTag(event.getItem(), "sbpractice")) {
+                if (SBPractice.getNms().getItemTag(event.getItem(), "sbpractice").equals("setup-build-area")) {
                     event.setCancelled(true);
                     if (session.mapBuildAreaPos1 != null && session.mapBuildAreaPos2 != null) {
                         player.setItemInHand(XMaterial.AIR.parseItem());
@@ -233,7 +318,7 @@ public class SetupSession implements Listener {
         if (optionalSession.isPresent()) {
             SetupSession session = optionalSession.get();
             Block block = event.getBlockPlaced();
-            String tag = Main.getNms().hasItemTag(item, "sbpractice") ? Main.getNms().getItemTag(item, "sbpractice") : "";
+            String tag = SBPractice.getNms().hasItemTag(item, "sbpractice") ? SBPractice.getNms().getItemTag(item, "sbpractice") : "";
             if (tag.startsWith("setup-signs")) {
                 //event.setCancelled(true);
                 if (!(block.getState() instanceof Sign)) return;
@@ -258,7 +343,7 @@ public class SetupSession implements Listener {
                     session.openGui();
                 } else {
                     sign = SetupType.SetupSignType.values()[sign.ordinal() + 1];
-                    player.setItemInHand(Main.getNms()
+                    player.setItemInHand(SBPractice.getNms()
                             .setItemTag(new ItemBuilder(item)
                             .setDisplayName(sign.getHint())
                             .build(), "sbpractice", "setup-signs_" + sign.name()));

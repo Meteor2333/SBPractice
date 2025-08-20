@@ -1,6 +1,6 @@
 package cc.meteormc.sbpractice.config;
 
-import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.SBPractice;
 import cc.meteormc.sbpractice.api.config.ConfigManager;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
@@ -23,15 +23,16 @@ public enum MainConfig {
     BLOCKLIST_ITEMS("blacklist-items", Arrays.asList("ARMOR_STAND", "MINECART", "ITEM_FRAME", "BOAT", "DYE", "POTION", "MILK_BUCKET", "PAINTING", "MAP")),
     CLEAR_ITEM("item.clear", XMaterial.SNOWBALL.name()),
     START_ITEM("item.start", XMaterial.EGG.name()),
+    DEFAULT_GROUND_BLOCK("default-ground-block", XMaterial.GRASS_BLOCK.name()),
     ISLAND_DISTANCE_INTERVAL("island-distance-interval", 100),
-    DEFAULT_GROUND_BLOCK("default-ground-block", XMaterial.GRASS_BLOCK.name());
+    MAX_PRESETS_LIMIT("max-presets-limit", 18);
 
     private final String path;
     private final Object defaultValue;
     private static final ConfigManager CONFIG;
 
     static {
-        CONFIG = new ConfigManager(Main.getPlugin(), Main.getPlugin().getDataFolder().getPath(), "Config");
+        CONFIG = new ConfigManager(SBPractice.getPlugin(), SBPractice.getPlugin().getDataFolder().getPath(), "Config");
 
         for (MainConfig value : values()) {
             CONFIG.addDefault(value.getPath(), value.getDefaultValue());

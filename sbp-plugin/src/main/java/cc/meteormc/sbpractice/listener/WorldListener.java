@@ -1,6 +1,6 @@
 package cc.meteormc.sbpractice.listener;
 
-import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.SBPractice;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -56,7 +56,7 @@ public class WorldListener implements Listener {
         Entity entity = event.getEntity();
         if (entity instanceof Arrow) event.setCancelled(true);
         if (entity instanceof Snowball || entity instanceof Egg) {
-            Bukkit.getScheduler().runTaskLater(Main.getPlugin(), entity::remove, 3L);
+            Bukkit.getScheduler().runTaskLater(SBPractice.getPlugin(), entity::remove, 3L);
         }
     }
 }

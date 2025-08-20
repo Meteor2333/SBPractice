@@ -1,5 +1,6 @@
 package cc.meteormc.sbpractice.command.subcmds.sbpractice;
 
+import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.command.SubCommand;
 import cc.meteormc.sbpractice.api.storage.player.PlayerData;
 import cc.meteormc.sbpractice.config.Messages;
@@ -10,23 +11,24 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ToggleHighjumpCommand extends SubCommand {
-    public ToggleHighjumpCommand() {
-        super("highjump", "", 0);
+public class RecordCommand extends SubCommand {
+    public RecordCommand() {
+        super("record", "", 0);
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (sender instanceof Player) {
             PlayerData.getData((Player) sender).ifPresent(data -> {
-                if (data.isEnableHighjump()) {
-                    data.setEnableHighjump(false);
-                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_HIGHJUMP_DISABLE.getMessage());
+                Island island = data.getIsland();
+                if (island.getOwner().equals(sender)) {
+                    island.record();
+                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.RECORD.getMessage());
+                    XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play((Entity) sender);
                 } else {
-                    data.setEnableHighjump(true);
-                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_HIGHJUMP_ENABLE.getMessage());
+                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
+                    XSound.ENTITY_VILLAGER_NO.play((Entity) sender);
                 }
-                XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play((Entity) sender);
             });
         }
     }
@@ -38,6 +40,6 @@ public class ToggleHighjumpCommand extends SubCommand {
 
     @Override
     public @Nullable String getCommandUsage(@NotNull CommandSender sender) {
-        return Messages.COMMAND_USAGE.getMessage().replace("%usage%", "/sbp highjump");
+        return Messages.COMMAND_USAGE.getMessage().replace("%usage%", "/sbp record");
     }
 }

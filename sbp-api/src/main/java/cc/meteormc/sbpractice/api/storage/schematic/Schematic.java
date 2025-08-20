@@ -9,6 +9,7 @@ import net.querz.nbt.tag.CompoundTag;
 import net.querz.nbt.tag.ListTag;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.util.Vector;
 
@@ -43,7 +44,7 @@ public class Schematic {
         }
     }
 
-    public static void save(Vector reference, Region region, File file) throws IOException {
+    public static void save(World world, Vector reference, Region region, File file) throws IOException {
         CompoundTag compound = new CompoundTag();
         int width = region.getWidth();
         int height = region.getHeight();
@@ -61,7 +62,7 @@ public class Schematic {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 for (int z = 0; z < length; z++) {
-                    Block block = reference.clone().add(new Vector(x, y, z)).toLocation(region.getWorld()).getBlock();
+                    Block block = reference.clone().add(new Vector(x, y, z)).toLocation(world).getBlock();
                     Material type = block.getType();
                     byte data = block.getData();
 

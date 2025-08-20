@@ -11,8 +11,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class StartCountdownCommand extends SubCommand {
-    public StartCountdownCommand() {
+public class StartCommand extends SubCommand {
+    public StartCommand() {
         super("start", "", 0);
     }
 
@@ -21,11 +21,11 @@ public class StartCountdownCommand extends SubCommand {
         if (sender instanceof Player) {
             PlayerData.getData((Player) sender).ifPresent(data -> {
                 Island island = data.getIsland();
-                switch (island.getBuildMode()) {
-                    case COUNTDOWN_ONCE:
-                        island.activateCountdown();
+                switch (island.getMode()) {
+                    case ONCE:
+                        island.start();
                         break;
-                    case COUNTDOWN_CONTINUOUS:
+                    case CONTINUOUS:
                         if (island.isStartCountdown()) {
                             island.setStartCountdown(false);
                             sender.sendMessage(Messages.PREFIX.getMessage() + Messages.COUNTDOWN_CONTINUOUS_DISABLE.getMessage());
@@ -33,7 +33,7 @@ public class StartCountdownCommand extends SubCommand {
                             island.setStartCountdown(true);
                             sender.sendMessage(Messages.PREFIX.getMessage() + Messages.COUNTDOWN_CONTINUOUS_ENABLE.getMessage());
                         }
-                        island.activateCountdown();
+                        island.start();
                         XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play((Entity) sender);
                         break;
                     default:

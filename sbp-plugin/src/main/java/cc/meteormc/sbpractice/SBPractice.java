@@ -1,9 +1,10 @@
 package cc.meteormc.sbpractice;
 
-import cc.meteormc.sbpractice.api.SBPractice;
+import cc.meteormc.sbpractice.api.SBPracticeAPI;
 import cc.meteormc.sbpractice.api.arena.Arena;
 import cc.meteormc.sbpractice.api.arena.exception.ArenaCreationException;
 import cc.meteormc.sbpractice.api.storage.Database;
+import cc.meteormc.sbpractice.api.storage.preset.PresetData;
 import cc.meteormc.sbpractice.api.storage.schematic.Schematic;
 import cc.meteormc.sbpractice.api.util.ItemBuilder;
 import cc.meteormc.sbpractice.api.version.NMS;
@@ -44,9 +45,9 @@ import java.util.Optional;
 @Author("Meteor23333")
 @Website("https://github.com/Meteor2333/SBPractice")
 @SoftDependency("PlaceholderAPI")
-public class Main extends JavaPlugin {
+public class SBPractice extends JavaPlugin {
     @Getter
-    private static Main plugin;
+    private static SBPractice plugin;
     @Getter
     private static Database remoteDatabase;
     @Getter
@@ -71,7 +72,7 @@ public class Main extends JavaPlugin {
     @Override
     public void onEnable() {
         /* Load api manager */
-        Bukkit.getServicesManager().register(SBPractice.class, new API(), this, ServicePriority.Highest);
+        Bukkit.getServicesManager().register(SBPracticeAPI.class, new API(), this, ServicePriority.Highest);
 
         /* Display screen */
         super.getLogger().info("------------------------------------------------");
@@ -103,6 +104,7 @@ public class Main extends JavaPlugin {
         FastInvManager.register(this);
         new Metrics(this, 24481);
         ItemBuilder.init(nms);
+        PresetData.init(nms);
         Schematic.init(nms);
 
         /* Load arenas */
@@ -137,25 +139,25 @@ public class Main extends JavaPlugin {
         return ARENAS;
     }
 
-    private static class API extends SBPractice {
+    private static class API extends SBPracticeAPI {
         @Override
         public JavaPlugin getPlugin() {
-            return Main.getPlugin();
+            return SBPractice.getPlugin();
         }
 
         @Override
         public Database getDatabase() {
-            return Main.getRemoteDatabase();
+            return SBPractice.getRemoteDatabase();
         }
 
         @Override
         public NMS getNms() {
-            return Main.getNms();
+            return SBPractice.getNms();
         }
 
         @Override
         public List<Arena> getArenas() {
-            return Main.getArenas();
+            return SBPractice.getArenas();
         }
     }
 }

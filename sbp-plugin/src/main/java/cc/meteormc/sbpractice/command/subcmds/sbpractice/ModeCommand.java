@@ -1,6 +1,7 @@
 package cc.meteormc.sbpractice.command.subcmds.sbpractice;
 
 import cc.meteormc.sbpractice.api.Island;
+import cc.meteormc.sbpractice.api.arena.BuildMode;
 import cc.meteormc.sbpractice.api.command.SubCommand;
 import cc.meteormc.sbpractice.api.storage.player.PlayerData;
 import cc.meteormc.sbpractice.config.Messages;
@@ -11,9 +12,9 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ViewBuildingCommand extends SubCommand {
-    public ViewBuildingCommand() {
-        super("view", "", 0);
+public class ModeCommand extends SubCommand {
+    public ModeCommand() {
+        super("mode", "", 0);
     }
 
     @Override
@@ -22,8 +23,19 @@ public class ViewBuildingCommand extends SubCommand {
             PlayerData.getData((Player) sender).ifPresent(data -> {
                 Island island = data.getIsland();
                 if (island.getOwner().equals(sender)) {
-                    island.viewBuilding();
-                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.VIEW_BUILDING.getMessage());
+                    BuildMode next = island.getMode().next();
+                    island.setMode(next);
+                    switch (next) {
+                        case DEFAULT:
+                            sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_DEFAULT.getMessage());
+                            break;
+                        case ONCE:
+                            sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_COUNTDOWN_ONCE.getMessage());
+                            break;
+                        case CONTINUOUS:
+                            sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_COUNTDOWN_CONTINUOUS.getMessage());
+                            break;
+                    }
                     XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play((Entity) sender);
                 } else {
                     sender.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
@@ -40,6 +52,6 @@ public class ViewBuildingCommand extends SubCommand {
 
     @Override
     public @Nullable String getCommandUsage(@NotNull CommandSender sender) {
-        return Messages.COMMAND_USAGE.getMessage().replace("%usage%", "/sbp view");
+        return Messages.COMMAND_USAGE.getMessage().replace("%usage%", "/sbp mode");
     }
 }

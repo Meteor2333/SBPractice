@@ -8,7 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 
-public abstract class SBPractice {
+public abstract class SBPracticeAPI {
     public abstract JavaPlugin getPlugin();
 
     public abstract Database getDatabase();
@@ -17,7 +17,7 @@ public abstract class SBPractice {
 
     public abstract List<Arena> getArenas();
 
-    public static SBPractice getInstance() {
-        return Bukkit.getServicesManager().getRegistration(SBPractice.class).getProvider();
+    public static SBPracticeAPI getInstance() {
+        return Bukkit.getServicesManager().getRegistration(SBPracticeAPI.class).getProvider();
     }
 }

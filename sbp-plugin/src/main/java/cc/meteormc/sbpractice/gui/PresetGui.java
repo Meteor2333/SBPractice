@@ -1,8 +1,11 @@
 package cc.meteormc.sbpractice.gui;
 
 import cc.meteormc.sbpractice.api.Island;
+import cc.meteormc.sbpractice.api.storage.player.PlayerData;
 import cc.meteormc.sbpractice.api.storage.preset.PresetData;
 import cc.meteormc.sbpractice.api.util.ItemBuilder;
+import cc.meteormc.sbpractice.arena.session.PresetBuildSession;
+import cc.meteormc.sbpractice.config.MainConfig;
 import cc.meteormc.sbpractice.config.Messages;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
@@ -14,10 +17,12 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class PresetGui extends PaginatedFastInv {
     private String filtered = null;
+    private final Player player;
     private final Island island;
     private final List<PresetData> presets;
 
@@ -28,16 +33,21 @@ public class PresetGui extends PaginatedFastInv {
             Character.UnicodeScript.HANGUL
     );
 
-    public PresetGui(Island island) {
+    public PresetGui(Player player, Island island) {
         super(54, Messages.GUI_PRESET_TITLE.getMessage());
+        this.player = player;
         this.island = island;
         this.presets = new ArrayList<>(island.getArena().getPresets());
+
         this.previousPageItem(
                 45,
                 new ItemBuilder(XMaterial.ARROW)
                         .setDisplayName(Messages.GUI_PREVIOUS_PAGE.getMessage())
                         .build()
         );
+
+        this.refreshFilter();
+
         this.setItem(
                 49,
                 new ItemBuilder(XMaterial.BARRIER)
@@ -45,13 +55,46 @@ public class PresetGui extends PaginatedFastInv {
                         .build(),
                 event -> event.getWhoClicked().closeInventory()
         );
+
+        this.setItem(
+                50,
+                new ItemBuilder(XMaterial.OAK_SIGN)
+                        .setDisplayName(Messages.GUI_PRESET_SAVE_NAME.getMessage())
+                        .setLore(Messages.GUI_PRESET_SAVE_LORE.getMessageList())
+                        .build(),
+                event -> {
+                    Player who = (Player) event.getWhoClicked();
+                    PlayerData.getData(who).ifPresent(data -> {
+                        int size = data.getPresets().getOrDefault(island.getArena(), Collections.emptyList()).size();
+                        if (size < MainConfig.MAX_PRESETS_LIMIT.getInt()) {
+                            new PresetBuildSession(this.island, false).start();
+                        } else {
+                            XSound.ENTITY_ENDERMAN_TELEPORT.play(who);
+                            who.sendMessage(Messages.PREFIX.getMessage() + Messages.PRESET_FULL.getMessage());
+                        }
+                    });
+                }
+        );
+
+        if (player.isOp()) {
+            this.setItem(
+                    51,
+                    new ItemBuilder(XMaterial.BOOK)
+                            .setDisplayName(Messages.GUI_PRESET_SAVE_GLOBAL_NAME.getMessage())
+                            .setLore(Messages.GUI_PRESET_SAVE_GLOBAL_LORE.getMessageList())
+                            .build(),
+                    event -> {
+                        new PresetBuildSession(this.island, true).start();
+                    }
+            );
+        }
+
         this.nextPageItem(
                 53,
                 new ItemBuilder(XMaterial.ARROW)
                         .setDisplayName(Messages.GUI_NEXT_PAGE.getMessage())
                         .build()
         );
-        this.refreshFilter();
     }
 
     private void refreshFilter() {
@@ -72,7 +115,6 @@ public class PresetGui extends PaginatedFastInv {
                         this.filtered = null;
                         this.refreshFilter();
                     } else {
-                        Player player = island.getOwner();
                         player.closeInventory();
                         SignGUI.builder()
                                 .setLine(1, "^^^^^")
@@ -89,42 +131,66 @@ public class PresetGui extends PaginatedFastInv {
                 }
         );
 
-        CompletableFuture.supplyAsync(() -> {
-            if (this.filtered != null) {
-                String query = this.filtered.toLowerCase(Locale.ROOT);
-                Map<PresetData, Integer> scores = new HashMap<>();
-                for (PresetData preset : this.presets) {
-                    String name = preset.getName().toLowerCase(Locale.ROOT);
-                    if (substringMatch(name, query)) {
-                        scores.put(preset, Integer.MAX_VALUE);
-                    } else if (abbreviationMatch(name, query)) {
-                        scores.put(preset, 1);
-                    } else {
-                        int dist = fuzzyMatch(name, query);
-                        if (dist <= 3) {
-                            scores.put(preset, -dist);
-                        }
-                    }
-                }
-
-                return scores.entrySet()
-                        .stream()
-                        .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                        .map(Map.Entry::getKey)
-                        .collect(Collectors.toList());
-            }
-            return this.presets;
-        }).thenAccept(result -> {
-            for (final PresetData preset : result) {
+        this.clearContent();
+        Consumer<List<PresetData>> action = presets -> {
+            for (final PresetData preset : presets) {
                 this.addContent(
                         buildPresetItem(preset),
                         event -> {
                             Player player = (Player) event.getWhoClicked();
-                            XSound.ENTITY_PLAYER_LEVELUP.play(player, 1L, 2L);
+                            player.closeInventory();
                             island.applyPreset(preset);
+                            XSound.ENTITY_PLAYER_LEVELUP.play(player, 1L, 2L);
+                            player.sendMessage(Messages.PREFIX.getMessage() + Messages.PRESET_APPLIED.getMessage().replace("%preset%", preset.getName()));
                         }
                 );
             }
+        };
+
+        PlayerData.getData(player)
+                .map(PlayerData::getPresets)
+                .map(presets -> presets.get(island.getArena()))
+                .map(presets -> filterAndSort(presets, this.filtered).thenAccept(result -> {
+                    action.accept(result);
+                    if (result.isEmpty()) return;
+                    int empty = 9 - Math.max(1, result.size() % 9) + 9;
+                    for (int i = 0; i < empty; i++) {
+                        this.addContent((ItemStack) null);
+                    }
+                }))
+                .orElse(CompletableFuture.completedFuture(null))
+                .thenCompose(v -> filterAndSort(this.presets, this.filtered))
+                .thenAccept(action)
+                .thenAccept(v -> this.openPage(1));
+    }
+
+    private static CompletableFuture<List<PresetData>> filterAndSort(List<PresetData> presets, String filtered) {
+        if (filtered == null) {
+            return CompletableFuture.completedFuture(presets);
+        }
+
+        return CompletableFuture.supplyAsync(() -> {
+            String query = filtered.toLowerCase(Locale.ROOT);
+            Map<PresetData, Integer> scores = new HashMap<>();
+            for (PresetData preset : presets) {
+                String name = preset.getName().toLowerCase(Locale.ROOT);
+                if (substringMatch(name, query)) {
+                    scores.put(preset, Integer.MAX_VALUE);
+                } else if (abbreviationMatch(name, query)) {
+                    scores.put(preset, 1);
+                } else {
+                    int dist = fuzzyMatch(name, query);
+                    if (dist <= 3) {
+                        scores.put(preset, -dist);
+                    }
+                }
+            }
+
+            return scores.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
         });
     }
 

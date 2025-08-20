@@ -13,8 +13,8 @@ public class BlockListener implements Listener {
         Player player = event.getPlayer();
         PlayerData.getData(player).ifPresent(data -> {
             if (event instanceof BlockMultiPlaceEvent) {
-                BlockMultiPlaceEvent bmpEvent = (BlockMultiPlaceEvent) event;
-                for (BlockState state : bmpEvent.getReplacedBlockStates()) {
+                BlockMultiPlaceEvent omp = (BlockMultiPlaceEvent) event;
+                for (BlockState state : omp.getReplacedBlockStates()) {
                     if (!data.getIsland().getBuildArea().isInside(state.getLocation())) {
                         event.setCancelled(true);
                         state.update(true, false);

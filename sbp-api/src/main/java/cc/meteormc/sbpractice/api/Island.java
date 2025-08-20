@@ -29,7 +29,9 @@ public interface Island {
 
     void setStartCountdown(boolean start);
 
-    BuildMode getBuildMode();
+    BuildMode getMode();
+
+    void setMode(BuildMode mode);
 
     SignGroup getSigns();
 
@@ -53,19 +55,17 @@ public interface Island {
 
     void refreshSigns();
 
-    void adaptGround();
+    void ground();
 
-    void cachingBuilding();
+    void record();
 
-    void clearBuilding();
+    void clear();
 
-    BuildMode toggleBuildMode();
+    void preview();
 
-    void viewBuilding();
+    void start();
 
     void applyPreset(PresetData preset);
-
-    void activateCountdown();
 
     void remove();
 }

@@ -1,6 +1,5 @@
 package cc.meteormc.sbpractice.command.subcmds.sbpractice;
 
-import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.command.SubCommand;
 import cc.meteormc.sbpractice.api.storage.player.PlayerData;
 import cc.meteormc.sbpractice.config.Messages;
@@ -11,24 +10,23 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CachingBuildingCommand extends SubCommand {
-    public CachingBuildingCommand() {
-        super("caching", "", 0);
+public class HighjumpCommand extends SubCommand {
+    public HighjumpCommand() {
+        super("highjump", "", 0);
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (sender instanceof Player) {
             PlayerData.getData((Player) sender).ifPresent(data -> {
-                Island island = data.getIsland();
-                if (island.getOwner().equals(sender)) {
-                    island.cachingBuilding();
-                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.RECORD.getMessage());
-                    XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play((Entity) sender);
+                if (data.isEnableHighjump()) {
+                    data.setEnableHighjump(false);
+                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_HIGHJUMP_DISABLE.getMessage());
                 } else {
-                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
-                    XSound.ENTITY_VILLAGER_NO.play((Entity) sender);
+                    data.setEnableHighjump(true);
+                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_HIGHJUMP_ENABLE.getMessage());
                 }
+                XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play((Entity) sender);
             });
         }
     }
@@ -40,6 +38,6 @@ public class CachingBuildingCommand extends SubCommand {
 
     @Override
     public @Nullable String getCommandUsage(@NotNull CommandSender sender) {
-        return Messages.COMMAND_USAGE.getMessage().replace("%usage%", "/sbp caching");
+        return Messages.COMMAND_USAGE.getMessage().replace("%usage%", "/sbp highjump");
     }
 }

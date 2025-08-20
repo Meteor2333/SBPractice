@@ -1,6 +1,6 @@
 package cc.meteormc.sbpractice.command.maincmds;
 
-import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.SBPractice;
 import cc.meteormc.sbpractice.api.command.MainCommand;
 import cc.meteormc.sbpractice.command.subcmds.HelpCommand;
 import cc.meteormc.sbpractice.command.subcmds.multiplayer.*;
@@ -29,9 +29,9 @@ public class MultiplayerCommand extends MainCommand {
     @Override
     public void sendCommandHelp(@NotNull CommandSender sender) {
         sender.sendMessage(ChatColor.BLUE + "" + ChatColor.BOLD
-                + "þ " + ChatColor.GOLD + Main.getPlugin().getDescription().getName() + " "
-                + ChatColor.GRAY + "v" + Main.getPlugin().getDescription().getVersion() + " by "
-                + ChatColor.RED + Main.getPlugin().getDescription().getAuthors().get(0));
+                + "þ " + ChatColor.GOLD + SBPractice.getPlugin().getDescription().getName() + " "
+                + ChatColor.GRAY + "v" + SBPractice.getPlugin().getDescription().getVersion() + " by "
+                + ChatColor.RED + SBPractice.getPlugin().getDescription().getAuthors().get(0));
 
         sender.sendMessage("");
         Messages.MULTIPLAYER_COMMAND_HELP.getMessageList().forEach(sender::sendMessage);

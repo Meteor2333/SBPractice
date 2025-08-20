@@ -1,11 +1,12 @@
 package cc.meteormc.sbpractice.listener;
 
-import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.SBPractice;
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.arena.Arena;
 import cc.meteormc.sbpractice.api.arena.BuildMode;
 import cc.meteormc.sbpractice.api.event.PlayerPerfectRestoreEvent;
 import cc.meteormc.sbpractice.api.storage.player.PlayerData;
+import cc.meteormc.sbpractice.api.storage.preset.PresetData;
 import cc.meteormc.sbpractice.config.MainConfig;
 import cc.meteormc.sbpractice.config.Messages;
 import com.cryptomorin.xseries.XMaterial;
@@ -22,16 +23,47 @@ import org.bukkit.event.player.*;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class PlayerListener implements Listener {
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
+    public void onPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
+        UUID uuid = event.getUniqueId();
+        PlayerData data = new PlayerData(uuid, SBPractice.getRemoteDatabase().getPlayerStats(uuid));
+        data.register();
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Arena arena : SBPractice.getArenas()) {
+                    File presetsDir = new File(arena.getPresetsDir(), uuid.toString());
+                    if (!presetsDir.exists()) continue;
+                    if (!presetsDir.isDirectory()) continue;
 
+                    File[] presetFiles = presetsDir.listFiles((dir, name) -> name.endsWith(".preset"));
+                    if (presetFiles != null) {
+                        data.getPresets().put(
+                                arena,
+                                Arrays.stream(presetFiles)
+                                        .map(PresetData::load)
+                                        .collect(Collectors.toList())
+                        );
+                    }
+                }
+            }
+        }.runTaskAsynchronously(SBPractice.getPlugin());
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
         event.setJoinMessage(null);
-        if (Main.getArenas().isEmpty()) {
+        Player player = event.getPlayer();
+        if (SBPractice.getArenas().isEmpty()) {
             player.sendMessage(Messages.PREFIX.getMessage() + ChatColor.RED + "The plugin is not set");
             if (player.hasPermission("sbp.setup")) {
                 player.setGameMode(GameMode.CREATIVE);
@@ -39,15 +71,11 @@ public class PlayerListener implements Listener {
                 player.sendMessage(Messages.PREFIX.getMessage() + ChatColor.YELLOW + "Please enter '/sbp setup <arenaName>' to setup a arena");
             }
         } else {
-            PlayerData data = new PlayerData(player, Main.getRemoteDatabase().getPlayerStats(player.getUniqueId()));
             try {
-                data.register();
-                Main.getArenas().get(0).createIsland(player);
-            } catch (Throwable e) {
-                data.unregister();
+                SBPractice.getArenas().get(0).createIsland(player);
+            } catch (RuntimeException e) {
                 player.kickPlayer(e.toString());
-                e.printStackTrace();
-                Main.getPlugin().getLogger().severe("Failed to create island for player " + player.getName() + ".");
+                SBPractice.getPlugin().getLogger().log(Level.SEVERE, "Failed to create island for player " + player.getName() + ".", e);
             }
         }
     }
@@ -63,9 +91,9 @@ public class PlayerListener implements Listener {
                 island.getOwner().sendMessage(Messages.PREFIX.getMessage() + Messages.LEAVE_PASSIVE.getMessage().replace("%player%", player.getName()));
             }
             data.unregister();
-            Main.getRemoteDatabase().setPlayerStats(data.getStats());
+            SBPractice.getRemoteDatabase().setPlayerStats(data.getStats());
         });
-        Main.getNms().fixOtherPlayerTab(player);
+        SBPractice.getNms().fixOtherPlayerTab(player);
     }
 
     @EventHandler
@@ -78,25 +106,25 @@ public class PlayerListener implements Listener {
             else if (block != null && block.getState() instanceof Sign && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 if (island.getSigns().getGround().equals(block.getLocation())) {
                     XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                    island.adaptGround();
+                    island.ground();
                     player.sendMessage(Messages.PREFIX.getMessage() + Messages.GROUND.getMessage());
                 }
                 if (island.getSigns().getRecord().equals(block.getLocation())) {
                     XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
                     if (island.getOwner().equals(player)) {
-                        island.cachingBuilding();
+                        island.record();
                         player.sendMessage(Messages.PREFIX.getMessage() + Messages.RECORD.getMessage());
                     } else player.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
                 }
                 if (island.getSigns().getClear().equals(block.getLocation())) {
                     XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                    island.clearBuilding();
+                    island.clear();
                     player.sendMessage(Messages.PREFIX.getMessage() + Messages.CLEAR.getMessage());
                 }
                 if (island.getSigns().getArena().equals(block.getLocation())) {
                     XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
 
-                    List<Arena> arenas = Main.getArenas();
+                    List<Arena> arenas = SBPractice.getArenas();
                     if (arenas.contains(island.getArena())) {
                         int index = arenas.indexOf(island.getArena()) + 1;
                         if (index >= arenas.size()) index = 0;
@@ -112,14 +140,16 @@ public class PlayerListener implements Listener {
                 if (island.getSigns().getMode().equals(block.getLocation())) {
                     XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
                     if (island.getOwner().equals(player)) {
-                        switch (island.toggleBuildMode()) {
+                        BuildMode next = island.getMode().next();
+                        island.setMode(next);
+                        switch (next) {
                             case DEFAULT:
                                 player.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_DEFAULT.getMessage());
                                 break;
-                            case COUNTDOWN_ONCE:
+                            case ONCE:
                                 player.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_COUNTDOWN_ONCE.getMessage());
                                 break;
-                            case COUNTDOWN_CONTINUOUS:
+                            case CONTINUOUS:
                                 player.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_COUNTDOWN_CONTINUOUS.getMessage());
                                 break;
                         }
@@ -131,11 +161,11 @@ public class PlayerListener implements Listener {
                 }
                 if (island.getSigns().getStart().equals(block.getLocation())) {
                     XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                    switch (island.getBuildMode()) {
-                        case COUNTDOWN_ONCE:
-                            island.activateCountdown();
+                    switch (island.getMode()) {
+                        case ONCE:
+                            island.start();
                             break;
-                        case COUNTDOWN_CONTINUOUS:
+                        case CONTINUOUS:
                             if (island.isStartCountdown()) {
                                 island.setStartCountdown(false);
                                 player.sendMessage(Messages.PREFIX.getMessage() + Messages.COUNTDOWN_CONTINUOUS_DISABLE.getMessage());
@@ -143,7 +173,7 @@ public class PlayerListener implements Listener {
                                 island.setStartCountdown(true);
                                 player.sendMessage(Messages.PREFIX.getMessage() + Messages.COUNTDOWN_CONTINUOUS_ENABLE.getMessage());
                             }
-                            island.activateCountdown();
+                            island.start();
                             break;
                         default:
                             player.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
@@ -153,8 +183,8 @@ public class PlayerListener implements Listener {
                 if (island.getSigns().getPreview().equals(block.getLocation())) {
                     XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
                     if (island.getOwner().equals(player)) {
-                        island.viewBuilding();
-                        player.sendMessage(Messages.PREFIX.getMessage() + Messages.VIEW_BUILDING.getMessage());
+                        island.preview();
+                        player.sendMessage(Messages.PREFIX.getMessage() + Messages.PREVIEW.getMessage());
                     } else player.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
                 }
                 island.refreshSigns();
@@ -179,15 +209,15 @@ public class PlayerListener implements Listener {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        boolean isFull = true, isPerfect = true;
+                        boolean isEmpty = true, isPerfect = true;
                         for (Vector vector : island.getBuildArea().getVectors()) {
-                            BlockState state = Main.getNms().getBlockState(vector.toLocation(island.getBuildArea().getWorld()));
+                            BlockState state = SBPractice.getNms().getBlockState(vector.toLocation(island.getArena().getWorld()));
                             Optional<BlockState> optionalState = Optional.ofNullable(island.getRecordedBlocks().getOrDefault(state.getLocation(), null));
-                            if (state.getType() != Material.AIR) isFull = false;
-                            if (!optionalState.isPresent() || !Main.getNms().isSimilarBlockState(state, optionalState.get())) isPerfect = false;
+                            if (state.getType() != Material.AIR) isEmpty = false;
+                            if (!optionalState.isPresent() || !SBPractice.getNms().isSimilarBlockState(state, optionalState.get())) isPerfect = false;
                         }
 
-                        if (!isFull) {
+                        if (!isEmpty) {
                             if (island.isStarted()) {
                                 if (isPerfect) {
                                     PlayerPerfectRestoreEvent call = new PlayerPerfectRestoreEvent(island);
@@ -201,22 +231,32 @@ public class PlayerListener implements Listener {
                                         if (island.getArea().isInsideIgnoreYaxis(p.getLocation())) {
                                             XSound.ENTITY_PLAYER_LEVELUP.play(p);
                                             XSound.BLOCK_NOTE_BLOCK_PLING.play(p);
-                                            Main.getNms().sendTitle(p, Messages.PERFECT_MATCH_TITLE.getMessage(), Messages.PERFECT_MATCH_SUBTITLE.getMessage().replace("%time%", island.getFormattedTime()), 5, 30, 5);
+                                            SBPractice.getNms().sendTitle(
+                                                    p,
+                                                    Messages.PERFECT_MATCH_TITLE.getMessage(),
+                                                    Messages.PERFECT_MATCH_SUBTITLE.getMessage().replace(
+                                                            "%time%",
+                                                            island.getFormattedTime()
+                                                    ),
+                                                    5, 30, 5
+                                            );
                                         }
                                     }
                                     data.getStats().setRestores(data.getStats().getRestores() + 1);
 
-                                    if (island.getBuildMode() == BuildMode.COUNTDOWN_CONTINUOUS && island.isStartCountdown()) {
-                                        Bukkit.getScheduler().runTaskLater(Main.getPlugin(), island::activateCountdown, 20L);
+                                    if (island.getMode() == BuildMode.CONTINUOUS && island.isStartCountdown()) {
+                                        Bukkit.getScheduler().runTaskLater(SBPractice.getPlugin(), island::start, 20L);
                                     }
                                 }
-                            } else island.startTimer();
+                            } else if (island.getMode() == BuildMode.DEFAULT) {
+                                island.startTimer();
+                            }
                         } else {
                             island.stopTimer();
                             island.setCanStart(true);
                         }
                     }
-                }.runTaskLater(Main.getPlugin(), 3L);
+                }.runTaskLater(SBPractice.getPlugin(), 3L);
             }
 
             player.updateInventory();
@@ -274,7 +314,7 @@ public class PlayerListener implements Listener {
                                 this.cancel();
                             } else player.setAllowFlight(false);
                         }
-                    }.runTaskTimer(Main.getPlugin(), 3L, 0L);
+                    }.runTaskTimer(SBPractice.getPlugin(), 3L, 0L);
                 }
             }
         });
@@ -296,12 +336,12 @@ public class PlayerListener implements Listener {
             if (island.getArea().isInsideIgnoreYaxis(player.getLocation())) {
                 if (data.isHidden()) {
                     data.setHidden(false);
-                    Main.getNms().showPlayer(player);
+                    SBPractice.getNms().showPlayer(player);
                 }
             } else {
                 if (!data.isHidden()) {
                     data.setHidden(true);
-                    Main.getNms().hidePlayer(player);
+                    SBPractice.getNms().hidePlayer(player);
                 }
             }
         });

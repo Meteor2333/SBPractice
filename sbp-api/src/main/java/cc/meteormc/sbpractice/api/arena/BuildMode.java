@@ -2,8 +2,8 @@ package cc.meteormc.sbpractice.api.arena;
 
 public enum BuildMode {
     DEFAULT,
-    COUNTDOWN_ONCE,
-    COUNTDOWN_CONTINUOUS;
+    ONCE,
+    CONTINUOUS;
 
     public BuildMode next() {
         int index = this.ordinal() + 1;
