@@ -1,62 +1,60 @@
 package cc.meteormc.sbpractice.listener;
 
-import cc.meteormc.sbpractice.SBPractice;
+import cc.meteormc.sbpractice.Main;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.weather.WeatherChangeEvent;
 
 public class WorldListener implements Listener {
     @EventHandler(ignoreCancelled = true)
-    public void onCreatureSpawn(CreatureSpawnEvent event) {
-        if (event.getEntity() instanceof Player) return;
+    public void onSpawn(EntitySpawnEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onEntitySpawn(EntitySpawnEvent event) {
-        if (event.getEntity() instanceof Player) return;
+    public void onChange(FoodLevelChangeEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+    public void onChange(WeatherChangeEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onWeatherChange(WeatherChangeEvent event) {
+    public void onChange(EntityChangeBlockEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onEntityExplode(EntityExplodeEvent event) {
+    public void onExplode(BlockExplodeEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onExplosionPrime(ExplosionPrimeEvent event) {
+    public void onExplode(EntityExplodeEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onEntityDamage(EntityDamageEvent event) {
+    public void onPrime(ExplosionPrimeEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onEntityChangeBlock(EntityChangeBlockEvent event) {
+    public void onDamage(EntityDamageEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onProjectileLaunch(ProjectileLaunchEvent event) {
+    public void onLaunch(ProjectileLaunchEvent event) {
         Entity entity = event.getEntity();
         if (entity instanceof Arrow) event.setCancelled(true);
-        if (entity instanceof Snowball || entity instanceof Egg) {
-            Bukkit.getScheduler().runTaskLater(SBPractice.getPlugin(), entity::remove, 3L);
-        }
+        Bukkit.getScheduler().runTaskLater(Main.getPlugin(), entity::remove, 3L);
     }
 }

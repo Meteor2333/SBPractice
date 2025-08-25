@@ -8,9 +8,12 @@ import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
 import org.bukkit.generator.ChunkGenerator;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Random;
 
 @Getter
@@ -26,26 +29,29 @@ public class WorldManager {
     public void load(boolean isVoid) {
         World oldWorld = Bukkit.getWorld(this.name);
         if (oldWorld != null) {
-            try {
-                Bukkit.unloadWorld(oldWorld, false);
-                FileUtils.deleteDirectory(oldWorld.getWorldFolder());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            Bukkit.unloadWorld(oldWorld, false);
         }
 
-        WorldCreator wc = new WorldCreator(this.name);
-        wc.environment(this.environment).type(this.type).generateStructures(!isVoid);
-        if (isVoid) {
-            wc.generator(new ChunkGenerator() {
-                @Override
-                public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid b) {
-                    return super.createChunkData(world);
-                }
-            });
+        File file = new File(Bukkit.getWorldContainer(), this.name);
+        try {
+            FileUtils.deleteDirectory(file);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
 
-        this.world = wc.createWorld();
+        this.world = new WorldCreator(this.name)
+                .environment(this.environment)
+                .type(this.type)
+                .generateStructures(!isVoid)
+                .generator(
+                        isVoid ? new ChunkGenerator() {
+                            @Override
+                            public @NotNull ChunkData generateChunkData(@NotNull World world, @NotNull Random random, int x, int z, @NotNull ChunkGenerator.BiomeGrid biome) {
+                                return this.createChunkData(world);
+                            }
+                        } : null
+                )
+                .createWorld();
         this.world.save();
     }
 

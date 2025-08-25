@@ -1,8 +1,8 @@
 package cc.meteormc.sbpractice.database;
 
-import cc.meteormc.sbpractice.SBPractice;
+import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.storage.Database;
-import cc.meteormc.sbpractice.api.storage.player.PlayerStats;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import cc.meteormc.sbpractice.config.MainConfig;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -16,16 +16,16 @@ public class MySQL implements Database {
     private final HikariDataSource dataSource;
 
     public MySQL() {
-        String host = MainConfig.MYSQL_HOST.getString();
-        String database = MainConfig.MYSQL_DATABASE.getString();
-        String username = MainConfig.MYSQL_USER.getString();
-        String password = MainConfig.MYSQL_PASSWORD.getString();
-        int port = MainConfig.MYSQL_PORT.getInt();
-        boolean ssl = MainConfig.MYSQL_SSL.getBoolean();
+        String host = MainConfig.MYSQL.HOST.resolve();
+        String database = MainConfig.MYSQL.DATABASE.resolve();
+        String username = MainConfig.MYSQL.USER.getOrDefault();
+        String password = MainConfig.MYSQL.PASSWORD.getOrDefault();
+        int port = MainConfig.MYSQL.PORT.resolve();
+        boolean ssl = MainConfig.MYSQL.USESSL.resolve();
 
         final long time = System.currentTimeMillis();
         HikariConfig hikariConfig = new HikariConfig();
-        hikariConfig.setPoolName("SBPractice");
+        hikariConfig.setPoolName("SBPracticePool");
         hikariConfig.setMaximumPoolSize(10);
         hikariConfig.setMaxLifetime(1800000L);
         hikariConfig.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database);
@@ -43,7 +43,7 @@ public class MySQL implements Database {
         hikariConfig.addDataSourceProperty("socketTimeout", String.valueOf(TimeUnit.SECONDS.toMillis(30)));
         this.dataSource = new HikariDataSource(hikariConfig);
         if (System.currentTimeMillis() - time >= 5000) {
-            SBPractice.getPlugin().getLogger().warning("It took " + (System.currentTimeMillis() - time) / 1000 + " ms to establish a database connection! Using this remote connection is not recommended!");
+            Main.getPlugin().getLogger().warning("It took " + (System.currentTimeMillis() - time) / 1000 + " ms to establish a database connection! Using this remote connection is not recommended!");
         }
     }
 
@@ -56,31 +56,31 @@ public class MySQL implements Database {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            SBPractice.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
+            Main.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
         }
     }
 
     @Override
-    public PlayerStats getPlayerStats(UUID uuid) {
+    public PlayerData.PlayerStats getPlayerStats(UUID uuid) {
         try (Connection connection = this.dataSource.getConnection()) {
             String sql = "SELECT restores FROM stats WHERE uuid = ?;";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, uuid.toString());
                 try (ResultSet result = statement.executeQuery()) {
                     if (result.next()) {
-                        return new PlayerStats(uuid, result.getInt(1));
+                        return new PlayerData.PlayerStats(uuid, result.getInt(1));
                     }
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            SBPractice.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
+            Main.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
         }
-        return new PlayerStats(uuid, 0);
+        return new PlayerData.PlayerStats(uuid, 0);
     }
 
     @Override
-    public void setPlayerStats(PlayerStats playerStats) {
+    public void setPlayerStats(PlayerData.PlayerStats playerStats) {
         try (Connection connection = this.dataSource.getConnection()) {
             if (hasData(playerStats.getUuid())) {
                 String sql = "UPDATE stats SET restores=? WHERE uuid = ?;";
@@ -99,7 +99,7 @@ public class MySQL implements Database {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            SBPractice.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
+            Main.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
         }
     }
 
@@ -114,7 +114,7 @@ public class MySQL implements Database {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            SBPractice.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
+            Main.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
         }
         return false;
     }

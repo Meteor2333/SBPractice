@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 @Getter
 @RequiredArgsConstructor
@@ -18,8 +19,8 @@ public class PlayerPerfectRestoreEvent extends Event {
     private static final HandlerList HANDLERS = new HandlerList();
 
     @Override
-    public HandlerList getHandlers() {
-        return HANDLERS;
+    public @NotNull HandlerList getHandlers() {
+        return getHandlerList();
     }
 
     public static HandlerList getHandlerList() {

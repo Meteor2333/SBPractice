@@ -9,7 +9,8 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 @RequiredArgsConstructor
 public abstract class SubCommand {
-    private final String name, permission;
+    private final String name;
+    private final String permission;
     private final int minArgs;
 
     public abstract void execute(CommandSender sender, String[] args);

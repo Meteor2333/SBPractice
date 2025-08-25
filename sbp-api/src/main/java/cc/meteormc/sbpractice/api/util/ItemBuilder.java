@@ -1,7 +1,7 @@
 package cc.meteormc.sbpractice.api.util;
 
 
-import cc.meteormc.sbpractice.api.version.NMS;
+import cc.meteormc.sbpractice.api.SBPracticeAPI;
 import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
@@ -15,8 +15,6 @@ public class ItemBuilder {
     private final ItemStack item;
     private final ItemMeta meta;
 
-    private static NMS nms;
-
     public ItemBuilder(ItemStack is) {
         this.item = is.clone();
         this.meta = item.getItemMeta();
@@ -26,17 +24,13 @@ public class ItemBuilder {
         this(Objects.requireNonNull(material.parseItem()));
     }
 
-    public static void init(NMS nms) {
-        ItemBuilder.nms = nms;
-    }
-
     public ItemStack build() {
         this.item.setItemMeta(this.meta);
         return this.item.clone();
     }
 
     public ItemBuilder setType(XMaterial material) {
-        this.item.setType(material.parseMaterial());
+        this.item.setType(material.get());
         return this;
     }
 
@@ -46,13 +40,12 @@ public class ItemBuilder {
     }
 
     public ItemBuilder setDisplayName(String name) {
-        if (name != null) this.meta.setDisplayName(Utils.colorize(name));
-        else this.meta.setDisplayName(null);
+        this.meta.setDisplayName(name);
         return this;
     }
 
     public ItemBuilder setLore(List<String> lore) {
-        this.meta.setLore(Utils.colorize(lore));
+        this.meta.setLore(lore);
         return this;
     }
 
@@ -61,8 +54,8 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder setUnbreakable(boolean unbreakable) {
-        nms.setUnbreakable(this.meta);
+    public ItemBuilder setUnbreakable() {
+        SBPracticeAPI.getInstance().getNms().setItemUnbreakable(this.meta);
         return this;
     }
 
@@ -111,9 +104,8 @@ public class ItemBuilder {
     }
 
     public ItemBuilder addLore(String lore) {
-        List<String> list = this.meta.getLore();
-        if (list == null) list = new ArrayList<>();
-        list.add(Utils.colorize(lore));
+        List<String> list = Optional.ofNullable(this.meta.getLore()).orElse(new ArrayList<>());
+        list.add(lore);
         this.meta.setLore(list);
         return this;
     }

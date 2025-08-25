@@ -1,333 +1,137 @@
 package cc.meteormc.sbpractice.listener;
 
-import cc.meteormc.sbpractice.SBPractice;
+import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
-import cc.meteormc.sbpractice.api.arena.Arena;
 import cc.meteormc.sbpractice.api.arena.BuildMode;
 import cc.meteormc.sbpractice.api.event.PlayerPerfectRestoreEvent;
-import cc.meteormc.sbpractice.api.storage.player.PlayerData;
-import cc.meteormc.sbpractice.api.storage.preset.PresetData;
+import cc.meteormc.sbpractice.api.storage.data.BlockData;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.arena.operation.ClearOperation;
+import cc.meteormc.sbpractice.arena.operation.StartOperation;
 import cc.meteormc.sbpractice.config.MainConfig;
-import cc.meteormc.sbpractice.config.Messages;
+import cc.meteormc.sbpractice.config.Message;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
-import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Sign;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
-
 public class PlayerListener implements Listener {
     @EventHandler
-    public void onPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
-        UUID uuid = event.getUniqueId();
-        PlayerData data = new PlayerData(uuid, SBPractice.getRemoteDatabase().getPlayerStats(uuid));
-        data.register();
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Arena arena : SBPractice.getArenas()) {
-                    File presetsDir = new File(arena.getPresetsDir(), uuid.toString());
-                    if (!presetsDir.exists()) continue;
-                    if (!presetsDir.isDirectory()) continue;
-
-                    File[] presetFiles = presetsDir.listFiles((dir, name) -> name.endsWith(".preset"));
-                    if (presetFiles != null) {
-                        data.getPresets().put(
-                                arena,
-                                Arrays.stream(presetFiles)
-                                        .map(PresetData::load)
-                                        .collect(Collectors.toList())
-                        );
-                    }
-                }
-            }
-        }.runTaskAsynchronously(SBPractice.getPlugin());
-    }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        event.setJoinMessage(null);
+    public void onInteract(PlayerInteractEvent event) {
+        ItemStack item = event.getItem();
         Player player = event.getPlayer();
-        if (SBPractice.getArenas().isEmpty()) {
-            player.sendMessage(Messages.PREFIX.getMessage() + ChatColor.RED + "The plugin is not set");
-            if (player.hasPermission("sbp.setup")) {
-                player.setGameMode(GameMode.CREATIVE);
-                player.setFlying(true);
-                player.sendMessage(Messages.PREFIX.getMessage() + ChatColor.YELLOW + "Please enter '/sbp setup <arenaName>' to setup a arena");
-            }
-        } else {
-            try {
-                SBPractice.getArenas().get(0).createIsland(player);
-            } catch (RuntimeException e) {
-                player.kickPlayer(e.toString());
-                SBPractice.getPlugin().getLogger().log(Level.SEVERE, "Failed to create island for player " + player.getName() + ".", e);
-            }
-        }
-    }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
+        player.updateInventory();
         PlayerData.getData(player).ifPresent(data -> {
             Island island = data.getIsland();
-            if (island.getOwner().equals(player)) island.remove();
-            else {
-                island.removeGuest(player);
-                island.getOwner().sendMessage(Messages.PREFIX.getMessage() + Messages.LEAVE_PASSIVE.getMessage().replace("%player%", player.getName()));
-            }
-            data.unregister();
-            SBPractice.getRemoteDatabase().setPlayerStats(data.getStats());
-        });
-        SBPractice.getNms().fixOtherPlayerTab(player);
-    }
-
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        PlayerData.getData(player).ifPresent(data -> {
-            Island island = data.getIsland();
-            Block block = event.getClickedBlock();
-            if (data.isHidden()) event.setCancelled(true);
-            else if (block != null && block.getState() instanceof Sign && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                if (island.getSigns().getGround().equals(block.getLocation())) {
-                    XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                    island.ground();
-                    player.sendMessage(Messages.PREFIX.getMessage() + Messages.GROUND.getMessage());
-                }
-                if (island.getSigns().getRecord().equals(block.getLocation())) {
-                    XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                    if (island.getOwner().equals(player)) {
-                        island.record();
-                        player.sendMessage(Messages.PREFIX.getMessage() + Messages.RECORD.getMessage());
-                    } else player.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
-                }
-                if (island.getSigns().getClear().equals(block.getLocation())) {
-                    XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                    island.clear();
-                    player.sendMessage(Messages.PREFIX.getMessage() + Messages.CLEAR.getMessage());
-                }
-                if (island.getSigns().getArena().equals(block.getLocation())) {
-                    XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-
-                    List<Arena> arenas = SBPractice.getArenas();
-                    if (arenas.contains(island.getArena())) {
-                        int index = arenas.indexOf(island.getArena()) + 1;
-                        if (index >= arenas.size()) index = 0;
-
-                        if (island.getOwner().equals(player)) island.remove();
-                        else {
-                            island.removeGuest(player);
-                            island.getOwner().sendMessage(Messages.PREFIX.getMessage() + Messages.LEAVE_PASSIVE.getMessage().replace("%player%", player.getName()));
-                        }
-                        arenas.get(index).createIsland(player);
+            if (item != null) {
+                XMaterial material = XMaterial.matchXMaterial(item);
+                if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                    if (material == MainConfig.MATERIAL.CLEAR.resolve()) {
+                        island.executeOperation(new ClearOperation());
+                    } else if (material == MainConfig.MATERIAL.START.resolve()) {
+                        island.executeOperation(new StartOperation());
                     }
                 }
-                if (island.getSigns().getMode().equals(block.getLocation())) {
-                    XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                    if (island.getOwner().equals(player)) {
-                        BuildMode next = island.getMode().next();
-                        island.setMode(next);
-                        switch (next) {
-                            case DEFAULT:
-                                player.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_DEFAULT.getMessage());
-                                break;
-                            case ONCE:
-                                player.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_COUNTDOWN_ONCE.getMessage());
-                                break;
-                            case CONTINUOUS:
-                                player.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_COUNTDOWN_CONTINUOUS.getMessage());
-                                break;
-                        }
-                    } else player.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
+
+                if (MainConfig.MATERIAL.BLOCKED_ITEMS.contains(material)) {
+                    event.setCancelled(true);
                 }
-                if (island.getSigns().getPreset().equals(block.getLocation())) {
-                    XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                    Bukkit.dispatchCommand(player, "sbp preset");
-                }
-                if (island.getSigns().getStart().equals(block.getLocation())) {
-                    XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                    switch (island.getMode()) {
-                        case ONCE:
-                            island.start();
-                            break;
-                        case CONTINUOUS:
-                            if (island.isStartCountdown()) {
-                                island.setStartCountdown(false);
-                                player.sendMessage(Messages.PREFIX.getMessage() + Messages.COUNTDOWN_CONTINUOUS_DISABLE.getMessage());
-                            } else {
-                                island.setStartCountdown(true);
-                                player.sendMessage(Messages.PREFIX.getMessage() + Messages.COUNTDOWN_CONTINUOUS_ENABLE.getMessage());
+            }
+
+            //fixme: 这里延时3tick的本意是为了正确地判断多格方块
+            //       因为多格方块被放置时 会首先放置玩家点击的那个部分的方块 后续的tick才会放置其余部分
+            //       但当玩家建造速度过快时 会导致正在开始判断的时候已经不是正确的状态了（简单来说就是要想其他办法判断多格方块）
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    boolean isEmpty = true, isPerfect = true;
+                    for (Vector vector : island.getBuildArea().getVectors()) {
+                        Location location = vector.toLocation(island.getArena().getWorld());
+                        BlockData currentBlock = Main.getNms().getBlockDataAt(location);
+
+                        if (isEmpty) {
+                            if (currentBlock.getType() != Material.AIR) {
+                                isEmpty = false;
                             }
-                            island.start();
-                            break;
-                        default:
-                            player.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
-                            break;
-                    }
-                }
-                if (island.getSigns().getPreview().equals(block.getLocation())) {
-                    XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                    if (island.getOwner().equals(player)) {
-                        island.preview();
-                        player.sendMessage(Messages.PREFIX.getMessage() + Messages.PREVIEW.getMessage());
-                    } else player.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
-                }
-                island.refreshSigns();
-            } else {
-                if (event.getItem() != null) {
-                    XMaterial material = XMaterial.matchXMaterial(event.getItem());
-                    if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                        if (material == MainConfig.CLEAR_ITEM.getMaterial().orElse(null)) {
-                            Bukkit.dispatchCommand(player, "sbp clear");
-                        } else if (material == MainConfig.START_ITEM.getMaterial().orElse(null)) {
-                            Bukkit.dispatchCommand(player, "sbp start");
+                        }
+
+                        if (isPerfect) {
+                            BlockData recordedBlock = island.getRecordedBlocks().get(location);
+                            if (recordedBlock == null) {
+                                isPerfect = false;
+                                continue;
+                            }
+
+                            if (!Main.getNms().isSimilarBlock(currentBlock, recordedBlock)) {
+                                isPerfect = false;
+                            }
                         }
                     }
 
-                    for (Object item : MainConfig.BLOCKLIST_ITEMS.getList()) {
-                        if (item instanceof String) {
-                            if (material.name().contains((String) item)) event.setCancelled(true);
-                        }
-                    }
-                }
+                    if (!isEmpty) {
+                        if (island.isStarted()) {
+                            if (isPerfect) {
+                                PlayerPerfectRestoreEvent call = new PlayerPerfectRestoreEvent(island);
+                                Bukkit.getPluginManager().callEvent(call);
+                                if (call.isCancelled()) return;
 
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        boolean isEmpty = true, isPerfect = true;
-                        for (Vector vector : island.getBuildArea().getVectors()) {
-                            BlockState state = SBPractice.getNms().getBlockState(vector.toLocation(island.getArena().getWorld()));
-                            Optional<BlockState> optionalState = Optional.ofNullable(island.getRecordedBlocks().getOrDefault(state.getLocation(), null));
-                            if (state.getType() != Material.AIR) isEmpty = false;
-                            if (!optionalState.isPresent() || !SBPractice.getNms().isSimilarBlockState(state, optionalState.get())) isPerfect = false;
-                        }
+                                island.setCanStart(false);
+                                island.stopTimer();
 
-                        if (!isEmpty) {
-                            if (island.isStarted()) {
-                                if (isPerfect) {
-                                    PlayerPerfectRestoreEvent call = new PlayerPerfectRestoreEvent(island);
-                                    Bukkit.getPluginManager().callEvent(call);
-                                    if (call.isCancelled()) return;
-
-                                    island.setCanStart(false);
-                                    island.stopTimer();
-
-                                    for (Player p : island.getSpawnPoint().getWorld().getPlayers()) {
-                                        if (island.getArea().isInsideIgnoreYaxis(p.getLocation())) {
-                                            XSound.ENTITY_PLAYER_LEVELUP.play(p);
-                                            XSound.BLOCK_NOTE_BLOCK_PLING.play(p);
-                                            SBPractice.getNms().sendTitle(
-                                                    p,
-                                                    Messages.PERFECT_MATCH_TITLE.getMessage(),
-                                                    Messages.PERFECT_MATCH_SUBTITLE.getMessage().replace(
-                                                            "%time%",
-                                                            island.getFormattedTime()
-                                                    ),
-                                                    5, 30, 5
-                                            );
-                                        }
-                                    }
-                                    data.getStats().setRestores(data.getStats().getRestores() + 1);
-
-                                    if (island.getMode() == BuildMode.CONTINUOUS && island.isStartCountdown()) {
-                                        Bukkit.getScheduler().runTaskLater(SBPractice.getPlugin(), island::start, 20L);
-                                    }
+                                data.getStats().setRestores(data.getStats().getRestores() + 1);
+                                for (Player player : island.getNearbyPlayers()) {
+                                    XSound.ENTITY_PLAYER_LEVELUP.play(player);
+                                    XSound.BLOCK_NOTE_BLOCK_PLING.play(player);
+                                    Message.TITLE.PERFECT_MATCH.send(player, island.getFormattedTime());
                                 }
-                            } else if (island.getMode() == BuildMode.DEFAULT) {
-                                island.startTimer();
+
+                                if (island.getMode() != BuildMode.CONTINUOUS || !island.isActive()) return;
+                                Bukkit.getScheduler().runTaskLater(Main.getPlugin(), () -> {
+                                    StartOperation.refreshCountdown(island);
+                                }, 20L);
                             }
-                        } else {
-                            island.stopTimer();
-                            island.setCanStart(true);
+                        } else if (island.getMode() == BuildMode.DEFAULT) {
+                            island.startTimer();
                         }
+                    } else {
+                        island.stopTimer();
+                        island.setCanStart(true);
                     }
-                }.runTaskLater(SBPractice.getPlugin(), 3L);
-            }
-
-            player.updateInventory();
-        });
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerMove(PlayerMoveEvent event) {
-        Player player = event.getPlayer();
-        PlayerData.getData(player).ifPresent(data -> {
-            Island island = data.getIsland();
-            if (event.getTo().getY() < island.getArea().getYMin() - 10) {
-                player.teleport(island.getSpawnPoint());
-            }
-            this.refreshVisibility(player);
-        });
-    }
-
-    @EventHandler
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-        Player player = event.getPlayer();
-        PlayerData.getData(player).ifPresent(data -> {
-            Island island = data.getIsland();
-            if (event.getTo().getY() < island.getArea().getYMin() - 10) {
-                player.teleport(island.getSpawnPoint());
-            }
-            this.refreshVisibility(player);
-        });
-    }
-
-    @EventHandler
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-        this.refreshVisibility(event.getPlayer());
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
-        if (!event.isFlying()) return;
-        Player player = event.getPlayer();
-        Location location = player.getLocation();
-        PlayerData.getData(player).ifPresent(data -> {
-            Island island = data.getIsland();
-            if (island.getBuildArea().clone().outset(1).isInside(location)) {
-                event.setCancelled(true);
-                if (System.currentTimeMillis() - data.getHighjumpCooldown() >= 1250) {
-                    player.setAllowFlight(false);
-                    data.setHighjumpCooldown(System.currentTimeMillis());
-                    XSound.ENTITY_GHAST_SHOOT.play(player);
-                    player.setVelocity(new Vector(0D, 1.15D, 0D));
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            if (player.isOnGround()) {
-                                player.setAllowFlight(true);
-                                this.cancel();
-                            } else player.setAllowFlight(false);
-                        }
-                    }.runTaskTimer(SBPractice.getPlugin(), 3L, 0L);
                 }
-            }
+            }.runTaskLater(Main.getPlugin(), 3L);
         });
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerBedEnter(PlayerBedEnterEvent event) {
-        event.setCancelled(true);
+    @EventHandler(priority = EventPriority.LOW)
+    public void onMove(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        PlayerData.getData(player).ifPresent(data -> {
+            Island island = data.getIsland();
+            if (event.getTo().getY() < island.getArea().getYMin() - 10) {
+                player.teleport(island.getSpawnPoint());
+            }
+        });
+        this.refreshVisibility(player);
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerEditBook(PlayerEditBookEvent event) {
-        event.setCancelled(true);
+    @EventHandler(priority = EventPriority.LOW)
+    public void onTeleport(PlayerTeleportEvent event) {
+        this.onMove(event);
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
+    public void onRespawn(PlayerRespawnEvent event) {
+        this.refreshVisibility(event.getPlayer());
     }
 
     private void refreshVisibility(Player player) {
@@ -336,14 +140,24 @@ public class PlayerListener implements Listener {
             if (island.getArea().isInsideIgnoreYaxis(player.getLocation())) {
                 if (data.isHidden()) {
                     data.setHidden(false);
-                    SBPractice.getNms().showPlayer(player);
+                    Main.getNms().showPlayer(player);
                 }
             } else {
                 if (!data.isHidden()) {
                     data.setHidden(true);
-                    SBPractice.getNms().hidePlayer(player);
+                    Main.getNms().hidePlayer(player);
                 }
             }
         });
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBed(PlayerBedEnterEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEditBook(PlayerEditBookEvent event) {
+        event.setCancelled(true);
     }
 }

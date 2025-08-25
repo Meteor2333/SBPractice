@@ -1,8 +1,8 @@
 package cc.meteormc.sbpractice.command.subcmds.sbpractice;
 
 import cc.meteormc.sbpractice.api.command.SubCommand;
-import cc.meteormc.sbpractice.api.storage.player.PlayerData;
-import cc.meteormc.sbpractice.config.Messages;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.config.Message;
 import com.cryptomorin.xseries.XSound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -21,10 +21,10 @@ public class HighjumpCommand extends SubCommand {
             PlayerData.getData((Player) sender).ifPresent(data -> {
                 if (data.isEnableHighjump()) {
                     data.setEnableHighjump(false);
-                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_HIGHJUMP_DISABLE.getMessage());
+                    Message.OPERATION.HIGHJUMP.DISABLE.sendTo(sender);
                 } else {
                     data.setEnableHighjump(true);
-                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_HIGHJUMP_ENABLE.getMessage());
+                    Message.OPERATION.HIGHJUMP.ENABLE.sendTo(sender);
                 }
                 XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play((Entity) sender);
             });
@@ -33,11 +33,11 @@ public class HighjumpCommand extends SubCommand {
 
     @Override
     public void onNoPermission(@NotNull CommandSender sender) {
-        sender.sendMessage(Messages.NO_PERMISSION.getMessage());
+        Message.COMMAND.NO_PERMISSION.sendTo(sender);
     }
 
     @Override
     public @Nullable String getCommandUsage(@NotNull CommandSender sender) {
-        return Messages.COMMAND_USAGE.getMessage().replace("%usage%", "/sbp highjump");
+        return Message.COMMAND.USAGE.parseLine(sender, "/sbp highjump");
     }
 }

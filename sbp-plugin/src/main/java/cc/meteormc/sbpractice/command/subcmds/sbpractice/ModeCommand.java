@@ -1,10 +1,10 @@
 package cc.meteormc.sbpractice.command.subcmds.sbpractice;
 
 import cc.meteormc.sbpractice.api.Island;
-import cc.meteormc.sbpractice.api.arena.BuildMode;
 import cc.meteormc.sbpractice.api.command.SubCommand;
-import cc.meteormc.sbpractice.api.storage.player.PlayerData;
-import cc.meteormc.sbpractice.config.Messages;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.arena.operation.ModeOperation;
+import cc.meteormc.sbpractice.config.Message;
 import com.cryptomorin.xseries.XSound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -23,22 +23,10 @@ public class ModeCommand extends SubCommand {
             PlayerData.getData((Player) sender).ifPresent(data -> {
                 Island island = data.getIsland();
                 if (island.getOwner().equals(sender)) {
-                    BuildMode next = island.getMode().next();
-                    island.setMode(next);
-                    switch (next) {
-                        case DEFAULT:
-                            sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_DEFAULT.getMessage());
-                            break;
-                        case ONCE:
-                            sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_COUNTDOWN_ONCE.getMessage());
-                            break;
-                        case CONTINUOUS:
-                            sender.sendMessage(Messages.PREFIX.getMessage() + Messages.TOGGLE_BUILD_MODE_COUNTDOWN_CONTINUOUS.getMessage());
-                            break;
-                    }
+                    island.executeOperation(new ModeOperation());
                     XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play((Entity) sender);
                 } else {
-                    sender.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
+                    Message.BASIC.CANNOT_DO_THAT.sendTo(sender);
                     XSound.ENTITY_VILLAGER_NO.play((Entity) sender);
                 }
             });
@@ -47,11 +35,11 @@ public class ModeCommand extends SubCommand {
 
     @Override
     public void onNoPermission(@NotNull CommandSender sender) {
-        sender.sendMessage(Messages.NO_PERMISSION.getMessage());
+        Message.COMMAND.NO_PERMISSION.sendTo(sender);
     }
 
     @Override
     public @Nullable String getCommandUsage(@NotNull CommandSender sender) {
-        return Messages.COMMAND_USAGE.getMessage().replace("%usage%", "/sbp mode");
+        return Message.COMMAND.USAGE.parseLine(sender, "/sbp mode");
     }
 }

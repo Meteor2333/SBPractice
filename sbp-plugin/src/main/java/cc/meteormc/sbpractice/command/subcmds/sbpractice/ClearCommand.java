@@ -1,8 +1,9 @@
 package cc.meteormc.sbpractice.command.subcmds.sbpractice;
 
 import cc.meteormc.sbpractice.api.command.SubCommand;
-import cc.meteormc.sbpractice.api.storage.player.PlayerData;
-import cc.meteormc.sbpractice.config.Messages;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.arena.operation.ClearOperation;
+import cc.meteormc.sbpractice.config.Message;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -16,17 +17,19 @@ public class ClearCommand extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (sender instanceof Player) {
-            PlayerData.getData((Player) sender).ifPresent(data -> data.getIsland().clear());
+            PlayerData.getData((Player) sender).ifPresent(data -> {
+                data.getIsland().executeOperation(new ClearOperation());
+            });
         }
     }
 
     @Override
     public void onNoPermission(@NotNull CommandSender sender) {
-        sender.sendMessage(Messages.NO_PERMISSION.getMessage());
+        Message.COMMAND.NO_PERMISSION.sendTo(sender);
     }
 
     @Override
     public @Nullable String getCommandUsage(@NotNull CommandSender sender) {
-        return Messages.COMMAND_USAGE.getMessage().replace("%usage%", "/sbp clear");
+        return Message.COMMAND.USAGE.parseLine(sender, "/sbp clear");
     }
 }

@@ -1,13 +1,13 @@
 package cc.meteormc.sbpractice.api.storage;
 
-import cc.meteormc.sbpractice.api.storage.player.PlayerStats;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 
 import java.util.UUID;
 
 public interface Database {
     void initialize();
 
-    PlayerStats getPlayerStats(UUID uuid);
+    PlayerData.PlayerStats getPlayerStats(UUID uuid);
 
-    void setPlayerStats(PlayerStats playerStats);
+    void setPlayerStats(PlayerData.PlayerStats playerStats);
 }

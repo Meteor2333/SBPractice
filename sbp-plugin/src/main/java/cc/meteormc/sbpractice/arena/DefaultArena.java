@@ -1,33 +1,28 @@
 package cc.meteormc.sbpractice.arena;
 
+import cc.carm.lib.mineconfiguration.bukkit.MineConfiguration;
 import cc.meteormc.sbpractice.DefaultIsland;
-import cc.meteormc.sbpractice.SBPractice;
+import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.arena.Arena;
-import cc.meteormc.sbpractice.api.arena.exception.ArenaCreationException;
-import cc.meteormc.sbpractice.api.config.ConfigManager;
-import cc.meteormc.sbpractice.api.config.paths.ArenaConfigPath;
 import cc.meteormc.sbpractice.api.manager.WorldManager;
-import cc.meteormc.sbpractice.api.storage.player.PlayerData;
-import cc.meteormc.sbpractice.api.storage.preset.PresetData;
-import cc.meteormc.sbpractice.api.storage.schematic.Schematic;
-import cc.meteormc.sbpractice.api.storage.sign.SignGroup;
-import cc.meteormc.sbpractice.api.util.ItemBuilder;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.api.storage.data.PresetData;
+import cc.meteormc.sbpractice.api.storage.data.SchematicData;
+import cc.meteormc.sbpractice.api.storage.data.SignData;
 import cc.meteormc.sbpractice.api.util.Region;
-import cc.meteormc.sbpractice.api.util.Utils;
+import cc.meteormc.sbpractice.config.ArenaConfig;
 import cc.meteormc.sbpractice.config.MainConfig;
-import cc.meteormc.sbpractice.config.Messages;
-import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.WorldType;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,41 +30,40 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Getter
-public class DefaultArena extends ConfigManager implements Arena {
-    private Schematic schematic;
+public class DefaultArena implements Arena {
+    private SchematicData schematic;
     private final String name;
-    private final File schematicFile;
     private final File presetsDir;
+    private final File schematicFile;
     private final WorldManager world;
+    private final ArenaConfig config;
     private final List<Island> islands = new ArrayList<>();
     private final List<PresetData> presets = new ArrayList<>();
 
     public DefaultArena(String name) {
-        super(SBPractice.getPlugin(), SBPractice.getPlugin().getDataFolder() + "/Arenas/" + name, "config");
-        String dir = SBPractice.getPlugin().getDataFolder() + "/Arenas/" + name;
+        File dir = new File(Main.getPlugin().getDataFolder() + "/Arenas/" + name);
         this.name = name;
-        this.schematicFile = new File(dir, "schematic.dat");
         this.presetsDir = new File(dir, "Presets");
+        this.schematicFile = new File(dir, "schematic.dat");
+        this.config = new ArenaConfig(MineConfiguration.from(new File(dir, "config.yml"), null));
         this.world = new WorldManager(name, World.Environment.NORMAL, WorldType.FLAT);
     }
 
-    public DefaultArena load() throws ArenaCreationException {
+    public DefaultArena load() {
         try {
             this.world.load(true);
-            World world = this.world.getWorld();
-            if (world != null) {
-                world.setAutoSave(false);
-                world.setGameRuleValue("announceAdvancements", "false");
-                world.setGameRuleValue("doDaylightCycle", "false");
-                world.setGameRuleValue("doFireTick", "false");
-                world.setGameRuleValue("doTileDrops", "false");
-                world.setGameRuleValue("doWeatherCycle", "false");
-                world.setGameRuleValue("randomTickSpeed", "0");
+            World w = this.world.getWorld();
+            if (w != null) {
+                w.setAutoSave(false);
+                w.setGameRuleValue("announceAdvancements", "false");
+                w.setGameRuleValue("doDaylightCycle", "false");
+                w.setGameRuleValue("doFireTick", "false");
+                w.setGameRuleValue("doTileDrops", "false");
+                w.setGameRuleValue("doWeatherCycle", "false");
+                w.setGameRuleValue("randomTickSpeed", "0");
             }
 
-            this.schematic = Schematic.load(this.schematicFile);
-
-            File[] presetFiles = presetsDir.listFiles((dir, name) -> name.endsWith(".preset"));
+            File[] presetFiles = presetsDir.listFiles((dir, fileName) -> fileName.endsWith(".preset"));
             if (presetFiles != null) {
                 this.presets.addAll(
                         Arrays.stream(presetFiles)
@@ -78,9 +72,10 @@ public class DefaultArena extends ConfigManager implements Arena {
                 );
             }
 
+            this.schematic = SchematicData.load(this.schematicFile);
             return this;
         } catch (IOException e) {
-            throw new ArenaCreationException("Failed to create arena " + this.name + " because of the schematic file!", e);
+            throw new UncheckedIOException("Failed to create arena " + this.name + " because of the schematic file!", e);
         }
     }
 
@@ -89,59 +84,56 @@ public class DefaultArena extends ConfigManager implements Arena {
     }
 
     @Override
-    public Island createIsland(Player player) throws RuntimeException {
+    public Island createIsland(Player player) {
         int index = this.islands.indexOf(null);
         if (index == -1) {
             this.islands.add(null);
             index = this.islands.size() - 1;
         }
 
-        Location reference = new Location(this.world.getWorld(), index * MainConfig.ISLAND_DISTANCE_INTERVAL.getInt(), super.getInt(ArenaConfigPath.HEIGHT), 0D);
-        this.schematic.pasteSchematic(reference);
+        Vector reference = new Vector(
+                index * MainConfig.ISLAND_DISTANCE.resolve(),
+                config.MAP.HEIGHT.resolve(),
+                0D
+        );
 
-        Island island = new DefaultIsland(player, this,
+        this.schematic.pasteSchematic(reference.toLocation(world.getWorld()));
 
+        Location spawn = config.MAP.SPAWN.resolve();
+        spawn.setWorld(this.getWorld());
+
+        Island island = new DefaultIsland(
+                player,
+                this,
                 new Region(
-                        super.getLocation(ArenaConfigPath.MAP_AREA_POS1).toVector().add(reference.toVector()),
-                        super.getLocation(ArenaConfigPath.MAP_AREA_POS2).toVector().add(reference.toVector())
+                        config.MAP.AREA_POS1.resolve().add(reference),
+                        config.MAP.AREA_POS2.resolve().add(reference)
                 ),
                 new Region(
-                        super.getLocation(ArenaConfigPath.MAP_BUILD_AREA_POS1).toVector().add(reference.toVector()),
-                        super.getLocation(ArenaConfigPath.MAP_BUILD_AREA_POS2).toVector().add(reference.toVector())
+                        config.MAP.BUILD_AREA_POS1.resolve().add(reference),
+                        config.MAP.BUILD_AREA_POS2.resolve().add(reference)
                 ),
-
-                super.getLocation(ArenaConfigPath.MAP_SPAWN, this.world.getWorld()).add(reference.toVector()),
-                new SignGroup(
-                        super.getLocation(ArenaConfigPath.GROUND_SIGN, this.world.getWorld()).add(reference.toVector()),
-                        super.getLocation(ArenaConfigPath.RECORD_SIGN, this.world.getWorld()).add(reference.toVector()),
-                        super.getLocation(ArenaConfigPath.CLEAR_SIGN, this.world.getWorld()).add(reference.toVector()),
-                        super.getLocation(ArenaConfigPath.SELECT_ARENA_SIGN, this.world.getWorld()).add(reference.toVector()),
-                        super.getLocation(ArenaConfigPath.MODE_SIGN, this.world.getWorld()).add(reference.toVector()),
-                        super.getLocation(ArenaConfigPath.PRESET_SIGN, this.world.getWorld()).add(reference.toVector()),
-                        super.getLocation(ArenaConfigPath.START_SIGN, this.world.getWorld()).add(reference.toVector()),
-                        super.getLocation(ArenaConfigPath.PREVIEW_SIGN, this.world.getWorld()).add(reference.toVector())
+                spawn.add(reference),
+                new SignData(
+                        config.SIGN.GROUND.resolve().add(reference).toLocation(world.getWorld()),
+                        config.SIGN.RECORD.resolve().add(reference).toLocation(world.getWorld()),
+                        config.SIGN.CLEAR.resolve().add(reference).toLocation(world.getWorld()),
+                        config.SIGN.SELECT_ARENA.resolve().add(reference).toLocation(world.getWorld()),
+                        config.SIGN.MODE.resolve().add(reference).toLocation(world.getWorld()),
+                        config.SIGN.PRESET.resolve().add(reference).toLocation(world.getWorld()),
+                        config.SIGN.START.resolve().add(reference).toLocation(world.getWorld()),
+                        config.SIGN.PREVIEW.resolve().add(reference).toLocation(world.getWorld())
                 )
         );
         this.islands.set(index, island);
         PlayerData.getData(player).ifPresent(data -> data.setIsland(island));
         island.refreshSigns();
-        Utils.resetPlayer(player);
-        player.getInventory().setItem(7, new ItemBuilder(MainConfig.START_ITEM.getMaterial()
-                .orElse(XMaterial.AIR))
-                .setDisplayName(Messages.START_ITEM_NAME.getMessage())
-                .build());
-        player.getInventory().setItem(8, new ItemBuilder(MainConfig.CLEAR_ITEM.getMaterial()
-                .orElse(XMaterial.AIR))
-                .setDisplayName(Messages.CLEAR_ITEM_NAME.getMessage())
-                .build());
-        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20, 0, false, false));
-        player.teleport(island.getSpawnPoint());
+        island.resetPlayer(player);
         return island;
     }
 
     public void removeIsland(Island island) {
         if (this.islands.contains(island)) {
-            island.getArea().fillBlock(this.getWorld(), XMaterial.AIR);
             this.islands.set(this.islands.indexOf(island), null);
             this.islands.remove(island);
         }

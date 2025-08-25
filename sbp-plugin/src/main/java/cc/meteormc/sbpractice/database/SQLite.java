@@ -1,8 +1,8 @@
 package cc.meteormc.sbpractice.database;
 
-import cc.meteormc.sbpractice.SBPractice;
+import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.storage.Database;
-import cc.meteormc.sbpractice.api.storage.player.PlayerStats;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import org.bukkit.Bukkit;
 
 import java.io.File;
@@ -16,18 +16,18 @@ public class SQLite implements Database {
     private Connection connection;
 
     public SQLite() {
-        String path = SBPractice.getPlugin().getDataFolder().getPath();
+        String path = Main.getPlugin().getDataFolder().getPath();
         new File(path).mkdirs();
         File file = new File(path, "stats.db");
         if (!file.exists()) {
             try {
                 if (!file.createNewFile()) {
-                    SBPractice.getPlugin().getLogger().warning("Failed to create new file: " + file.getName());
+                    Main.getPlugin().getLogger().warning("Failed to create new file: " + file.getName());
                     return;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                SBPractice.getPlugin().getLogger().warning("Failed to create new file: " + file.getName());
+                Main.getPlugin().getLogger().warning("Failed to create new file: " + file.getName());
             }
         }
         this.url = "jdbc:sqlite:" + file;
@@ -36,7 +36,7 @@ public class SQLite implements Database {
             Class.forName("org.sqlite.JDBC");
             DriverManager.getConnection(this.url);
         } catch (ClassNotFoundException e) {
-            Bukkit.getPluginManager().disablePlugin(SBPractice.getPlugin());
+            Bukkit.getPluginManager().disablePlugin(Main.getPlugin());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -56,7 +56,7 @@ public class SQLite implements Database {
     }
 
     @Override
-    public PlayerStats getPlayerStats(UUID uuid) {
+    public PlayerData.PlayerStats getPlayerStats(UUID uuid) {
         String sql = "SELECT * FROM stats WHERE uuid = ?;";
         try {
             checkConnection();
@@ -64,18 +64,18 @@ public class SQLite implements Database {
                 statement.setString(1, uuid.toString());
                 try (ResultSet result = statement.executeQuery()) {
                     if (result.next()) {
-                        return new PlayerStats(uuid, result.getInt("restores"));
+                        return new PlayerData.PlayerStats(uuid, result.getInt("restores"));
                     }
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return new PlayerStats(uuid, 0);
+        return new PlayerData.PlayerStats(uuid, 0);
     }
 
     @Override
-    public void setPlayerStats(PlayerStats playerStats) {
+    public void setPlayerStats(PlayerData.PlayerStats playerStats) {
         String sql;
         try {
             checkConnection();

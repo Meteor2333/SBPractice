@@ -1,9 +1,7 @@
 package cc.meteormc.sbpractice.api.util;
 
-import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -54,12 +52,6 @@ public class Region implements Cloneable {
             && location.getBlockX() <= this.xMax
             && location.getBlockZ() >= this.zMin
             && location.getBlockZ() <= this.zMax;
-    }
-
-    public void fillBlock(World world, XMaterial type) {
-        for (Vector vector : this.getVectors()) {
-            vector.toLocation(world).getBlock().setType(type.parseMaterial(), false);
-        }
     }
 
     public List<Vector> getVectors() {

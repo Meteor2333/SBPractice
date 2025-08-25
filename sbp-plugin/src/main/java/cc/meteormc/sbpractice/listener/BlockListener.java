@@ -1,15 +1,16 @@
 package cc.meteormc.sbpractice.listener;
 
-import cc.meteormc.sbpractice.api.storage.player.PlayerData;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 
 public class BlockListener implements Listener {
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent event) {
+    @EventHandler(priority = EventPriority.LOW)
+    public void onPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         PlayerData.getData(player).ifPresent(data -> {
             if (event instanceof BlockMultiPlaceEvent) {
@@ -29,8 +30,8 @@ public class BlockListener implements Listener {
         });
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockBreak(BlockBreakEvent event) {
+    @EventHandler(priority = EventPriority.LOW)
+    public void onBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         PlayerData.getData(player).ifPresent(data -> {
             if (!data.getIsland().getBuildArea().isInside(event.getBlock().getLocation())) {
@@ -41,32 +42,27 @@ public class BlockListener implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onBlockExplode(BlockExplodeEvent event) {
+    public void onPiston(BlockPistonExtendEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+    public void onPiston(BlockPistonRetractEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onBlockPistonRetractEvent(BlockPistonRetractEvent event) {
+    public void onFluid(BlockFromToEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onBlockFromTo(BlockFromToEvent event) {
+    public void onDispense(BlockDispenseEvent event) {
         event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onBlockDispense(BlockDispenseEvent event) {
-        event.setCancelled(true);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockBurn(BlockBurnEvent event) {
+    public void onBurn(BlockBurnEvent event) {
         event.setCancelled(true);
     }
 }

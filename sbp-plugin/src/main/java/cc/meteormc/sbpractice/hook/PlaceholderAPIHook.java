@@ -1,12 +1,12 @@
 package cc.meteormc.sbpractice.hook;
 
-import cc.meteormc.sbpractice.SBPractice;
-import cc.meteormc.sbpractice.api.storage.player.PlayerData;
-import cc.meteormc.sbpractice.config.Messages;
+import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.api.Island;
+import cc.meteormc.sbpractice.api.storage.data.BlockData;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,31 +21,33 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getAuthor() {
-        return SBPractice.getPlugin().getDescription().getAuthors().get(0);
+        return Main.getPlugin().getDescription().getAuthors().get(0);
     }
 
     @Override
     public @NotNull String getVersion() {
-        return SBPractice.getPlugin().getDescription().getVersion();
+        return Main.getPlugin().getDescription().getVersion();
     }
 
     @Override
     public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
-        Optional<PlayerData> data = PlayerData.getData(player.getPlayer());
-        if (data.isPresent()) {
+        Optional<PlayerData> optionalData = PlayerData.getData(player.getPlayer());
+        if (optionalData.isPresent()) {
+            PlayerData data = optionalData.get();
+            Island island = data.getIsland();
             switch (params) {
                 case "restores":
-                    return String.valueOf(data.get().getStats().getRestores());
+                    return String.valueOf(data.getStats().getRestores());
                 case "owner":
-                    return data.get().getIsland().getOwner().getName();
+                    return island.getOwner().getName();
                 case "total-player":
-                    return String.valueOf(data.get().getIsland().getGuests().size() + 1);
+                    return String.valueOf(island.getGuests().size() + 1);
                 case "time":
-                    return Messages.CURRENT_TIME.getMessage().replace("%time%", data.get().getIsland().getFormattedTime());
+                    return island.getFormattedTime();
                 case "blocks":
                     int num = 0;
-                    for (BlockState state : data.get().getIsland().getRecordedBlocks().values()) {
-                        if (state != null && state.getType() != Material.AIR) num++;
+                    for (BlockData block : island.getRecordedBlocks().values()) {
+                        if (block != null && block.getType() != Material.AIR) num++;
                     }
                     return String.valueOf(num);
                 default: return null;

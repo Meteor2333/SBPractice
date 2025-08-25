@@ -5,6 +5,7 @@ import cc.meteormc.sbpractice.arena.session.SetupSession;
 import cc.meteormc.sbpractice.arena.setup.SetupType;
 import com.cryptomorin.xseries.XMaterial;
 import fr.mrmicky.fastinv.FastInv;
+import org.bukkit.ChatColor;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 
@@ -45,8 +46,8 @@ public class SetupArenaGui extends FastInv {
         this.setItem(
                 8,
                 new ItemBuilder(XMaterial.REDSTONE)
-                        .setDisplayName("&a&lSave")
-                        .addLore(this.session.isComplete() ? "&aClick to save! ✔" : "&cComplete the setup first! ✘")
+                        .setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Save")
+                        .addLore(this.session.isComplete() ? ChatColor.GREEN + "Click to save! ✔" : ChatColor.RED + "Complete the setup first! ✘")
                         .build(),
                 event -> {
                     if (session.isComplete()) {

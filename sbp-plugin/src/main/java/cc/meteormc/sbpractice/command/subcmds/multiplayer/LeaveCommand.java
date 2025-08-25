@@ -2,8 +2,8 @@ package cc.meteormc.sbpractice.command.subcmds.multiplayer;
 
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.command.SubCommand;
-import cc.meteormc.sbpractice.api.storage.player.PlayerData;
-import cc.meteormc.sbpractice.config.Messages;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.config.Message;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -21,12 +21,12 @@ public class LeaveCommand extends SubCommand {
             PlayerData.getData(player).ifPresent(data -> {
                 Island island = data.getIsland();
                 if (island.getOwner().equals(player)) {
-                    player.sendMessage(Messages.PREFIX.getMessage() + Messages.CANNOT_DO_THAT.getMessage());
+                    Message.BASIC.CANNOT_DO_THAT.sendTo(player);
                 } else {
                     island.removeGuest(player);
                     island.getArena().createIsland(player);
-                    player.sendMessage(Messages.PREFIX.getMessage() + Messages.LEAVE_ACTIVE.getMessage().replace("%player%", island.getOwner().getName()));
-                    island.getOwner().sendMessage(Messages.PREFIX.getMessage() + Messages.LEAVE_PASSIVE.getMessage().replace("%player%", player.getName()));
+                    Message.MULTIPLAYER.LEAVE.ACTIVE.sendTo(player, island.getOwner().getName());
+                    Message.MULTIPLAYER.LEAVE.PASSIVE.sendTo(island.getOwner(), player.getName());
                 }
             });
         }
@@ -34,11 +34,11 @@ public class LeaveCommand extends SubCommand {
 
     @Override
     public void onNoPermission(@NotNull CommandSender sender) {
-        sender.sendMessage(Messages.NO_PERMISSION.getMessage());
+        Message.COMMAND.NO_PERMISSION.sendTo(sender);
     }
 
     @Override
     public @Nullable String getCommandUsage(@NotNull CommandSender sender) {
-        return null;
+        return Message.COMMAND.USAGE.parseLine(sender, "/mp leave");
     }
 }

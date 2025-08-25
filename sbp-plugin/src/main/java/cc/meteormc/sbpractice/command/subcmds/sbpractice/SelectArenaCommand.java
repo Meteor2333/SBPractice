@@ -1,11 +1,11 @@
 package cc.meteormc.sbpractice.command.subcmds.sbpractice;
 
-import cc.meteormc.sbpractice.SBPractice;
+import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.arena.Arena;
 import cc.meteormc.sbpractice.api.command.SubCommand;
-import cc.meteormc.sbpractice.api.storage.player.PlayerData;
-import cc.meteormc.sbpractice.config.Messages;
+import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.config.Message;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -20,14 +20,14 @@ public class SelectArenaCommand extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         if (sender instanceof Player) {
             Player player = (Player) sender;
-            for (Arena arena : SBPractice.getArenas()) {
+            for (Arena arena : Main.getArenas()) {
                 if (arena.getName().equals(args[0])) {
                     PlayerData.getData(player).ifPresent(data -> {
                         Island island = data.getIsland();
                         if (island.getOwner().equals(player)) island.remove();
                         else {
                             island.removeGuest(player);
-                            island.getOwner().sendMessage(Messages.PREFIX.getMessage() + Messages.LEAVE_PASSIVE.getMessage().replace("%player%", player.getName()));
+                            Message.MULTIPLAYER.LEAVE.PASSIVE.sendTo(island.getOwner(), player.getName());
                         }
                         arena.createIsland(player);
                     });
@@ -39,11 +39,11 @@ public class SelectArenaCommand extends SubCommand {
 
     @Override
     public void onNoPermission(@NotNull CommandSender sender) {
-        sender.sendMessage(Messages.NO_PERMISSION.getMessage());
+        Message.COMMAND.NO_PERMISSION.sendTo(sender);
     }
 
     @Override
     public @Nullable String getCommandUsage(@NotNull CommandSender sender) {
-        return Messages.COMMAND_USAGE.getMessage().replace("%usage%", "/sbp arena <arenaName>");
+        return Message.COMMAND.USAGE.parseLine(sender, "/sbp arena <arenaName>");
     }
 }

@@ -2,12 +2,14 @@ package cc.meteormc.sbpractice.api;
 
 import cc.meteormc.sbpractice.api.arena.Arena;
 import cc.meteormc.sbpractice.api.arena.BuildMode;
-import cc.meteormc.sbpractice.api.storage.preset.PresetData;
-import cc.meteormc.sbpractice.api.storage.sign.SignGroup;
+import cc.meteormc.sbpractice.api.arena.operation.Operation;
+import cc.meteormc.sbpractice.api.storage.data.BlockData;
+import cc.meteormc.sbpractice.api.storage.data.PresetData;
+import cc.meteormc.sbpractice.api.storage.data.SignData;
 import cc.meteormc.sbpractice.api.util.Region;
 import org.bukkit.Location;
-import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
 import java.util.Map;
@@ -25,17 +27,21 @@ public interface Island {
 
     Location getSpawnPoint();
 
-    boolean isStartCountdown();
+    boolean isActive();
 
-    void setStartCountdown(boolean start);
+    void setActive(boolean active);
 
     BuildMode getMode();
 
     void setMode(BuildMode mode);
 
-    SignGroup getSigns();
+    BukkitTask getModeTask();
 
-    Map<Location, BlockState> getRecordedBlocks();
+    void setModeTask(BukkitTask task);
+
+    SignData getSigns();
+
+    Map<Location, BlockData> getRecordedBlocks();
 
     void setCanStart(boolean canStart);
 
@@ -49,21 +55,17 @@ public interface Island {
 
     void stopTimer();
 
+    List<Player> getNearbyPlayers();
+
+    void resetPlayer(Player player);
+
     void addGuest(Player player);
 
     void removeGuest(Player player);
 
     void refreshSigns();
 
-    void ground();
-
-    void record();
-
-    void clear();
-
-    void preview();
-
-    void start();
+    boolean executeOperation(Operation... operations);
 
     void applyPreset(PresetData preset);
 

@@ -1,64 +1,52 @@
 package cc.meteormc.sbpractice.config;
 
-import cc.meteormc.sbpractice.SBPractice;
-import cc.meteormc.sbpractice.api.config.ConfigManager;
+import cc.carm.lib.configuration.Configuration;
+import cc.carm.lib.configuration.annotation.ConfigPath;
+import cc.carm.lib.configuration.value.standard.ConfiguredList;
+import cc.carm.lib.configuration.value.standard.ConfiguredValue;
 import com.cryptomorin.xseries.XMaterial;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+@ConfigPath(root = true)
+public interface MainConfig extends Configuration {
+    interface MYSQL extends Configuration {
+        ConfiguredValue<Boolean> ENABLE = ConfiguredValue.of(false);
 
-@Getter
-@RequiredArgsConstructor
-public enum MainConfig {
-    MYSQL_ENABLE("mysql.enable", false),
-    MYSQL_HOST("mysql.host", "localhost"),
-    MYSQL_PORT("mysql.port", 3306),
-    MYSQL_DATABASE("mysql.database", "sbpractice"),
-    MYSQL_USER("mysql.user", "root"),
-    MYSQL_PASSWORD("mysql.password", "password"),
-    MYSQL_SSL("mysql.ssl", false),
-    BLOCKLIST_ITEMS("blacklist-items", Arrays.asList("ARMOR_STAND", "MINECART", "ITEM_FRAME", "BOAT", "DYE", "POTION", "MILK_BUCKET", "PAINTING", "MAP")),
-    CLEAR_ITEM("item.clear", XMaterial.SNOWBALL.name()),
-    START_ITEM("item.start", XMaterial.EGG.name()),
-    DEFAULT_GROUND_BLOCK("default-ground-block", XMaterial.GRASS_BLOCK.name()),
-    ISLAND_DISTANCE_INTERVAL("island-distance-interval", 100),
-    MAX_PRESETS_LIMIT("max-presets-limit", 18);
+        ConfiguredValue<String> HOST = ConfiguredValue.of("localhost");
 
-    private final String path;
-    private final Object defaultValue;
-    private static final ConfigManager CONFIG;
+        ConfiguredValue<Integer> PORT = ConfiguredValue.of(3306);
 
-    static {
-        CONFIG = new ConfigManager(SBPractice.getPlugin(), SBPractice.getPlugin().getDataFolder().getPath(), "Config");
+        ConfiguredValue<String> DATABASE = ConfiguredValue.of("sbpractice");
 
-        for (MainConfig value : values()) {
-            CONFIG.addDefault(value.getPath(), value.getDefaultValue());
-        }
+        ConfiguredValue<String> USER = ConfiguredValue.of(String.class);
 
-        CONFIG.copyDefaults();
-        CONFIG.save();
+        ConfiguredValue<String> PASSWORD = ConfiguredValue.of(String.class);
+
+        ConfiguredValue<Boolean> USESSL = ConfiguredValue.of(false);
     }
 
-    public Optional<XMaterial> getMaterial() {
-        return XMaterial.matchXMaterial(CONFIG.getString(this.path));
+    interface MATERIAL extends Configuration {
+        ConfiguredValue<XMaterial> CLEAR = ConfiguredValue.of(XMaterial.SNOWBALL);
+
+        ConfiguredValue<XMaterial> START = ConfiguredValue.of(XMaterial.EGG);
+
+        ConfiguredValue<XMaterial> GROUND_BLOCK = ConfiguredValue.of(XMaterial.GRASS_BLOCK);
+
+        ConfiguredList<XMaterial> BLOCKED_ITEMS = ConfiguredList.of(
+                XMaterial.ARMOR_STAND,
+                XMaterial.MINECART,
+                XMaterial.ITEM_FRAME,
+                XMaterial.OAK_BOAT,
+                XMaterial.BONE_MEAL,
+                XMaterial.POTION,
+                XMaterial.MILK_BUCKET,
+                XMaterial.PAINTING,
+                XMaterial.MAP
+        );
     }
 
-    public String getString() {
-        return CONFIG.getString(this.path);
-    }
+    ConfiguredValue<Integer> ISLAND_DISTANCE = ConfiguredValue.of(80);
 
-    public List<?> getList() {
-        return CONFIG.getList(this.path);
-    }
+    ConfiguredValue<Integer> MAX_PRESETS_LIMIT = ConfiguredValue.of(18);
 
-    public boolean getBoolean() {
-        return CONFIG.getBoolean(this.path);
-    }
-
-    public int getInt() {
-        return CONFIG.getInt(this.path);
-    }
+    ConfiguredValue<Boolean> AUTO_TO_FULL_BLOCK = ConfiguredValue.of(true);
 }

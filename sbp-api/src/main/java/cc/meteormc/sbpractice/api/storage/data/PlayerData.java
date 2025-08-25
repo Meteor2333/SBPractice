@@ -1,12 +1,14 @@
-package cc.meteormc.sbpractice.api.storage.player;
+package cc.meteormc.sbpractice.api.storage.data;
 
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.arena.Arena;
-import cc.meteormc.sbpractice.api.storage.preset.PresetData;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 public class PlayerData {
@@ -19,7 +21,7 @@ public class PlayerData {
     private final UUID uuid;
     private final PlayerStats stats;
 
-    private static final Map<UUID, PlayerData> PLAYERS = new HashMap<>();
+    private static final Map<UUID, PlayerData> PLAYERS = new ConcurrentHashMap<>();
 
     public void register() {
         PLAYERS.put(this.uuid, this);
@@ -31,5 +33,17 @@ public class PlayerData {
 
     public static Optional<PlayerData> getData(Player player) {
         return Optional.ofNullable(PLAYERS.getOrDefault(player.getUniqueId(), null));
+    }
+
+    @Getter
+    public static class PlayerStats {
+        private final UUID uuid;
+        @Setter
+        private int restores;
+
+        public PlayerStats(UUID uuid, int restores) {
+            this.uuid = uuid;
+            this.restores = restores;
+        }
     }
 }

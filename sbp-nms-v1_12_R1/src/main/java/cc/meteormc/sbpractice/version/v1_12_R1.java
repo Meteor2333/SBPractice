@@ -1,84 +1,60 @@
 package cc.meteormc.sbpractice.version;
 
-import cc.meteormc.sbpractice.api.bukkitfix.blockstate.Stairs;
+import cc.meteormc.sbpractice.api.SBPracticeAPI;
+import cc.meteormc.sbpractice.api.storage.data.BlockData;
 import cc.meteormc.sbpractice.api.version.NMS;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
+import com.cryptomorin.xseries.XMaterial;
+import com.google.common.io.ByteArrayDataInput;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import com.mojang.authlib.GameProfile;
 import net.minecraft.server.v1_12_R1.*;
+import net.querz.nbt.io.NBTDeserializer;
+import net.querz.nbt.io.NBTSerializer;
+import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
-import net.querz.nbt.tag.ListTag;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
 import org.bukkit.command.Command;
-import org.bukkit.craftbukkit.v1_12_R1.CraftChunk;
 import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_12_R1.block.CraftBanner;
-import org.bukkit.craftbukkit.v1_12_R1.block.CraftBed;
-import org.bukkit.craftbukkit.v1_12_R1.block.CraftBlockState;
-import org.bukkit.craftbukkit.v1_12_R1.block.CraftSkull;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_12_R1.util.CraftChatMessage;
 import org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.material.Stairs;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Objects;
 
 public class v1_12_R1 extends NMS {
-    public v1_12_R1(Plugin plugin) {
-        super(plugin);
-    }
-
     @Override
-    public void registerCommand(Command command) {
+    public void registerCommand(@NotNull Command command) {
         ((CraftServer) Bukkit.getServer()).getCommandMap().register(command.getName(), command);
     }
 
     @Override
-    public void sendTitle(Player player, String title, String subTitle, int fadeIn, int stay, int fadeOut) {
-        PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
-
-        if (title != null) {
-            IChatBaseComponent bc = CraftChatMessage.fromString(title)[0];
-            PacketPlayOutTitle tit = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, bc);
-            PacketPlayOutTitle length = new PacketPlayOutTitle(fadeIn, stay, fadeOut);
-            connection.sendPacket(tit);
-            connection.sendPacket(length);
-        }
-
-        if (subTitle != null) {
-            IChatBaseComponent bc = CraftChatMessage.fromString(subTitle)[0];
-            PacketPlayOutTitle tit = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE, bc);
-            PacketPlayOutTitle length = new PacketPlayOutTitle(fadeIn, stay, fadeOut);
-            connection.sendPacket(tit);
-            connection.sendPacket(length);
-        }
-    }
-
-    @Override
-    public void sendActionBar(Player player, String message) {
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
-    }
-
-    @Override
-    public void setUnbreakable(ItemMeta itemMeta) {
+    public void setItemUnbreakable(@NotNull ItemMeta itemMeta) {
         itemMeta.setUnbreakable(true);
     }
 
     @Override
-    public ItemStack setItemTag(ItemStack itemStack, String key, String value) {
+    public @NotNull ItemStack setItemTag(@NotNull ItemStack itemStack, @NotNull String key, @NotNull String value) {
         net.minecraft.server.v1_12_R1.ItemStack is = CraftItemStack.asNMSCopy(itemStack);
         NBTTagCompound tag = is.getTag();
         if (tag == null) tag = new NBTTagCompound();
@@ -89,16 +65,17 @@ public class v1_12_R1 extends NMS {
     }
 
     @Override
-    public String getItemTag(ItemStack itemStack, String key) {
+    public @Nullable String getItemTag(@NotNull ItemStack itemStack, @NotNull String key) {
         net.minecraft.server.v1_12_R1.ItemStack i = CraftItemStack.asNMSCopy(itemStack);
         if (i == null) return null;
 
         NBTTagCompound tag = i.getTag();
-        return tag == null ? null : tag.hasKey(key) ? tag.getString(key) : null;
+        if (tag == null) return null;
+        return tag.hasKey(key) ? tag.getString(key) : null;
     }
 
     @Override
-    public boolean hasItemTag(ItemStack itemStack, String key) {
+    public boolean hasItemTag(@NotNull ItemStack itemStack, @NotNull String key) {
         net.minecraft.server.v1_12_R1.ItemStack i = CraftItemStack.asNMSCopy(itemStack);
         if (i == null) return false;
 
@@ -107,7 +84,7 @@ public class v1_12_R1 extends NMS {
     }
 
     @Override
-    public ItemStack removeItemTag(ItemStack itemStack, String key) {
+    public @NotNull ItemStack removeItemTag(@NotNull ItemStack itemStack, @NotNull String key) {
         net.minecraft.server.v1_12_R1.ItemStack is = CraftItemStack.asNMSCopy(itemStack);
         NBTTagCompound tag = is.getTag();
         if (tag == null) tag = new NBTTagCompound();
@@ -118,303 +95,470 @@ public class v1_12_R1 extends NMS {
     }
 
     @Override
-    public void hidePlayer(Player player) {
-        CraftPlayer cPlayer = (CraftPlayer) player;
-        cPlayer.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false));
-        try {
-            Field gm = PlayerInteractManager.class.getDeclaredField("gamemode");
-            gm.setAccessible(true);
-            PlayerInteractManager pim = cPlayer.getHandle().playerInteractManager;
-            gm.set(pim, EnumGamemode.SPECTATOR);
-            PacketPlayOutPlayerInfo info = new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, cPlayer.getHandle());
-            player.getWorld().getPlayers().forEach(p -> {
-                p.hidePlayer(super.plugin, player);
-                ((CraftPlayer) p).getHandle().playerConnection.sendPacket(info);
-            });
-            gm.set(pim, EnumGamemode.CREATIVE);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-        cPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_GAME_MODE, cPlayer.getHandle()));
-    }
-
-    @Override
-    public void showPlayer(Player player) {
-        CraftPlayer cPlayer = (CraftPlayer) player;
-        cPlayer.removePotionEffect(PotionEffectType.INVISIBILITY);
-        player.getWorld().getPlayers().forEach(p -> p.showPlayer(super.plugin, player));
-        cPlayer.getHandle().playerInteractManager.setGameMode(EnumGamemode.CREATIVE);
-    }
-
-    @Override
-    public void fixOtherPlayerTab(Player player) {
-        EntityPlayer ePlayer = ((CraftPlayer) player).getHandle();
-        ePlayer.server.getPlayerList()
-                .sendAll(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo
-                .EnumPlayerInfoAction.REMOVE_PLAYER, ePlayer));
-    }
-
-    @Override
-    public BlockState createBlockState(Material material, String data) {
-        CraftBlockState result;
-        String[] split = data.split(":");
-        switch (material) {
-            case BED_BLOCK:
-                CraftBed bed = new CraftBed(material, new TileEntityBed());
-                if (split.length > 1) {
-                    bed.setColor(DyeColor.valueOf(split[1]));
-                }
-                result = bed;
-                break;
-            case SKULL:
-                CraftSkull skull = new CraftSkull(material, new TileEntitySkull());
-                if (split.length > 2) {
-                    skull.setRotation(BlockFace.valueOf(split[1]));
-                    skull.setSkullType(SkullType.valueOf(split[2]));
-                }
-                result = skull;
-                break;
-            case STANDING_BANNER:
-            case WALL_BANNER:
-            case BANNER:
-                CraftBanner banner = new CraftBanner(material, new TileEntityBanner());
-                if (split.length > 1) {
-                    banner.setBaseColor(DyeColor.valueOf(split[1]));
-                }
-                result = banner;
-                break;
-            default: result = new CraftBlockState(material);
-        }
-
-        MaterialData mData = material.getNewData(Byte.parseByte(split[0]));
-        if (mData instanceof org.bukkit.material.Stairs) {
-            Stairs stairs = new Stairs(mData);
-            if (split.length > 1) {
-                stairs.setShape(Stairs.StairShape.valueOf(split[1]));
-            }
-            mData = stairs;
-        }
-        return this.setBlockStateData(result, mData);
-    }
-
-    @Override
-    public BlockState setBlockStateLocation(BlockState state, Location location) {
-        BlockState result = new CraftBlockState(location.getBlock());
-        if (state instanceof CraftBanner) {
-            CraftBanner banner = new CraftBanner(location.getBlock());
-            banner.setBaseColor(((CraftBanner) state).getBaseColor());
-            result = banner;
-        } else if (state instanceof CraftBed) {
-            CraftBed bed = new CraftBed(location.getBlock());
-            bed.setColor(((CraftBed) state).getColor());
-            result = bed;
-        } else if (state instanceof CraftSkull) {
-            CraftSkull skull = new CraftSkull(location.getBlock());
-            skull.setRotation(((CraftSkull) state).getRotation());
-            skull.setSkullType(((CraftSkull) state).getSkullType());
-            result = skull;
-        }
-        result.setType(state.getType());
-        return this.setBlockStateData(result, state.getData());
-    }
-
-    @Override
-    public BlockState setBlockStateData(BlockState state, MaterialData data) {
-        try {
-            final Field field = CraftBlockState.class.getDeclaredField("data");
-            field.setAccessible(true);
-            field.set(state, data);
-        } catch (IllegalAccessException | NoSuchFieldException ignored) { }
-        return state;
-    }
-
-    @Override
-    public String getDataByBlockState(BlockState state) {
-        StringBuilder result = new StringBuilder().append(state.getData().getData());
-        switch (state.getType()) {
-            case STANDING_BANNER:
-            case WALL_BANNER:
-            case BANNER:
-                if (state instanceof CraftBanner) {
-                    CraftBanner banner = (CraftBanner) state;
-                    result.append(":").append(banner.getBaseColor().name());
-                }
-                break;
-            case BED_BLOCK:
-                if (state instanceof CraftBed) {
-                    CraftBed bed = (CraftBed) state;
-                    result.append(":").append(bed.getColor().name());
-                }
-                break;
-            case SKULL:
-                if (state instanceof CraftSkull) {
-                    CraftSkull skull = (CraftSkull) state;
-                    result.append(":").append(skull.getRotation().name()).append(":").append(skull.getSkullType().name());
-                }
-                break;
-            case WOOD_STAIRS:
-            case COBBLESTONE_STAIRS:
-            case BRICK_STAIRS:
-            case SMOOTH_STAIRS:
-            case NETHER_BRICK_STAIRS:
-            case SANDSTONE_STAIRS:
-            case SPRUCE_WOOD_STAIRS:
-            case BIRCH_WOOD_STAIRS:
-            case JUNGLE_WOOD_STAIRS:
-            case QUARTZ_STAIRS:
-            case ACACIA_STAIRS:
-            case DARK_OAK_STAIRS:
-            case RED_SANDSTONE_STAIRS:
-            case PURPUR_STAIRS:
-                if (state.getData() instanceof Stairs) {
-                    Stairs stairs = (Stairs) state.getData();
-                    result.append(":").append(stairs.getShape().name());
-                }
-                break;
-        }
-        return result.toString();
-    }
-
-    @Override
-    public BlockState getBlockState(Location location) {
-        BlockState state = location.getBlock().getState();
-        if (state.getData() instanceof org.bukkit.material.Stairs) {
-            Stairs stairs = new Stairs(state.getData());
-            BlockPosition position = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
-            IBlockData data = ((CraftChunk) location.getChunk()).getHandle().getBlockData(position);
-            stairs.setShape(Stairs.StairShape.values()[data.getBlock().updateState(data, ((CraftWorld) location.getWorld()).getHandle(), position).get(BlockStairs.SHAPE).ordinal()]);
-            this.setBlockStateData(state, stairs);
-        }
-        return state;
-    }
-
-    @Override
-    public boolean isSimilarBlockState(BlockState state1, BlockState state2) {
-        if (!state1.getData().equals(state2.getData())) {
-            if (state1.getData() instanceof Stairs && state2.getData() instanceof Stairs) {
-                Stairs stairs1 = (Stairs) state1.getData();
-                Stairs stairs2 = (Stairs) state2.getData();
-                if (Math.abs(stairs1.getFacing().ordinal() - stairs2.getFacing().ordinal()) == 1
-                        || stairs1.getFacing() == BlockFace.NORTH && stairs2.getFacing() == BlockFace.WEST
-                        || stairs1.getFacing() == BlockFace.WEST && stairs2.getFacing() == BlockFace.NORTH
-                        && stairs1.isInverted() == stairs2.isInverted()) {
-                    return (stairs1.getShape().name().contains("LEFT") && stairs2.getShape().name().contains("RIGHT")) || (stairs1.getShape().name().contains("RIGHT") && stairs2.getShape().name().contains("LEFT"));
-                }
-            }
-        } else {
-            if (state1 instanceof CraftBanner || state2 instanceof CraftBanner) {
-                if (state1 instanceof CraftBanner && state2 instanceof CraftBanner) {
-                    return ((CraftBanner) state1).getBaseColor() == ((CraftBanner) state2).getBaseColor();
-                }
-            } else if (state1 instanceof CraftBed || state2 instanceof CraftBed) {
-                if (state1 instanceof CraftBed && state2 instanceof CraftBed) {
-                    return ((CraftBed) state1).getColor() == ((CraftBed) state2).getColor();
-                }
-            } else if (state1 instanceof CraftSkull || state2 instanceof CraftSkull) {
-                if (state1 instanceof CraftSkull && state2 instanceof CraftSkull) {
-                    return ((CraftSkull) state1).getSkullType() == ((CraftSkull) state2).getSkullType();
-                }
-            } else {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public CompoundTag getTileEntityData(Block block) {
-        CompoundTag tag = new CompoundTag();
-        TileEntity entity = ((CraftWorld) block.getWorld()).getTileEntityAt(block.getX(), block.getY(), block.getZ());
-        if (entity == null) return tag;
-        if (entity instanceof TileEntityBanner) {
-            tag.putString("Id", "Banner");
-            TileEntityBanner banner = (TileEntityBanner) entity;
-            tag.putInt("Color", banner.color.getInvColorIndex());
-
-            ListTag<CompoundTag> patterns = new ListTag<>(CompoundTag.class);
-            for (int i = 0; i < banner.patterns.size(); i++) {
-                NBTTagCompound pattern = banner.patterns.get(i);
-                CompoundTag patternTag = new CompoundTag();
-                if (pattern.hasKey("Color")) patternTag.putInt("Color", pattern.getInt("Color"));
-                if (pattern.hasKey("Pattern")) patternTag.putString("Pattern", pattern.getString("Pattern"));
-                patterns.add(patternTag);
-            }
-            tag.put("Patterns", patterns);
-        } else if (entity instanceof TileEntityBed) {
-            tag.putString("Id", "Bed");
-            TileEntityBed bed = (TileEntityBed) entity;
-            tag.putInt("Color", bed.a().getColorIndex());
-        } else if (entity instanceof TileEntitySign) {
-            tag.putString("Id", "Sign");
-            TileEntitySign sign = (TileEntitySign) entity;
-            for (int i = 0; i < 4; i++) {
-                tag.putString("Text" + i, CraftChatMessage.fromComponent(sign.lines[i]));
-            }
-        } else if (entity instanceof TileEntitySkull) {
-            tag.putString("Id", "Skull");
-            TileEntitySkull skull = (TileEntitySkull) entity;
-            tag.putInt("SkullType", skull.getSkullType());
-            tag.putInt("Rotation", skull.rotation);
-        }
-        return tag;
-    }
-
-    @Override
-    public void setTileEntityData(Block block, CompoundTag tag) {
-        TileEntity entity = ((CraftWorld) block.getWorld()).getTileEntityAt(block.getX(), block.getY(), block.getZ());
-        if (entity == null) return;
-        switch (tag.getString("Id")) {
-            case "Banner":
-                if (entity instanceof TileEntityBanner) {
-                    TileEntityBanner banner = ((TileEntityBanner) entity);
-                    banner.color = EnumColor.fromInvColorIndex(tag.getInt("Color"));
-
-                    NBTTagList patterns = new NBTTagList();
-                    for (CompoundTag pattern : tag.getListTag("Patterns").asCompoundTagList()) {
-                        NBTTagCompound patternTag = new NBTTagCompound();
-                        patternTag.setInt("Color", pattern.getInt("Color"));
-                        patternTag.setString("Pattern", pattern.getString("Pattern"));
-                        patterns.add(patternTag);
-                    }
-                    banner.patterns = patterns;
-                }
-                break;
-            case "Bed":
-                if (entity instanceof TileEntityBed) {
-                    TileEntityBed bed = ((TileEntityBed) entity);
-                    bed.a(EnumColor.fromColorIndex(tag.getInt("Color")));
-                }
-                break;
-            case "Sign":
-                if (entity instanceof TileEntitySign) {
-                    TileEntitySign sign = ((TileEntitySign) entity);
-                    for (int i = 0; i < 4; i++) {
-                        sign.lines[i] = CraftChatMessage.fromString(tag.getString("Text" + i))[0];
-                    }
-                }
-                break;
-            case "Skull":
-                if (entity instanceof TileEntitySkull) {
-                    TileEntitySkull skull = ((TileEntitySkull) entity);
-                    skull.setSkullType(tag.getInt("SkullType"));
-                    skull.setRotation(tag.getInt("Rotation"));
-                }
-                break;
-            default: return;
-        }
-        entity.update();
-    }
-
-    @Override
-    public ItemStack getItemByBlock(Material material, byte data) {
+    public @NotNull ItemStack getItemByBlock(Material material, byte data) {
         try {
             net.minecraft.server.v1_12_R1.Block block = CraftMagicNumbers.getBlock(material);
             Method method = net.minecraft.server.v1_12_R1.Block.class.getDeclaredMethod("u", IBlockData.class);
             method.setAccessible(true);
             return CraftItemStack.asCraftMirror((net.minecraft.server.v1_12_R1.ItemStack) method.invoke(block, block.fromLegacyData(data)));
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Failed to get item by block " + material.name(), e);
+        }
+    }
+
+    @Override
+    public void hidePlayer(@NotNull Player player) {
+        CraftPlayer cPlayer = (CraftPlayer) player;
+        EntityPlayer handle = cPlayer.getHandle();
+        cPlayer.addPotionEffect(new PotionEffect(
+                PotionEffectType.INVISIBILITY,
+                Integer.MAX_VALUE,
+                1,
+                false,
+                false
+        ));
+
+        try {
+            PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(
+                    PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_GAME_MODE
+            );
+            Field field = PacketPlayOutPlayerInfo.class.getDeclaredField("b");
+            field.setAccessible(true);
+
+            // Use reflection because @javax.annotation.Nullable causes compile-time annotation errors
+            Class<?> clazz = Class.forName("net.minecraft.server.v1_12_R1.PacketPlayOutPlayerInfo$PlayerInfoData");
+            Constructor<?> ctor = clazz.getDeclaredConstructor(GameProfile.class, int.class, EnumGamemode.class, IChatBaseComponent.class);
+            //noinspection ALL
+            ((List) field.get(packet)).add(ctor.newInstance(
+                    handle.getProfile(),
+                    handle.ping,
+                    EnumGamemode.SPECTATOR,
+                    handle.getPlayerListName()
+            ));
+
+            player.getWorld().getPlayers().forEach(p -> {
+                if (player.equals(p)) return;
+                p.hidePlayer(SBPracticeAPI.getInstance().getPlugin(), player);
+                ((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
+            });
+        } catch (ReflectiveOperationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void showPlayer(@NotNull Player player) {
+        CraftPlayer cPlayer = (CraftPlayer) player;
+        cPlayer.removePotionEffect(PotionEffectType.INVISIBILITY);
+        player.getWorld().getPlayers().forEach(p -> {
+            p.showPlayer(SBPracticeAPI.getInstance().getPlugin(), player);
+        });
+        cPlayer.getHandle().playerInteractManager.setGameMode(EnumGamemode.CREATIVE);
+    }
+
+    @Override
+    public @NotNull BlockData getBlockDataAt(@NotNull Location location) {
+        Block block = location.getBlock();
+        Material type = block.getType();
+        MaterialData data = block.getState().getData();
+        CompoundTag entity = this.getBlockEntityNBT(block);
+        if (data instanceof Stairs) {
+            FixedStairs stairs = new FixedStairs(data);
+            BlockPosition position = toNMSPosition(location);
+            World world = ((CraftWorld) location.getWorld()).getHandle();
+            IBlockData blockData = getBlock(world, position);
+            BlockStairs.EnumStairShape shape = blockData.getBlock().updateState(
+                    blockData,
+                    world,
+                    position
+            ).get(BlockStairs.SHAPE);
+            stairs.setShape(FixedStairs.StairShape.values()[shape.ordinal()]);
+            data = stairs;
+        }
+        return new BlockData(type, data, entity);
+    }
+
+    @Override
+    public boolean isSimilarBlock(@NotNull BlockData b1, @NotNull BlockData b2) {
+        MaterialData data1 = b1.getData();
+        MaterialData data2 = b2.getData();
+        if (!data1.equals(data2)) {
+            if (data1 instanceof FixedStairs && data2 instanceof FixedStairs) {
+                FixedStairs stairs1 = (FixedStairs) data1;
+                FixedStairs stairs2 = (FixedStairs) data2;
+                if (Math.abs(stairs1.getFacing().ordinal() - stairs2.getFacing().ordinal()) == 1
+                        || stairs1.getFacing() == BlockFace.NORTH && stairs2.getFacing() == BlockFace.WEST
+                        || stairs1.getFacing() == BlockFace.WEST && stairs2.getFacing() == BlockFace.NORTH
+                        && stairs1.isInverted() == stairs2.isInverted()) {
+                    return (stairs1.getShape().name().contains("LEFT") && stairs2.getShape().name().contains("RIGHT"))
+                            || (stairs1.getShape().name().contains("RIGHT") && stairs2.getShape().name().contains("LEFT"));
+                }
+            }
+            return false;
+        } else {
+            CompoundTag entity1 = b1.getBlockEntity();
+            CompoundTag entity2 = b2.getBlockEntity();
+            return Objects.equals(filterBlockEntityNBT(entity1), filterBlockEntityNBT(entity2));
+        }
+    }
+
+    @Override
+    public boolean toFullBlock(@NotNull Block block) {
+        if (block.getType() == null) return false;
+        BlockData newBlock;
+        Location location = block.getLocation();
+
+        BlockPosition position = toNMSPosition(location);
+        World world = ((CraftWorld) block.getWorld()).getHandle();
+        IBlockData blockData = getBlock(world, position);
+        net.minecraft.server.v1_12_R1.Block nmsBlock = blockData.getBlock();
+        if (nmsBlock instanceof BlockAnvil) {
+            newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+        } else if (nmsBlock instanceof BlockBanner) {
+            newBlock = BlockData.of(Material.WOOL, block.getData());
+        } else if (nmsBlock instanceof BlockBed) {
+            newBlock = BlockData.of(Material.WOOL, block.getData());
+        } else if (nmsBlock instanceof BlockBrewingStand) {
+            newBlock = BlockData.of(XMaterial.GOLD_BLOCK);
+        } else if (nmsBlock instanceof BlockButtonAbstract) {
+            EnumDirection facing = blockData.get(BlockDirectional.FACING);
+            if (facing == EnumDirection.UP || facing == EnumDirection.DOWN) {
+                if (nmsBlock instanceof BlockStoneButton) {
+                    newBlock = BlockData.of(XMaterial.STONE);
+                } else if (nmsBlock instanceof BlockWoodButton) {
+                    newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+                } else {
+                    newBlock = null;
+                }
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockCactus) {
+            newBlock = BlockData.of(XMaterial.SAND);
+        } else if (nmsBlock instanceof BlockCake) {
+            newBlock = BlockData.of(XMaterial.WHITE_WOOL);
+        } else if (nmsBlock instanceof BlockCarpet) {
+            newBlock = BlockData.of(Material.WOOL, block.getData());
+        } else if (nmsBlock instanceof BlockChest) {
+            newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+        } else if (nmsBlock instanceof BlockWeb) {
+            newBlock = BlockData.of(XMaterial.WHITE_WOOL);
+        } else if (nmsBlock instanceof BlockCrops) {
+            newBlock = BlockData.of(XMaterial.FARMLAND);
+        } else if (nmsBlock instanceof BlockDaylightDetector) {
+            newBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
+        } else if (nmsBlock instanceof BlockDeadBush) {
+            newBlock = BlockData.of(XMaterial.RED_SAND);
+        } else if (nmsBlock instanceof BlockDoor) {
+            if (nmsBlock == Blocks.IRON_DOOR) {
+                newBlock = BlockData.of(XMaterial.IRON_DOOR);
+            } else if (nmsBlock == Blocks.SPRUCE_DOOR) {
+                newBlock = BlockData.of(XMaterial.SPRUCE_DOOR);
+            } else if (nmsBlock == Blocks.BIRCH_DOOR) {
+                newBlock = BlockData.of(XMaterial.BIRCH_DOOR);
+            } else if (nmsBlock == Blocks.JUNGLE_DOOR) {
+                newBlock = BlockData.of(XMaterial.JUNGLE_DOOR);
+            } else if (nmsBlock == Blocks.ACACIA_DOOR) {
+                newBlock = BlockData.of(XMaterial.ACACIA_DOOR);
+            } else if (nmsBlock == Blocks.DARK_OAK_DOOR) {
+                newBlock = BlockData.of(XMaterial.DARK_OAK_DOOR);
+            } else if (nmsBlock == Blocks.WOODEN_DOOR) {
+                newBlock = BlockData.of(XMaterial.OAK_DOOR);
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockTallPlant) {
+            newBlock = BlockData.of(XMaterial.GRASS_BLOCK);
+        } else if (nmsBlock instanceof BlockEnchantmentTable) {
+            newBlock = BlockData.of(XMaterial.DIAMOND_BLOCK);
+        } else if (nmsBlock instanceof BlockEndRod) {
+            EnumDirection facing = blockData.get(BlockDirectional.FACING);
+            if (facing == EnumDirection.UP || facing == EnumDirection.DOWN) {
+                newBlock = BlockData.of(XMaterial.QUARTZ_BLOCK);
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockEnderChest) {
+            newBlock = BlockData.of(XMaterial.OBSIDIAN);
+        } else if (nmsBlock instanceof BlockEnderPortalFrame) {
+            newBlock = BlockData.of(XMaterial.END_STONE);
+        } else if (nmsBlock instanceof BlockFence) {
+            if (nmsBlock == Blocks.SPRUCE_FENCE) {
+                newBlock = BlockData.of(XMaterial.SPRUCE_PLANKS);
+            } else if (nmsBlock == Blocks.BIRCH_FENCE) {
+                newBlock = BlockData.of(XMaterial.BIRCH_PLANKS);
+            } else if (nmsBlock == Blocks.JUNGLE_FENCE) {
+                newBlock = BlockData.of(XMaterial.JUNGLE_PLANKS);
+            } else if (nmsBlock == Blocks.ACACIA_FENCE) {
+                newBlock = BlockData.of(XMaterial.ACACIA_PLANKS);
+            } else if (nmsBlock == Blocks.DARK_OAK_FENCE) {
+                newBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
+            } else if (nmsBlock == Blocks.FENCE) {
+                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockFenceGate) {
+            if (nmsBlock == Blocks.SPRUCE_FENCE_GATE) {
+                newBlock = BlockData.of(XMaterial.SPRUCE_PLANKS);
+            } else if (nmsBlock == Blocks.BIRCH_FENCE_GATE) {
+                newBlock = BlockData.of(XMaterial.BIRCH_PLANKS);
+            } else if (nmsBlock == Blocks.JUNGLE_FENCE_GATE) {
+                newBlock = BlockData.of(XMaterial.JUNGLE_PLANKS);
+            } else if (nmsBlock == Blocks.ACACIA_FENCE_GATE) {
+                newBlock = BlockData.of(XMaterial.ACACIA_PLANKS);
+            } else if (nmsBlock == Blocks.DARK_OAK_FENCE_GATE) {
+                newBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
+            } else if (nmsBlock == Blocks.FENCE_GATE) {
+                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockFire) {
+            newBlock = BlockData.of(XMaterial.NETHERRACK);
+        } else if (nmsBlock instanceof BlockFlowerPot) {
+            newBlock = null;
+        } else if (nmsBlock instanceof BlockFlowers) {
+            newBlock = BlockData.of(XMaterial.GRASS_BLOCK);
+        } else if (nmsBlock instanceof BlockThin) {
+            if (nmsBlock == Blocks.GLASS_PANE) {
+                newBlock = BlockData.of(XMaterial.GLASS);
+            } else if (nmsBlock == Blocks.STAINED_GLASS_PANE) {
+                newBlock = BlockData.of(Material.STAINED_GLASS, block.getData());
+            } else if (nmsBlock == Blocks.IRON_BARS) {
+                newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockSkull) {
+            newBlock = null;
+        } else if (nmsBlock instanceof BlockHopper) {
+            newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+        } else if (nmsBlock instanceof BlockLadder) {
+            newBlock = null;
+        } else if (nmsBlock instanceof BlockLever) {
+            BlockLever.EnumLeverPosition facing = blockData.get(BlockLever.FACING);
+            if (facing.c() == EnumDirection.UP || facing.c() == EnumDirection.DOWN) {
+                newBlock = BlockData.of(XMaterial.COBBLESTONE);
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockWaterLily) {
+            newBlock = null;
+        } else if (nmsBlock instanceof BlockMushroom) {
+            newBlock = BlockData.of(XMaterial.MYCELIUM);
+        } else if (nmsBlock instanceof BlockNetherWart) {
+            newBlock = BlockData.of(XMaterial.SOUL_SAND);
+        } else if (nmsBlock instanceof BlockPressurePlateAbstract) {
+            if (nmsBlock == Blocks.STONE_PRESSURE_PLATE) {
+                newBlock = BlockData.of(XMaterial.STONE);
+            } else if (nmsBlock == Blocks.WOODEN_PRESSURE_PLATE) {
+                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+            } else if (nmsBlock == Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE) {
+                newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+            } else if (nmsBlock == Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE) {
+                newBlock = BlockData.of(XMaterial.GOLD_BLOCK);
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockMinecartTrackAbstract) {
+            newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+        } else if (nmsBlock instanceof BlockRedstoneWire) {
+            newBlock = BlockData.of(XMaterial.RED_WOOL);
+        } else if (nmsBlock instanceof BlockRedstoneComparator) {
+            newBlock = BlockData.of(XMaterial.RED_WOOL);
+        } else if (nmsBlock instanceof BlockRepeater) {
+            newBlock = BlockData.of(XMaterial.RED_WOOL);
+        } else if (nmsBlock instanceof BlockSapling) {
+            newBlock = null;
+        } else if (nmsBlock instanceof BlockSign) {
+            if (nmsBlock == Blocks.STANDING_SIGN) {
+                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockStepAbstract) {
+            if (nmsBlock instanceof BlockDoubleStepAbstract) { // Stone Slab
+                BlockDoubleStepAbstract.EnumStoneSlabVariant variant = blockData.get(BlockDoubleStepAbstract.VARIANT);
+                switch (variant) {
+                    case STONE:
+                        newBlock = BlockData.of(Material.DOUBLE_STEP, (byte) 8);
+                        break;
+                    case SAND:
+                        newBlock = BlockData.of(XMaterial.SANDSTONE);
+                        break;
+                    case COBBLESTONE:
+                        newBlock = BlockData.of(XMaterial.COBBLESTONE);
+                        break;
+                    case BRICK:
+                        newBlock = BlockData.of(XMaterial.BRICK);
+                        break;
+                    case SMOOTHBRICK:
+                        newBlock = BlockData.of(XMaterial.STONE_BRICKS);
+                        break;
+                    case NETHERBRICK:
+                        newBlock = BlockData.of(XMaterial.NETHER_BRICK);
+                        break;
+                    case QUARTZ:
+                        newBlock = BlockData.of(XMaterial.QUARTZ_BLOCK);
+                        break;
+                    default:
+                        newBlock = null;
+                        break;
+                }
+            } else if (nmsBlock instanceof BlockWoodenStep) { // Wood Slab
+                BlockWood.EnumLogVariant variant = blockData.get(BlockWoodenStep.VARIANT);
+                newBlock = BlockData.of(Material.WOOD, (byte) variant.a());
+            } else if (nmsBlock instanceof BlockPurpurSlab) { // Purpur Slab
+                newBlock = BlockData.of(XMaterial.PURPUR_BLOCK);
+            } else if (nmsBlock instanceof BlockDoubleStoneStepAbstract) { // Red Sandstone Slab
+                newBlock = BlockData.of(XMaterial.RED_SANDSTONE);
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockSnow) {
+            newBlock = BlockData.of(XMaterial.SNOW_BLOCK);
+        } else if (nmsBlock instanceof BlockStairs) {
+            if (nmsBlock == Blocks.OAK_STAIRS) {
+                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+            } else if (nmsBlock == Blocks.STONE_STAIRS) {
+                newBlock = BlockData.of(XMaterial.COBBLESTONE);
+            } else if (nmsBlock == Blocks.BRICK_STAIRS) {
+                newBlock = BlockData.of(XMaterial.BRICK);
+            } else if (nmsBlock == Blocks.STONE_BRICK_STAIRS) {
+                newBlock = BlockData.of(XMaterial.STONE_BRICKS);
+            } else if (nmsBlock == Blocks.NETHER_BRICK_STAIRS) {
+                newBlock = BlockData.of(XMaterial.NETHER_BRICK);
+            } else if (nmsBlock == Blocks.SANDSTONE_STAIRS) {
+                newBlock = BlockData.of(XMaterial.SANDSTONE);
+            } else if (nmsBlock == Blocks.SPRUCE_STAIRS) {
+                newBlock = BlockData.of(XMaterial.SPRUCE_PLANKS);
+            } else if (nmsBlock == Blocks.BIRCH_STAIRS) {
+                newBlock = BlockData.of(XMaterial.BIRCH_PLANKS);
+            } else if (nmsBlock == Blocks.JUNGLE_STAIRS) {
+                newBlock = BlockData.of(XMaterial.JUNGLE_PLANKS);
+            } else if (nmsBlock == Blocks.QUARTZ_STAIRS) {
+                newBlock = BlockData.of(XMaterial.QUARTZ_BLOCK);
+            } else if (nmsBlock == Blocks.ACACIA_STAIRS) {
+                newBlock = BlockData.of(XMaterial.ACACIA_PLANKS);
+            } else if (nmsBlock == Blocks.DARK_OAK_STAIRS) {
+                newBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
+            } else if (nmsBlock == Blocks.RED_SANDSTONE_STAIRS) {
+                newBlock = BlockData.of(XMaterial.RED_SANDSTONE);
+            } else if (nmsBlock == Blocks.PURPUR_STAIRS) {
+                newBlock = BlockData.of(XMaterial.PURPUR_BLOCK);
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockStem) {
+            newBlock = BlockData.of(XMaterial.FARMLAND);
+        } else if (nmsBlock instanceof BlockReed) {
+            newBlock = null;
+        } else if (nmsBlock instanceof BlockLongGrass) {
+            newBlock = BlockData.of(XMaterial.GRASS_BLOCK);
+        } else if (nmsBlock instanceof BlockTorch) {
+            newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+        } else if (nmsBlock instanceof BlockTrapdoor) {
+            boolean open = blockData.get(BlockTrapdoor.OPEN);
+            BlockTrapdoor.EnumTrapdoorHalf half = blockData.get(BlockTrapdoor.HALF);
+            if (!open && half == BlockTrapdoor.EnumTrapdoorHalf.BOTTOM) {
+                if (nmsBlock == Blocks.TRAPDOOR) {
+                    newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+                } else if (nmsBlock == Blocks.IRON_TRAPDOOR) {
+                    newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+                } else {
+                    newBlock = null;
+                }
+            } else {
+                newBlock = null;
+            }
+        } else if (nmsBlock instanceof BlockTripwireHook) {
+            newBlock = null;
+        } else if (nmsBlock instanceof BlockVine) {
+            newBlock = null;
+        } else if (nmsBlock instanceof BlockCobbleWall) {
+            BlockCobbleWall.EnumCobbleVariant variant = blockData.get(BlockCobbleWall.VARIANT);
+            switch (variant) {
+                case NORMAL:
+                    newBlock = BlockData.of(XMaterial.COBBLESTONE);
+                    break;
+                case MOSSY:
+                    newBlock = BlockData.of(XMaterial.MOSSY_COBBLESTONE);
+                    break;
+                default:
+                    newBlock = null;
+                    break;
+            }
+        } else if (nmsBlock instanceof BlockFluids) {
+            if (nmsBlock == Blocks.WATER || nmsBlock == Blocks.FLOWING_WATER) {
+                newBlock = BlockData.of(XMaterial.LIGHT_BLUE_WOOL);
+            } else if (nmsBlock == Blocks.LAVA || nmsBlock == Blocks.FLOWING_LAVA) {
+                newBlock = BlockData.of(XMaterial.ORANGE_WOOL);
+            } else {
+                newBlock = null;
+            }
+        } else {
+            return true;
+        }
+
+        if (newBlock != null) {
+            this.setBlock(location, newBlock);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private IBlockData getBlock(World world, BlockPosition position) {
+        return world.getType(position);
+    }
+
+    private BlockPosition toNMSPosition(Location location) {
+        return new BlockPosition(
+                location.getBlockX(),
+                location.getBlockY(),
+                location.getBlockZ()
+        );
+    }
+
+    @Override
+    public @Nullable CompoundTag getBlockEntityNBT(@NotNull Block block) {
+        TileEntity entity = ((CraftWorld) block.getWorld()).getTileEntityAt(
+                block.getX(),
+                block.getY(),
+                block.getZ()
+        );
+        if (entity == null) return null;
+
+        try {
+            NBTTagCompound tag = new NBTTagCompound();
+            entity.save(tag);
+            ByteArrayDataOutput output = ByteStreams.newDataOutput();
+            NBTCompressedStreamTools.a(tag, output);
+            ByteArrayInputStream input = new ByteArrayInputStream(output.toByteArray());
+            return (CompoundTag) new NBTDeserializer(false).fromStream(input).getTag();
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    @Override
+    public void updateBlockEntityNBT(@NotNull Block block, @NotNull CompoundTag tag) {
+        TileEntity entity = ((CraftWorld) block.getWorld()).getTileEntityAt(
+                block.getX(),
+                block.getY(),
+                block.getZ()
+        );
+        if (entity == null) return;
+
+        try {
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            new NBTSerializer(false).toStream(new NamedTag(null, tag), output);
+            ByteArrayDataInput input = ByteStreams.newDataInput(output.toByteArray());
+            entity.load(NBTCompressedStreamTools.a(input, NBTReadLimiter.a));
+            entity.update();
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
         }
     }
 }

@@ -1,17 +1,17 @@
 package cc.meteormc.sbpractice.arena.session;
 
-import cc.meteormc.sbpractice.SBPractice;
-import cc.meteormc.sbpractice.api.config.paths.ArenaConfigPath;
-import cc.meteormc.sbpractice.api.storage.schematic.Schematic;
+import cc.carm.lib.easyplugin.utils.ColorParser;
+import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.api.storage.data.SchematicData;
 import cc.meteormc.sbpractice.api.util.ItemBuilder;
 import cc.meteormc.sbpractice.api.util.Region;
-import cc.meteormc.sbpractice.api.util.Utils;
 import cc.meteormc.sbpractice.arena.DefaultArena;
 import cc.meteormc.sbpractice.arena.setup.SetupType;
-import cc.meteormc.sbpractice.config.Messages;
+import cc.meteormc.sbpractice.config.ArenaConfig;
 import cc.meteormc.sbpractice.gui.SetupArenaGui;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
+import com.cryptomorin.xseries.messages.Titles;
 import fr.mrmicky.fastparticles.ParticleType;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -25,7 +25,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -33,9 +32,9 @@ import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Getter
 public class SetupSession extends BukkitRunnable implements Listener {
@@ -55,14 +54,15 @@ public class SetupSession extends BukkitRunnable implements Listener {
     private Location startSign = null;
     private Location previewSign = null;
 
-    private static final List<SetupSession> SESSIONS = new ArrayList<>();
+    private static final List<SetupSession> SESSIONS = new CopyOnWriteArrayList<>();
 
     public SetupSession(Player player, String name) {
         this.name = name;
         this.player = player;
         this.gui = new SetupArenaGui(this);
         SESSIONS.add(this);
-        Bukkit.getPluginManager().registerEvents(this, SBPractice.getPlugin());
+        this.runTaskTimer(Main.getPlugin(), 0L, 5L);
+        Bukkit.getPluginManager().registerEvents(this, Main.getPlugin());
     }
 
     @Override
@@ -149,7 +149,8 @@ public class SetupSession extends BukkitRunnable implements Listener {
             case MAP_SIGN:
                 this.startSetMapSigns();
                 break;
-            default: return;
+            default:
+                return;
         }
         XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(this.player);
     }
@@ -168,7 +169,8 @@ public class SetupSession extends BukkitRunnable implements Listener {
             case MAP_SIGN:
                 this.startSetMapSigns();
                 break;
-            default: return;
+            default:
+                return;
         }
         XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(this.player);
     }
@@ -196,33 +198,33 @@ public class SetupSession extends BukkitRunnable implements Listener {
                 DefaultArena arena = new DefaultArena(this.name);
                 Region region = new Region(this.mapAreaPos1.toVector(), this.mapAreaPos2.toVector());
                 Vector reference = region.getMinimumPos();
-                arena.setObject(ArenaConfigPath.HEIGHT, this.mapAreaPos1.getBlockY());
-                arena.setLocation(ArenaConfigPath.MAP_AREA_POS1, this.mapAreaPos1.subtract(reference));
-                arena.setLocation(ArenaConfigPath.MAP_AREA_POS2, this.mapAreaPos2.subtract(reference));
-                arena.setLocation(ArenaConfigPath.MAP_BUILD_AREA_POS1, this.mapBuildAreaPos1.subtract(reference));
-                arena.setLocation(ArenaConfigPath.MAP_BUILD_AREA_POS2, this.mapBuildAreaPos2.subtract(reference));
-                arena.setLocation(ArenaConfigPath.MAP_SPAWN, this.mapSpawnPoint.subtract(reference));
-                arena.setLocation(ArenaConfigPath.GROUND_SIGN, this.groundSign.subtract(reference));
-                arena.setLocation(ArenaConfigPath.RECORD_SIGN, this.recordSign.subtract(reference));
-                arena.setLocation(ArenaConfigPath.CLEAR_SIGN, this.clearSign.subtract(reference));
-                arena.setLocation(ArenaConfigPath.SELECT_ARENA_SIGN, this.selectArenaSign.subtract(reference));
-                arena.setLocation(ArenaConfigPath.MODE_SIGN, this.modeSign.subtract(reference));
-                arena.setLocation(ArenaConfigPath.PRESET_SIGN, this.presetSign.subtract(reference));
-                arena.setLocation(ArenaConfigPath.START_SIGN, this.startSign.subtract(reference));
-                arena.setLocation(ArenaConfigPath.PREVIEW_SIGN, this.previewSign.subtract(reference));
-                arena.save();
+                ArenaConfig config = arena.getConfig();
+                config.MAP.HEIGHT.set(this.mapAreaPos1.getBlockY());
+                config.MAP.AREA_POS1.set(this.mapAreaPos1.toVector().subtract(reference));
+                config.MAP.AREA_POS2.set(this.mapAreaPos2.toVector().subtract(reference));
+                config.MAP.BUILD_AREA_POS1.set(this.mapBuildAreaPos1.toVector().subtract(reference));
+                config.MAP.BUILD_AREA_POS2.set(this.mapBuildAreaPos2.toVector().subtract(reference));
+                config.MAP.SPAWN.set(this.mapSpawnPoint.subtract(reference));
+                config.SIGN.GROUND.set(this.groundSign.toVector().subtract(reference));
+                config.SIGN.RECORD.set(this.recordSign.toVector().subtract(reference));
+                config.SIGN.CLEAR.set(this.clearSign.toVector().subtract(reference));
+                config.SIGN.SELECT_ARENA.set(this.selectArenaSign.toVector().subtract(reference));
+                config.SIGN.MODE.set(this.modeSign.toVector().subtract(reference));
+                config.SIGN.PRESET.set(this.presetSign.toVector().subtract(reference));
+                config.SIGN.START.set(this.startSign.toVector().subtract(reference));
+                config.SIGN.PREVIEW.set(this.previewSign.toVector().subtract(reference));
+                config.getHolder().save();
 
-                Schematic.save(
+                SchematicData.save(
                         this.mapSpawnPoint.getWorld(),
                         region.getMinimumPos(),
                         region,
                         arena.getSchematicFile()
                 );
-                arena.load();
 
-                SBPractice.getArenas().add(arena);
-                this.player.sendMessage(ChatColor.GREEN + "Save was successful! " +
-                        "If the settings are not applied, please try restarting the server.");
+                Main.getArenas().add(arena.load());
+                this.player.sendMessage(ChatColor.GREEN + "Save was successful! "
+                        + "If the settings are not applied, please try restarting the server.");
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -232,17 +234,17 @@ public class SetupSession extends BukkitRunnable implements Listener {
     private void startSetMapBuildArea() {
         this.player.closeInventory();
         this.mapBuildAreaPos1 = this.mapBuildAreaPos2 = null;
-        SBPractice.getNms().sendTitle(
+        Titles.sendTitle(
                 this.player,
+                0, 20, 5,
                 "",
-                ChatColor.GREEN + "Use the iron axe to select 2 points!",
-                0, 20, 5
+                ChatColor.GREEN + "Use the iron axe to select 2 points!"
         );
         PlayerInventory inventory = this.player.getInventory();
-        inventory.setItem(inventory.getHeldItemSlot(), SBPractice.getNms()
+        inventory.setItem(inventory.getHeldItemSlot(), Main.getNms()
                 .setItemTag(new ItemBuilder(XMaterial.IRON_AXE)
-                .setDisplayName(SetupType.MAP_BUILD_AREA.getHint())
-                .build(), "sbpractice", "setup-build-area"));
+                        .setDisplayName(SetupType.MAP_BUILD_AREA.getHint())
+                        .build(), "sbpractice", "setup-build-area"));
     }
 
     private void startSetMapSigns() {
@@ -255,112 +257,106 @@ public class SetupSession extends BukkitRunnable implements Listener {
         this.presetSign = null;
         this.startSign = null;
         this.previewSign = null;
-        SBPractice.getNms().sendTitle(
+        Titles.sendTitle(
                 this.player,
+                0, 20, 5,
                 "",
-                ChatColor.GREEN + "Place the oak sign to set sign!",
-                0, 20, 5
+                ChatColor.GREEN + "Place the oak sign to set sign!"
         );
         final SetupType.SetupSignType sign = SetupType.SetupSignType.GROUND;
         PlayerInventory inventory = this.player.getInventory();
-        inventory.setItem(inventory.getHeldItemSlot(), SBPractice.getNms()
+        inventory.setItem(inventory.getHeldItemSlot(), Main.getNms()
                 .setItemTag(new ItemBuilder(XMaterial.OAK_SIGN)
-                .setDisplayName(sign.getHint())
-                .build(), "sbpractice", "setup-signs_" + sign.name()));
+                        .setDisplayName(sign.getHint())
+                        .build(), "sbpractice", "setup-signs_" + sign.name()));
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
+    @EventHandler
+    public void onInteract(PlayerInteractEvent event) {
         if (!event.hasItem()) return;
-        Optional<SetupSession> optionalSession = getSession(player);
+
+        ItemStack item = event.getItem();
+        Optional<SetupSession> optionalSession = getSession(event.getPlayer());
         if (optionalSession.isPresent()) {
             SetupSession session = optionalSession.get();
-            if (SBPractice.getNms().hasItemTag(event.getItem(), "sbpractice")) {
-                if (SBPractice.getNms().getItemTag(event.getItem(), "sbpractice").equals("setup-build-area")) {
-                    event.setCancelled(true);
-                    if (session.mapBuildAreaPos1 != null && session.mapBuildAreaPos2 != null) {
-                        player.setItemInHand(XMaterial.AIR.parseItem());
+            String tag = Main.getNms().hasItemTag(item, "sbpractice") ? Main.getNms().getItemTag(item, "sbpractice") : "";
+            if ("setup-build-area".equals(tag)) {
+                event.setCancelled(true);
+                if (session.mapBuildAreaPos1 != null && session.mapBuildAreaPos2 != null) {
+                    player.setItemInHand(null);
+                    return;
+                }
+
+                switch (event.getAction()) {
+                    case LEFT_CLICK_BLOCK:
+                        session.mapBuildAreaPos1 = event.getClickedBlock().getLocation();
+                        player.sendMessage(ChatColor.GREEN + "Build area position 1 set!");
+                        break;
+                    case RIGHT_CLICK_BLOCK:
+                        session.mapBuildAreaPos2 = event.getClickedBlock().getLocation();
+                        player.sendMessage(ChatColor.GREEN + "Build area position 2 set!");
+                        break;
+                    default:
                         return;
-                    }
-
-                    switch (event.getAction()) {
-                        case LEFT_CLICK_BLOCK:
-                            session.mapBuildAreaPos1 = event.getClickedBlock().getLocation();
-                            player.sendMessage(Messages.PREFIX.getMessage() + ChatColor.GREEN + "Build area position 1 set!");
-                            break;
-                        case RIGHT_CLICK_BLOCK:
-                            session.mapBuildAreaPos2 = event.getClickedBlock().getLocation();
-                            player.sendMessage(Messages.PREFIX.getMessage() + ChatColor.GREEN + "Build area position 2 set!");
-                            break;
-                        default:
-                            return;
-                    }
-                    XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player);
-
-                    if (session.mapBuildAreaPos1 != null && session.mapBuildAreaPos2 != null) {
-                        player.getInventory().setItemInHand(null);
-                        player.sendMessage(Messages.PREFIX.getMessage() + ChatColor.GREEN + "The setup was successful!");
-                        session.openGui();
-                    }
                 }
-            }
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent event) {
-        if (!event.canBuild()) return;
-        Player player = event.getPlayer();
-        ItemStack item = event.getItemInHand();
-        if (item == null) return;
-        Optional<SetupSession> optionalSession = getSession(player);
-        if (optionalSession.isPresent()) {
-            SetupSession session = optionalSession.get();
-            Block block = event.getBlockPlaced();
-            String tag = SBPractice.getNms().hasItemTag(item, "sbpractice") ? SBPractice.getNms().getItemTag(item, "sbpractice") : "";
-            if (tag.startsWith("setup-signs")) {
-                //event.setCancelled(true);
-                if (!(block.getState() instanceof Sign)) return;
-
-                SetupType.SetupSignType sign;
-                try {
-                    sign = SetupType.SetupSignType.valueOf(tag.substring(tag.indexOf('_') + 1));
-                    Field field = super.getClass().getDeclaredField(sign.getField());
-                    field.setAccessible(true);
-                    field.set(session, block.getLocation());
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
-                    return;
-                } catch (IllegalArgumentException e) {
-                    return;
-                }
-
-                player.sendMessage(Messages.PREFIX.getMessage() + ChatColor.GREEN + ChatColor.stripColor(Utils.colorize(sign.getHint())) + " was successful!");
                 XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player);
-                if (sign.ordinal() + 1 >= SetupType.SetupSignType.values().length) {
+
+                if (session.mapBuildAreaPos1 != null && session.mapBuildAreaPos2 != null) {
                     player.getInventory().setItemInHand(null);
+                    player.sendMessage(ChatColor.GREEN + "The setup was successful!");
                     session.openGui();
-                } else {
-                    sign = SetupType.SetupSignType.values()[sign.ordinal() + 1];
-                    player.setItemInHand(SBPractice.getNms()
-                            .setItemTag(new ItemBuilder(item)
-                            .setDisplayName(sign.getHint())
-                            .build(), "sbpractice", "setup-signs_" + sign.name()));
                 }
             }
         }
     }
 
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
-        getSession(player).ifPresent(SetupSession::close);
+    public void onPlace(BlockPlaceEvent event) {
+        if (!event.canBuild()) return;
+        ItemStack item = event.getItemInHand();
+        if (item == null) return;
+
+        Optional<SetupSession> optionalSession = getSession(event.getPlayer());
+        if (optionalSession.isPresent()) {
+            SetupSession session = optionalSession.get();
+            Block block = event.getBlockPlaced();
+            String tag = Main.getNms().hasItemTag(item, "sbpractice") ? Main.getNms().getItemTag(item, "sbpractice") : "";
+            assert tag != null;
+            if (tag.startsWith("setup-signs")) {
+                if (!(block.getState() instanceof Sign)) return;
+
+                SetupType.SetupSignType sign;
+                try {
+                    sign = SetupType.SetupSignType.valueOf(tag.substring(tag.indexOf('_') + 1));
+                    Field field = this.getClass().getDeclaredField(sign.getField());
+                    field.setAccessible(true);
+                    field.set(session, block.getLocation());
+                } catch (ReflectiveOperationException e) {
+                    e.printStackTrace();
+                    return;
+                } catch (IllegalArgumentException e) {
+                    return;
+                }
+
+                player.sendMessage(ChatColor.GREEN + ColorParser.clear(sign.getHint()) + " was successful!");
+                XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player);
+                if (sign.ordinal() + 1 >= SetupType.SetupSignType.values().length) {
+                    player.getInventory().setItemInHand(null);
+                    session.openGui();
+                } else {
+                    sign = SetupType.SetupSignType.values()[sign.ordinal() + 1];
+                    player.setItemInHand(Main.getNms()
+                            .setItemTag(new ItemBuilder(item)
+                                    .setDisplayName(sign.getHint())
+                                    .build(), "sbpractice", "setup-signs_" + sign.name()));
+                }
+            }
+        }
     }
 
     public static @NotNull Optional<SetupSession> getSession(Player player) {
         return SESSIONS.stream()
-                .filter(session -> session.getPlayer().getName().equals(player.getName()))
+                .filter(session -> session.getPlayer().equals(player))
                 .findFirst();
     }
 }
