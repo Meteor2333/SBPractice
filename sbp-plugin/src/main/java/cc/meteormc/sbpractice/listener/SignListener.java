@@ -2,12 +2,13 @@ package cc.meteormc.sbpractice.listener;
 
 import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
-import cc.meteormc.sbpractice.api.arena.Arena;
+import cc.meteormc.sbpractice.api.Zone;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
-import cc.meteormc.sbpractice.arena.operation.*;
-import cc.meteormc.sbpractice.config.Message;
 import cc.meteormc.sbpractice.gui.PresetGui;
+import cc.meteormc.sbpractice.operation.*;
 import com.cryptomorin.xseries.XSound;
+import fr.mrmicky.fastparticles.ParticleType;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
@@ -35,62 +36,35 @@ public class SignListener implements Listener {
             if (!(block.getState() instanceof Sign)) return;
             if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
-            if (island.getSigns().getGround().equals(block.getLocation())) {
-                XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
+            Location location = block.getLocation();
+            if (island.getSigns().getGround().equals(location)) {
                 island.executeOperation(new GroundOperation());
-            }
-            if (island.getSigns().getRecord().equals(block.getLocation())) {
-                XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                if (island.getOwner().equals(player)) {
-                    data.getIsland().executeOperation(new RecordOperation());
-                } else {
-                    Message.BASIC.CANNOT_DO_THAT.sendTo(player);
-                }
-            }
-            if (island.getSigns().getClear().equals(block.getLocation())) {
-                XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
+            } else if (island.getSigns().getRecord().equals(location)) {
+                island.executeOperation(new RecordOperation());
+            } else if (island.getSigns().getClear().equals(location)) {
                 island.executeOperation(new ClearOperation());
-            }
-            if (island.getSigns().getSelectArena().equals(block.getLocation())) {
-                XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                List<Arena> arenas = Main.getArenas();
-                if (arenas.contains(island.getArena())) {
-                    int index = arenas.indexOf(island.getArena()) + 1;
-                    if (index >= arenas.size()) index = 0;
-
-                    if (island.getOwner().equals(player)) island.remove();
-                    else {
-                        island.removeGuest(player);
-                        Message.MULTIPLAYER.LEAVE.PASSIVE.sendTo(island.getOwner(), player.getName());
-                    }
-                    arenas.get(index).createIsland(player);
+            } else if (island.getSigns().getZone().equals(location)) {
+                List<Zone> zones = Main.get().getZones();
+                if (zones.contains(island.getZone())) {
+                    int index = zones.indexOf(island.getZone()) + 1;
+                    if (index >= zones.size()) index = 0;
+                    island.removeAny(player, false);
+                    zones.get(index).createIsland(player);
                 }
-            }
-            if (island.getSigns().getMode().equals(block.getLocation())) {
-                XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                if (island.getOwner().equals(player)) {
-                    island.executeOperation(new ModeOperation());
-                } else {
-                    Message.BASIC.CANNOT_DO_THAT.sendTo(player);
-                }
-            }
-            if (island.getSigns().getPreset().equals(block.getLocation())) {
-                XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
+            } else if (island.getSigns().getMode().equals(location)) {
+                island.executeOperation(new ModeOperation());
+            } else if (island.getSigns().getPreset().equals(location)) {
                 new PresetGui(player, island).open(player);
-            }
-            if (island.getSigns().getStart().equals(block.getLocation())) {
-                XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
+            } else if (island.getSigns().getStart().equals(location)) {
                 island.executeOperation(new StartOperation());
-            }
-            if (island.getSigns().getPreview().equals(block.getLocation())) {
-                XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-                if (island.getOwner().equals(player)) {
-                    island.executeOperation(new PreviewOperation());
-                } else {
-                    Message.BASIC.CANNOT_DO_THAT.sendTo(player);
-                }
+            } else if (island.getSigns().getPreview().equals(location)) {
+                island.executeOperation(new PreviewOperation());
+            } else {
+                return;
             }
 
+            XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
+            ParticleType.of("CRIT").spawn(player, location.clone().add(0.5, 0.5, 0.5), 1, 0, 0, 0, 0.1);
             island.refreshSigns();
         });
     }

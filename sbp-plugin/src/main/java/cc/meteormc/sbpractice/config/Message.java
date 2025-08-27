@@ -73,7 +73,6 @@ public interface Message extends Configuration {
                     "&2▪ &7/&esbp ground &8- &aSync ground",
                     "&2▪ &7/&esbp record &8- &aRecord current",
                     "&2▪ &7/&esbp clear &8- &aClear current",
-                    "&2▪ &7/&esbp arena <arenaName> &8- &aSelect arena",
                     "&2▪ &7/&esbp highjump &8- &aToggle highjump",
                     "&2▪ &7/&esbp mode &8- &aToggle mode",
                     "&2▪ &7/&esbp preset &8- &aSelect preset",
@@ -117,7 +116,7 @@ public interface Message extends Configuration {
         ConfiguredMessage<String> CLOSE = ofText("&cClose");
 
         interface PRESET extends Configuration {
-            ConfiguredMessage<String> TITLE = ofText("Select a preset");
+            ConfiguredMessage<String> TITLE = ofText("Presets");
 
             ConfiguredMessage<String> DESCRIPTION = asText(
                     "&7Blocks: %(blocks)",
@@ -154,7 +153,7 @@ public interface Message extends Configuration {
                     ConfiguredMessage<String> NAME = ofText("&aSave preset");
 
                     ConfiguredMessage<String> LORE = ofText(
-                            "&eClick to save"
+                            "&eClick to save!"
                     );
                 }
 
@@ -162,7 +161,7 @@ public interface Message extends Configuration {
                     ConfiguredMessage<String> NAME = ofText("&aSave preset globally");
 
                     ConfiguredMessage<String> LORE = ofText(
-                            "&eClick to save"
+                            "&eClick to save!"
                     );
                 }
 
@@ -199,9 +198,9 @@ public interface Message extends Configuration {
                 ""
         );
 
-        ConfiguredMessage<String> SELECT_ARENA = ofText(
+        ConfiguredMessage<String> TOGGLE_ZONE = ofText(
                 "",
-                "Select Arena",
+                "Toggle Zone",
                 "",
                 ""
         );

@@ -1,7 +1,6 @@
 package cc.meteormc.sbpractice.listener;
 
 import cc.meteormc.sbpractice.Main;
-import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import com.cryptomorin.xseries.XSound;
 import org.bukkit.Location;
@@ -20,15 +19,15 @@ public class HighjumpListener implements Listener {
         Player player = event.getPlayer();
         Location location = player.getLocation();
         PlayerData.getData(player).ifPresent(data -> {
-            Island island = data.getIsland();
-            if (!island.getBuildArea().clone().outset(1).isInside(location)) return;
+            if (!data.isEnableHighjump()) return;
+            if (!data.getIsland().getBuildArea().clone().outset(1).isInside(location)) return;
 
             event.setCancelled(true);
             if (System.currentTimeMillis() - data.getHighjumpCooldown() >= 1250) {
                 player.setAllowFlight(false);
                 data.setHighjumpCooldown(System.currentTimeMillis());
                 XSound.ENTITY_GHAST_SHOOT.play(player);
-                player.setVelocity(new Vector(0D, 1.15D, 0D));
+                player.setVelocity(new Vector(0D, 1.2D, 0D));
                 new BukkitRunnable() {
                     @Override
                     public void run() {
@@ -37,7 +36,7 @@ public class HighjumpListener implements Listener {
                             this.cancel();
                         } else player.setAllowFlight(false);
                     }
-                }.runTaskTimer(Main.getPlugin(), 3L, 0L);
+                }.runTaskTimer(Main.get(), 3L, 0L);
             }
         });
     }

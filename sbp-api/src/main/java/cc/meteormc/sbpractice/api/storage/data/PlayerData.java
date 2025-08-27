@@ -1,7 +1,7 @@
 package cc.meteormc.sbpractice.api.storage.data;
 
 import cc.meteormc.sbpractice.api.Island;
-import cc.meteormc.sbpractice.api.arena.Arena;
+import cc.meteormc.sbpractice.api.Zone;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +16,7 @@ public class PlayerData {
     private boolean hidden = false;
     private boolean enableHighjump = true;
     private long highjumpCooldown = System.currentTimeMillis();
-    private Map<Arena, List<PresetData>> presets = new HashMap<>();
+    private Map<Zone, List<PresetData>> presets = new HashMap<>();
 
     private final UUID uuid;
     private final PlayerStats stats;

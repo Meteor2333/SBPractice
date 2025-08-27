@@ -3,40 +3,67 @@ package cc.meteormc.sbpractice.listener;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
 
 public class BlockListener implements Listener {
     @EventHandler(priority = EventPriority.LOW)
     public void onPlace(BlockPlaceEvent event) {
-        Player player = event.getPlayer();
-        PlayerData.getData(player).ifPresent(data -> {
-            if (event instanceof BlockMultiPlaceEvent) {
-                BlockMultiPlaceEvent omp = (BlockMultiPlaceEvent) event;
-                for (BlockState state : omp.getReplacedBlockStates()) {
-                    if (!data.getIsland().getBuildArea().isInside(state.getLocation())) {
-                        event.setCancelled(true);
-                        state.update(true, false);
-                    }
-                }
-            } else {
-                if (!data.getIsland().getBuildArea().isInside(event.getBlock().getLocation())) {
-                    event.setCancelled(true);
-                    event.getBlock().getState().update(true, false);
-                }
+        if (event instanceof BlockMultiPlaceEvent) {
+            BlockMultiPlaceEvent omp = (BlockMultiPlaceEvent) event;
+            for (BlockState state : omp.getReplacedBlockStates()) {
+                this.handleBlock(
+                        event.getPlayer(),
+                        state,
+                        event
+                );
             }
-        });
+        } else {
+            this.handleBlock(
+                    event.getPlayer(),
+                    event.getBlock().getState(),
+                    event
+            );
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
+    public void onPour(PlayerBucketEmptyEvent event) {
+        this.handleBlock(
+                event.getPlayer(),
+                event.getBlockClicked().getRelative(event.getBlockFace()).getState(),
+                event
+        );
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onBreak(BlockBreakEvent event) {
-        Player player = event.getPlayer();
+        this.handleBlock(
+                event.getPlayer(),
+                event.getBlock().getState(),
+                event
+        );
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
+    public void onFill(PlayerBucketFillEvent event) {
+        this.handleBlock(
+                event.getPlayer(),
+                event.getBlockClicked().getRelative(event.getBlockFace()).getState(),
+                event
+        );
+    }
+
+    private void handleBlock(Player player, BlockState block, Cancellable event) {
         PlayerData.getData(player).ifPresent(data -> {
-            if (!data.getIsland().getBuildArea().isInside(event.getBlock().getLocation())) {
+            if (!data.getIsland().getBuildArea().isInside(block.getLocation())) {
                 event.setCancelled(true);
-                event.getBlock().getState().update(true, false);
+                block.update(true, false);
             }
         });
     }

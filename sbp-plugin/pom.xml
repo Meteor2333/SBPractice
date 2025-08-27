@@ -21,26 +21,58 @@
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <relocations>
-<!--                        <relocation>-->
-<!--                            <pattern>com.cryptomorin.xseries</pattern>-->
-<!--                            <shadedPattern>cc.meteormc.sbpractice.libs.xseries</shadedPattern>-->
-<!--                        </relocation>-->
+                        <relocation>
+                            <pattern>cc.carm.lib.configuration</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.configuration</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>cc.carm.lib.easyplugin</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.easyplugin</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>cc.carm.lib.mineconfiguration</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.mineconfiguration</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>cc.carm.lib.yamlcommentupdater</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.yamlcommentupdater</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.cryptomorin.xseries</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.xseries</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.zaxxer.hikari</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.hikari</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>de.rapha149.signgui</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.signgui</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>dev.rollczi.litecommands</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.litecommands</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>fr.mrmicky.fastinv</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.fastinv</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>fr.mrmicky.fastparticles</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.fastparticles</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>net.querz</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.nbtapi</shadedPattern>
+                        </relocation>
                         <relocation>
                             <pattern>org.bstats</pattern>
-                            <shadedPattern>cc.meteormc.sbpractice.libs.bstats</shadedPattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.bstats</shadedPattern>
                         </relocation>
-<!--                        <relocation>-->
-<!--                            <pattern>com.zaxxer.hikari</pattern>-->
-<!--                            <shadedPattern>cc.meteormc.sbpractice.libs.hikari</shadedPattern>-->
-<!--                        </relocation>-->
-<!--                        <relocation>-->
-<!--                            <pattern>org.slf4j</pattern>-->
-<!--                            <shadedPattern>cc.meteormc.sbpractice.libs.slf4j</shadedPattern>-->
-<!--                        </relocation>-->
-<!--                        <relocation>-->
-<!--                            <pattern>net.querz</pattern>-->
-<!--                            <shadedPattern>cc.meteormc.sbpractice.libs.nbtapi</shadedPattern>-->
-<!--                        </relocation>-->
+                        <relocation>
+                            <pattern>org.slf4j</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.slf4j</shadedPattern>
+                        </relocation>
                     </relocations>
                 </configuration>
                 <executions>
@@ -69,8 +101,8 @@
             <url>https://repo.extendedclip.com/releases/</url>
         </repository>
         <repository>
-            <id>worldedit-repo</id>
-            <url>https://maven.enginehub.org/repo/</url>
+            <id>aikar</id>
+            <url>https://repo.aikar.co/content/groups/aikar/</url>
         </repository>
     </repositories>
 
@@ -78,7 +110,7 @@
         <!-- Spigot API  -->
         <dependency>
             <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
+            <artifactId>spigot</artifactId>
             <version>1.8.8-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
@@ -116,6 +148,7 @@
             </exclusions>
             <scope>provided</scope>
         </dependency>
+        <!-- MineConfiguration -->
         <dependency>
             <groupId>cc.carm.lib</groupId>
             <artifactId>mineconfiguration-bukkit</artifactId>
@@ -133,6 +166,13 @@
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>4.0.3</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- Command Framework -->
+        <dependency>
+            <groupId>com.github.Despical</groupId>
+            <artifactId>CommandFramework</artifactId>
+            <version>1.5.2</version>
             <scope>compile</scope>
         </dependency>
         <!-- FastInv -->
@@ -154,6 +194,7 @@
             <groupId>de.rapha149.signgui</groupId>
             <artifactId>signgui</artifactId>
             <version>2.3.6</version>
+            <scope>compile</scope>
         </dependency>
         <!-- bStat -->
         <dependency>
@@ -169,14 +210,14 @@
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>
-        <!-- SBPractice NMS v1.8.R3 -->
+        <!-- SBPractice NMS v1_8_R3 -->
         <dependency>
             <groupId>cc.meteormc</groupId>
             <artifactId>sbp-nms-v1_8_R3</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>
-        <!-- SBPractice NMS v1.12.R1 -->
+        <!-- SBPractice NMS v1_12_R1 -->
         <dependency>
             <groupId>cc.meteormc</groupId>
             <artifactId>sbp-nms-v1_12_R1</artifactId>

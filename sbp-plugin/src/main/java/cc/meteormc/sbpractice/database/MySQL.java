@@ -43,7 +43,7 @@ public class MySQL implements Database {
         hikariConfig.addDataSourceProperty("socketTimeout", String.valueOf(TimeUnit.SECONDS.toMillis(30)));
         this.dataSource = new HikariDataSource(hikariConfig);
         if (System.currentTimeMillis() - time >= 5000) {
-            Main.getPlugin().getLogger().warning("It took " + (System.currentTimeMillis() - time) / 1000 + " ms to establish a database connection! Using this remote connection is not recommended!");
+            Main.get().getLogger().warning("It took " + (System.currentTimeMillis() - time) / 1000 + " ms to establish a database connection! Using this remote connection is not recommended!");
         }
     }
 
@@ -56,7 +56,7 @@ public class MySQL implements Database {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            Main.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
+            Main.get().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
         }
     }
 
@@ -74,7 +74,7 @@ public class MySQL implements Database {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            Main.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
+            Main.get().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
         }
         return new PlayerData.PlayerStats(uuid, 0);
     }
@@ -99,7 +99,7 @@ public class MySQL implements Database {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            Main.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
+            Main.get().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
         }
     }
 
@@ -114,7 +114,7 @@ public class MySQL implements Database {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            Main.getPlugin().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
+            Main.get().getLogger().severe("Could not connect to database! Please verify your credentials and make sure that the server IP is whitelisted in MySQL.");
         }
         return false;
     }

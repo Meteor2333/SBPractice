@@ -55,6 +55,6 @@ public class WorldListener implements Listener {
     public void onLaunch(ProjectileLaunchEvent event) {
         Entity entity = event.getEntity();
         if (entity instanceof Arrow) event.setCancelled(true);
-        Bukkit.getScheduler().runTaskLater(Main.getPlugin(), entity::remove, 3L);
+        Bukkit.getScheduler().runTaskLater(Main.get(), entity::remove, 3L);
     }
 }

@@ -8,7 +8,6 @@ import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
 import org.bukkit.generator.ChunkGenerator;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -46,7 +45,7 @@ public class WorldManager {
                 .generator(
                         isVoid ? new ChunkGenerator() {
                             @Override
-                            public @NotNull ChunkData generateChunkData(@NotNull World world, @NotNull Random random, int x, int z, @NotNull ChunkGenerator.BiomeGrid biome) {
+                            public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid biome) {
                                 return this.createChunkData(world);
                             }
                         } : null
@@ -56,7 +55,7 @@ public class WorldManager {
     }
 
     public void unload() {
-        assert this.world != null;
+        if (this.world == null) return;
         this.world.getPlayers().forEach(player -> player.kickPlayer("The world you are in has been unloaded!"));
         Bukkit.unloadWorld(this.world, false);
         try {

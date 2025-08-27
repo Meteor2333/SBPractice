@@ -21,12 +21,12 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getAuthor() {
-        return Main.getPlugin().getDescription().getAuthors().get(0);
+        return Main.get().getDescription().getAuthors().get(0);
     }
 
     @Override
     public @NotNull String getVersion() {
-        return Main.getPlugin().getDescription().getVersion();
+        return Main.get().getDescription().getVersion();
     }
 
     @Override
@@ -50,7 +50,8 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                         if (block != null && block.getType() != Material.AIR) num++;
                     }
                     return String.valueOf(num);
-                default: return null;
+                default:
+                    return null;
             }
         } else return "None";
     }

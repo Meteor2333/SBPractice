@@ -1,15 +1,14 @@
 package cc.meteormc.sbpractice.api;
 
-import cc.meteormc.sbpractice.api.arena.Arena;
-import cc.meteormc.sbpractice.api.arena.BuildMode;
-import cc.meteormc.sbpractice.api.arena.operation.Operation;
+import cc.meteormc.sbpractice.api.helper.Area;
+import cc.meteormc.sbpractice.api.helper.Operation;
 import cc.meteormc.sbpractice.api.storage.data.BlockData;
 import cc.meteormc.sbpractice.api.storage.data.PresetData;
 import cc.meteormc.sbpractice.api.storage.data.SignData;
-import cc.meteormc.sbpractice.api.util.Region;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -19,11 +18,13 @@ public interface Island {
 
     List<Player> getGuests();
 
-    Arena getArena();
+    List<Player> getAllPlayers();
 
-    Region getArea();
+    Zone getZone();
 
-    Region getBuildArea();
+    Area getArea();
+
+    Area getBuildArea();
 
     Location getSpawnPoint();
 
@@ -43,13 +44,15 @@ public interface Island {
 
     Map<Location, BlockData> getRecordedBlocks();
 
-    void setCanStart(boolean canStart);
+    boolean isCanStart();
 
-    boolean isStarted();
+    void setCanStart(boolean canStart);
 
     double getTime();
 
     String getFormattedTime();
+
+    boolean isStarted();
 
     void startTimer();
 
@@ -63,6 +66,9 @@ public interface Island {
 
     void removeGuest(Player player);
 
+    @ApiStatus.Internal
+    void removeAny(Player player, boolean createNew);
+
     void refreshSigns();
 
     boolean executeOperation(Operation... operations);
@@ -70,4 +76,8 @@ public interface Island {
     void applyPreset(PresetData preset);
 
     void remove();
+
+    enum BuildMode {
+        DEFAULT, ONCE, CONTINUOUS
+    }
 }

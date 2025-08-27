@@ -16,18 +16,18 @@ public class SQLite implements Database {
     private Connection connection;
 
     public SQLite() {
-        String path = Main.getPlugin().getDataFolder().getPath();
+        String path = Main.get().getDataFolder().getPath();
         new File(path).mkdirs();
         File file = new File(path, "stats.db");
         if (!file.exists()) {
             try {
                 if (!file.createNewFile()) {
-                    Main.getPlugin().getLogger().warning("Failed to create new file: " + file.getName());
+                    Main.get().getLogger().warning("Failed to create new file: " + file.getName());
                     return;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                Main.getPlugin().getLogger().warning("Failed to create new file: " + file.getName());
+                Main.get().getLogger().warning("Failed to create new file: " + file.getName());
             }
         }
         this.url = "jdbc:sqlite:" + file;
@@ -36,7 +36,7 @@ public class SQLite implements Database {
             Class.forName("org.sqlite.JDBC");
             DriverManager.getConnection(this.url);
         } catch (ClassNotFoundException e) {
-            Bukkit.getPluginManager().disablePlugin(Main.getPlugin());
+            Bukkit.getPluginManager().disablePlugin(Main.get());
         } catch (SQLException e) {
             e.printStackTrace();
         }

@@ -2,13 +2,13 @@ package cc.meteormc.sbpractice.gui;
 
 import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
+import cc.meteormc.sbpractice.api.helper.ItemBuilder;
 import cc.meteormc.sbpractice.api.storage.data.BlockData;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import cc.meteormc.sbpractice.api.storage.data.PresetData;
-import cc.meteormc.sbpractice.api.util.ItemBuilder;
-import cc.meteormc.sbpractice.arena.session.PresetBuildSession;
 import cc.meteormc.sbpractice.config.MainConfig;
 import cc.meteormc.sbpractice.config.Message;
+import cc.meteormc.sbpractice.feature.session.BuildPresetSession;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import de.rapha149.signgui.SignGUI;
@@ -70,11 +70,11 @@ public class PresetGui extends PaginatedFastInv {
                 event -> {
                     Player who = (Player) event.getWhoClicked();
                     PlayerData.getData(who).ifPresent(data -> {
-                        int size = data.getPresets().getOrDefault(island.getArena(), Collections.emptyList()).size();
+                        int size = data.getPresets().getOrDefault(island.getZone(), Collections.emptyList()).size();
                         if (size < MainConfig.MAX_PRESETS_LIMIT.resolve()) {
-                            new PresetBuildSession(this.island, false).start();
+                            new BuildPresetSession(this.island, false).start();
                         } else {
-                            XSound.ENTITY_ENDERMAN_TELEPORT.play(who);
+                            XSound.ENTITY_VILLAGER_NO.play(who);
                             Message.BASIC.PRESET_FULL.sendTo(who);
                         }
                     });
@@ -89,7 +89,7 @@ public class PresetGui extends PaginatedFastInv {
                             .setLore(Message.GUI.PRESET.SAVE.ITEM_GLOBAL.LORE.parse(player))
                             .build(),
                     event -> {
-                        new PresetBuildSession(this.island, true).start();
+                        new BuildPresetSession(this.island, true).start();
                     }
             );
         }
@@ -133,7 +133,7 @@ public class PresetGui extends PaginatedFastInv {
         this.clearContent();
         PlayerData.getData(player)
                 .map(PlayerData::getPresets)
-                .map(presets -> presets.get(island.getArena()))
+                .map(presets -> presets.get(island.getZone()))
                 // First, load the local preset
                 .map(presets -> {
                     return filterAndSort(presets, this.filtered)
@@ -148,7 +148,7 @@ public class PresetGui extends PaginatedFastInv {
                 })
                 .orElse(CompletableFuture.completedFuture(null))
                 // Next, load the global preset
-                .thenCompose(v -> filterAndSort(island.getArena().getPresets(), this.filtered))
+                .thenCompose(v -> filterAndSort(island.getZone().getPresets(), this.filtered))
                 .thenAccept(result -> this.executeAction(true, result))
                 .thenAcceptAsync(v -> this.openPage(1));
     }
@@ -161,7 +161,8 @@ public class PresetGui extends PaginatedFastInv {
                     .map(BlockData::getType)
                     .filter(type -> type != Material.AIR)
                     .count();
-            if (isGlobal && !player.isOp()) description = Message.GUI.PRESET.DESCRIPTION_NO_PERMISSION.parse(player, count);
+            if (isGlobal && !player.isOp())
+                description = Message.GUI.PRESET.DESCRIPTION_NO_PERMISSION.parse(player, count);
             else description = Message.GUI.PRESET.DESCRIPTION.parse(player, count);
             ItemBuilder item = new ItemBuilder(preset.getIcon())
                     .setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + preset.getName())
@@ -182,11 +183,11 @@ public class PresetGui extends PaginatedFastInv {
                                 presetData.getFile().delete();
                             }).thenAccept(v -> {
                                 if (global) {
-                                    island.getArena().getPresets().remove(presetData);
+                                    island.getZone().getPresets().remove(presetData);
                                 } else {
-                                    data.getPresets().getOrDefault(island.getArena(), Collections.emptyList()).remove(presetData);
+                                    data.getPresets().getOrDefault(island.getZone(), Collections.emptyList()).remove(presetData);
                                 }
-                                XSound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR.play(player, 1L, 0L);
+                                XSound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR.play(player, 1F, 0F);
                             }).exceptionally(e -> {
                                 e.printStackTrace();
                                 return null;
@@ -197,7 +198,7 @@ public class PresetGui extends PaginatedFastInv {
 
                     player.closeInventory();
                     island.applyPreset(this.presetData);
-                    XSound.ENTITY_PLAYER_LEVELUP.play(player, 1L, 2L);
+                    XSound.ENTITY_PLAYER_LEVELUP.play(player, 1F, 2F);
                     Message.OPERATION.PRESET.sendTo(player, preset.getName());
                 }
             };
@@ -237,7 +238,7 @@ public class PresetGui extends PaginatedFastInv {
         }).thenApplyAsync( // Ensure subsequent operations run on the main thread
                 Function.identity(),
                 runnable -> {
-                    Bukkit.getScheduler().runTask(Main.getPlugin(), runnable);
+                    Bukkit.getScheduler().runTask(Main.get(), runnable);
                 }
         );
     }

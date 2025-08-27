@@ -3,7 +3,9 @@ package cc.meteormc.sbpractice.config.adapter;
 import cc.carm.lib.configuration.adapter.ValueAdapter;
 import cc.carm.lib.configuration.adapter.ValueType;
 import cc.carm.lib.configuration.source.section.ConfigureSection;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.util.NumberConversions;
 
 import java.util.Map;
@@ -23,19 +25,15 @@ public class LocationAdapter extends ValueAdapter<Location> {
                     }
 
                     if (map != null) {
-                        try {
-                            return Location.deserialize(map);
-                        } catch (IllegalArgumentException ignored) {
-                            assert false;
-                            return new Location(
-                                    null,
-                                    NumberConversions.toDouble(map.get("x")),
-                                    NumberConversions.toDouble(map.get("y")),
-                                    NumberConversions.toDouble(map.get("z")),
-                                    NumberConversions.toFloat(map.get("yaw")),
-                                    NumberConversions.toFloat(map.get("pitch"))
-                            );
-                        }
+                        World world = Bukkit.getWorld((String) map.getOrDefault("world", ""));
+                        return new Location(
+                                world,
+                                NumberConversions.toDouble(map.getOrDefault("x", 0)),
+                                NumberConversions.toDouble(map.getOrDefault("y", 0)),
+                                NumberConversions.toDouble(map.getOrDefault("z", 0)),
+                                NumberConversions.toFloat(map.getOrDefault("yaw", 0)),
+                                NumberConversions.toFloat(map.getOrDefault("pitch", 0))
+                        );
                     } else {
                         return null;
                     }
