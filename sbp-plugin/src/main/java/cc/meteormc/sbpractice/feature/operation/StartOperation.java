@@ -1,4 +1,4 @@
-package cc.meteormc.sbpractice.operation;
+package cc.meteormc.sbpractice.feature.operation;
 
 import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
@@ -36,15 +36,10 @@ public class StartOperation implements Operation {
 
     public static void refreshCountdown(Island island) {
         BukkitTask task = island.getModeTask();
+        if (task != null) task.cancel();
+        island.setModeTask(null);
 
         if (island.getMode() == Island.BuildMode.CONTINUOUS && !island.isActive()) {
-            task.cancel();
-            island.setModeTask(null);
-            return;
-        }
-
-        if (task != null) {
-            island.setModeTask(null);
             return;
         }
 

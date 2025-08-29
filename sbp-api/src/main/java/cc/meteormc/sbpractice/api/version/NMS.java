@@ -8,7 +8,6 @@ import net.querz.nbt.tag.CompoundTag;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -18,23 +17,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class NMS {
-    /* --------------------- Command --------------------- */
-
-    public abstract void registerCommand(@NotNull Command command);
-
-    /* --------------------------------------------------- */
-
     /* ---------------------- Item ----------------------- */
 
     public abstract void setItemUnbreakable(@NotNull ItemMeta itemMeta);
-
-    public abstract @NotNull ItemStack setItemTag(@NotNull ItemStack itemStack, @NotNull String key, @NotNull String value);
-
-    public abstract @Nullable String getItemTag(@NotNull ItemStack itemStack, @NotNull String key);
-
-    public abstract boolean hasItemTag(@NotNull ItemStack itemStack, @NotNull String key);
-
-    public abstract @NotNull ItemStack removeItemTag(@NotNull ItemStack itemStack, @NotNull String key);
 
     public abstract @NotNull ItemStack getItemByBlock(Material material, byte data);
 

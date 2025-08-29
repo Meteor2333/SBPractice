@@ -6,7 +6,7 @@ import cc.meteormc.sbpractice.api.event.PlayerPerfectRestoreEvent;
 import cc.meteormc.sbpractice.api.storage.data.BlockData;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import cc.meteormc.sbpractice.config.Message;
-import cc.meteormc.sbpractice.operation.StartOperation;
+import cc.meteormc.sbpractice.feature.operation.StartOperation;
 import com.cryptomorin.xseries.XSound;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -39,7 +39,7 @@ public class Checker implements Runnable {
 
     public Checker(Island island) {
         this.island = island;
-        this.scheduler.scheduleAtFixedRate(this, 3L, 10L, TimeUnit.MILLISECONDS);
+        this.scheduler.scheduleAtFixedRate(this, 3L, 5L, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -55,22 +55,29 @@ public class Checker implements Runnable {
     }
 
     private synchronized void check() {
-        boolean isEmpty = true, isPerfect = true;
+        boolean isEmpty = true;
+        boolean isPerfect = true;
+        boolean isRecorded = false;
         for (Vector point : island.getBuildArea().getPoints()) {
             Location location = point.toLocation(island.getZone().getWorld());
             BlockData currentBlock = Main.get().getNms().getBlockDataAt(location);
+            BlockData recordedBlock = island.getRecordedBlocks().get(location);
 
             if (isEmpty && currentBlock.getType() != Material.AIR) {
                 isEmpty = false;
             }
 
-            if (isPerfect) {
-                BlockData recordedBlock = island.getRecordedBlocks().get(location);
-                if (recordedBlock == null || !Main.get().getNms().isSimilarBlock(currentBlock, recordedBlock)) {
-                    isPerfect = false;
-                }
+            if (recordedBlock != null) {
+                isRecorded = true;
+            }
+
+            if (isPerfect && (recordedBlock == null
+                    || !Main.get().getNms().isSimilarBlock(currentBlock, recordedBlock))) {
+                isPerfect = false;
             }
         }
+
+        if (!isRecorded) return;
 
         if (island.getMode() == Island.BuildMode.DEFAULT) {
             if (isEmpty) {
@@ -81,7 +88,7 @@ public class Checker implements Runnable {
             }
         }
 
-        if (isPerfect && island.isStarted()) {
+        if (isPerfect && island.isCanStart() && island.isStarted()) {
             this.onPerfectMatch();
             island.setCanStart(false);
             island.stopTimer();

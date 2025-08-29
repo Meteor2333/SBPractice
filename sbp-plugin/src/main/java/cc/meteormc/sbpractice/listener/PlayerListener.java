@@ -4,8 +4,8 @@ import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import cc.meteormc.sbpractice.config.MainConfig;
-import cc.meteormc.sbpractice.operation.ClearOperation;
-import cc.meteormc.sbpractice.operation.StartOperation;
+import cc.meteormc.sbpractice.feature.operation.ClearOperation;
+import cc.meteormc.sbpractice.feature.operation.StartOperation;
 import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,10 +26,10 @@ public class PlayerListener implements Listener {
             if (item != null) {
                 XMaterial material = XMaterial.matchXMaterial(item);
                 if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                    if (material == MainConfig.MATERIAL.CLEAR.resolve()) {
-                        island.executeOperation(new ClearOperation());
-                    } else if (material == MainConfig.MATERIAL.START.resolve()) {
+                    if (material == MainConfig.MATERIAL.START_ITEM.resolve()) {
                         island.executeOperation(new StartOperation());
+                    } else if (material == MainConfig.MATERIAL.CLEAR_ITEM.resolve()) {
+                        island.executeOperation(new ClearOperation());
                     }
                 }
 

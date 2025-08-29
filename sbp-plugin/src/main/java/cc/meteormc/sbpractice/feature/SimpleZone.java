@@ -108,14 +108,15 @@ public class SimpleZone implements Zone {
                 buildArea.add(reference),
                 spawn.add(reference),
                 new SignData(
-                        config.SIGN.GROUND.resolve().clone().add(reference).toLocation(world.getWorld()),
-                        config.SIGN.RECORD.resolve().clone().add(reference).toLocation(world.getWorld()),
-                        config.SIGN.CLEAR.resolve().clone().add(reference).toLocation(world.getWorld()),
-                        config.SIGN.TOGGLE_ZONE.resolve().clone().add(reference).toLocation(world.getWorld()),
-                        config.SIGN.MODE.resolve().clone().add(reference).toLocation(world.getWorld()),
-                        config.SIGN.PRESET.resolve().clone().add(reference).toLocation(world.getWorld()),
-                        config.SIGN.START.resolve().clone().add(reference).toLocation(world.getWorld()),
-                        config.SIGN.PREVIEW.resolve().clone().add(reference).toLocation(world.getWorld())
+                        this.getWorld(),
+                        addAll(config.SIGN.CLEAR.resolve(), reference),
+                        addAll(config.SIGN.GROUND.resolve(), reference),
+                        addAll(config.SIGN.MODE.resolve(), reference),
+                        addAll(config.SIGN.PRESET.resolve(), reference),
+                        addAll(config.SIGN.PREVIEW.resolve(), reference),
+                        addAll(config.SIGN.RECORD.resolve(), reference),
+                        addAll(config.SIGN.START.resolve(), reference),
+                        addAll(config.SIGN.TOGGLE_ZONE.resolve(), reference)
                 )
         );
         this.islands.set(index, island);
@@ -123,6 +124,13 @@ public class SimpleZone implements Zone {
         island.refreshSigns();
         island.resetPlayer(player);
         return island;
+    }
+
+    private static List<Vector> addAll(List<Vector> vectors, Vector add) {
+        return vectors.stream()
+                .map(Vector::clone)
+                .map(vec -> vec.add(add))
+                .collect(Collectors.toList());
     }
 
     @Override

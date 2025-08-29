@@ -4,8 +4,9 @@ import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.Zone;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.api.storage.data.SignData;
+import cc.meteormc.sbpractice.feature.operation.*;
 import cc.meteormc.sbpractice.gui.PresetGui;
-import cc.meteormc.sbpractice.operation.*;
 import com.cryptomorin.xseries.XSound;
 import fr.mrmicky.fastparticles.ParticleType;
 import org.bukkit.Location;
@@ -24,47 +25,67 @@ public class SignListener implements Listener {
     @EventHandler(priority = EventPriority.LOW)
     public void onInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+
         PlayerData.getData(player).ifPresent(data -> {
             Island island = data.getIsland();
-            Block block = event.getClickedBlock();
             if (data.isHidden()) {
                 event.setCancelled(true);
                 return;
             }
 
+            Block block = event.getClickedBlock();
             if (block == null) return;
             if (!(block.getState() instanceof Sign)) return;
-            if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
-            Location location = block.getLocation();
-            if (island.getSigns().getGround().equals(location)) {
-                island.executeOperation(new GroundOperation());
-            } else if (island.getSigns().getRecord().equals(location)) {
-                island.executeOperation(new RecordOperation());
-            } else if (island.getSigns().getClear().equals(location)) {
-                island.executeOperation(new ClearOperation());
-            } else if (island.getSigns().getZone().equals(location)) {
-                List<Zone> zones = Main.get().getZones();
-                if (zones.contains(island.getZone())) {
+            SignData signs = island.getSigns();
+            SignData.Type type = signs.matchType(block);
+            if (type == null) return;
+            switch (type) {
+                case CLEAR:
+                    island.executeOperation(new ClearOperation());
+                    break;
+                case GROUND:
+                    island.executeOperation(new GroundOperation());
+                    break;
+                case MODE:
+                    island.executeOperation(new ModeOperation());
+                    break;
+                case PRESET:
+                    new PresetGui(player, island).open(player);
+                    break;
+                case PREVIEW:
+                    island.executeOperation(new PreviewOperation());
+                    break;
+                case RECORD:
+                    island.executeOperation(new RecordOperation());
+                    break;
+                case START:
+                    island.executeOperation(new StartOperation());
+                    break;
+                case TOGGLE_ZONE:
+                    List<Zone> zones = Main.get().getZones();
+                    if (!zones.contains(island.getZone())) break;
                     int index = zones.indexOf(island.getZone()) + 1;
                     if (index >= zones.size()) index = 0;
                     island.removeAny(player, false);
                     zones.get(index).createIsland(player);
-                }
-            } else if (island.getSigns().getMode().equals(location)) {
-                island.executeOperation(new ModeOperation());
-            } else if (island.getSigns().getPreset().equals(location)) {
-                new PresetGui(player, island).open(player);
-            } else if (island.getSigns().getStart().equals(location)) {
-                island.executeOperation(new StartOperation());
-            } else if (island.getSigns().getPreview().equals(location)) {
-                island.executeOperation(new PreviewOperation());
-            } else {
-                return;
+                    break;
+                default:
+                    return;
             }
 
+            Location location = block.getLocation().add(0.5, 0.5, 0.5);
+            ParticleType.of("CRIT").spawn(
+                    block.getWorld(),
+                    location.getX(),
+                    location.getY(),
+                    location.getZ(),
+                    1,
+                    0, 0, 0,
+                    0.1, null, true
+            );
             XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
-            ParticleType.of("CRIT").spawn(player, location.clone().add(0.5, 0.5, 0.5), 1, 0, 0, 0, 0.1);
             island.refreshSigns();
         });
     }

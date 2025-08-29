@@ -48,7 +48,7 @@ public class MySQL implements Database {
     }
 
     @Override
-    public void initialize() {
+    public void connect() {
         try (Connection connection = this.dataSource.getConnection()) {
             String sql = "CREATE TABLE IF NOT EXISTS stats (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, uuid VARCHAR(200), restores INT(200));";
             try (Statement statement = connection.createStatement()) {

@@ -53,6 +53,10 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
     }
 
     public Main() {
+        /* Register API */
+        Bukkit.getServicesManager().register(SBPracticeAPI.class, this, this, ServicePriority.Highest);
+
+        /* Load NMS */
         try {
             String version = Bukkit.getServer().getClass().getName().split("\\.")[3];
             Class<?> nmsClass = Class.forName(getClass().getPackage().getName() + ".version." + version);
@@ -61,26 +65,24 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
             throw new UnsupportedOperationException("Unsupported server version: " + this.getServer().getVersion() + "!");
         }
 
+        /* Init Configs */
+        MineConfiguration config = new MineConfiguration(this, MainConfig.class, Message.class);
+        config.getConfig().adapters().register(new XMaterialAdapter());
+
+        /* Init Database */
         if (MainConfig.MYSQL.ENABLE.resolve()) this.db = new MySQL();
         else this.db = new SQLite();
     }
 
     @Override
     public void onLoad() {
-        /* Register API */
-        Bukkit.getServicesManager().register(SBPracticeAPI.class, this, this, ServicePriority.Highest);
-
-        /* Init config */
-        MineConfiguration config = new MineConfiguration(this, MainConfig.class, Message.class);
-        config.getConfig().adapters().register(new XMaterialAdapter());
-
-        /* Init database */
-        this.db.initialize();
+        /* Connect Database */
+        this.db.connect();
     }
 
     @Override
     public void onEnable() {
-        /* Display info */
+        /* Display Info */
         this.getLogger().info("------------------------------------------------");
         this.getLogger().info("   _____ ____  ____                  __  _         ");
         this.getLogger().info("  / ___// __ )/ __ \\_________ ______/ /_(_)_______ ");
@@ -94,11 +96,11 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
         this.getLogger().info("Java Version: " + System.getProperty("java.version"));
         this.getLogger().info("------------------------------------------------");
 
-        /* Init service */
+        /* Init Services */
         new Metrics(this, 24481);
         FastInvManager.register(this);
 
-        /* Load zone */
+        /* Load Zones */
         File[] files = SimpleZone.ZONES_DIR.listFiles(File::isDirectory);
         for (File file : Optional.ofNullable(files).orElse(new File[]{})) {
             try {
@@ -111,7 +113,16 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
         }
         this.getLogger().info("Loaded " + zones.size() + " Zones!");
 
-        /* Register command */
+        /* Register Listeners */
+        PluginManager pm = Bukkit.getPluginManager();
+        pm.registerEvents(new BlockListener(), this);
+        pm.registerEvents(new DataListener(), this);
+        pm.registerEvents(new HighjumpListener(), this);
+        pm.registerEvents(new PlayerListener(), this);
+        pm.registerEvents(new SignListener(), this);
+        pm.registerEvents(new WorldListener(), this);
+
+        /* Register Commands */
         CommandFramework cf = new CommandFramework(this);
         cf.registerCommands(new MainCommand());
         cf.registerCommands(new MultiplayerCommand());
@@ -136,17 +147,7 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
             return true;
         });
 
-
-        /* Register listener */
-        PluginManager pm = Bukkit.getPluginManager();
-        pm.registerEvents(new BlockListener(), this);
-        pm.registerEvents(new DataListener(), this);
-        pm.registerEvents(new HighjumpListener(), this);
-        pm.registerEvents(new PlayerListener(), this);
-        pm.registerEvents(new SignListener(), this);
-        pm.registerEvents(new WorldListener(), this);
-
-        /* Register hook */
+        /* Register Hooks */
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new PlaceholderAPIHook().register();
             this.getLogger().info("Hooked into PlaceholderAPI support!");

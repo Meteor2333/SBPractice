@@ -1,6 +1,5 @@
 package cc.meteormc.sbpractice.feature;
 
-import cc.carm.lib.easyplugin.utils.ColorParser;
 import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.Zone;
@@ -13,17 +12,18 @@ import cc.meteormc.sbpractice.api.storage.data.PresetData;
 import cc.meteormc.sbpractice.api.storage.data.SignData;
 import cc.meteormc.sbpractice.config.MainConfig;
 import cc.meteormc.sbpractice.config.Message;
+import cc.meteormc.sbpractice.feature.operation.ClearOperation;
+import cc.meteormc.sbpractice.feature.operation.GroundOperation;
+import cc.meteormc.sbpractice.feature.operation.RecordOperation;
 import cc.meteormc.sbpractice.feature.task.Checker;
 import cc.meteormc.sbpractice.feature.task.Timer;
-import cc.meteormc.sbpractice.operation.ClearOperation;
-import cc.meteormc.sbpractice.operation.GroundOperation;
-import cc.meteormc.sbpractice.operation.RecordOperation;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -62,7 +62,7 @@ public class SimpleIsland extends Timer implements Island {
         @Override
         public void run() {
             for (Player player : getNearbyPlayers()) {
-                Message.ACTIONBAR.TIME.sendActionBar(player, getFormattedTime());
+                Message.BASIC.TIME_FORMAT.sendActionBar(player, getFormattedTime());
             }
         }
     }.runTaskTimerAsynchronously(Main.get(), 0L, 0L);
@@ -97,13 +97,13 @@ public class SimpleIsland extends Timer implements Island {
         player.getInventory().clear();
         player.getInventory().setItem(
                 7,
-                new ItemBuilder(MainConfig.MATERIAL.START.resolve())
+                new ItemBuilder(MainConfig.MATERIAL.START_ITEM.resolve())
                         .setDisplayName(Message.ITEM.START.parseLine(player))
                         .build()
         );
         player.getInventory().setItem(
                 8,
-                new ItemBuilder(MainConfig.MATERIAL.CLEAR.resolve())
+                new ItemBuilder(MainConfig.MATERIAL.CLEAR_ITEM.resolve())
                         .setDisplayName(Message.ITEM.CLEAR.parseLine(player))
                         .build()
         );
@@ -146,81 +146,56 @@ public class SimpleIsland extends Timer implements Island {
 
     @Override
     public void refreshSigns() {
-        if (this.signs.getGround().getBlock().getState() instanceof Sign) {
-            Sign sign = (Sign) this.signs.getGround().getBlock().getState();
-            List<String> line = Message.SIGN.GROUND.parse(owner);
-            for (int i = 0; i <= 3; i++) {
-                sign.setLine(i, ColorParser.parse(line.get(i)));
-            }
-            sign.update();
-        }
-        if (this.signs.getRecord().getBlock().getState() instanceof Sign) {
-            Sign sign = (Sign) this.signs.getRecord().getBlock().getState();
-            List<String> line = Message.SIGN.RECORD.parse(owner);
-            for (int i = 0; i <= 3; i++) {
-                sign.setLine(i, ColorParser.parse(line.get(i)));
-            }
-            sign.update();
-        }
-        if (this.signs.getClear().getBlock().getState() instanceof Sign) {
-            Sign sign = (Sign) this.signs.getClear().getBlock().getState();
-            List<String> line = Message.SIGN.CLEAR.parse(owner);
-            for (int i = 0; i <= 3; i++) {
-                sign.setLine(i, ColorParser.parse(line.get(i)));
-            }
-            sign.update();
-        }
-        if (this.signs.getZone().getBlock().getState() instanceof Sign) {
-            Sign sign = (Sign) this.signs.getZone().getBlock().getState();
-            List<String> line = Message.SIGN.TOGGLE_ZONE.parse(owner);
-            for (int i = 0; i <= 3; i++) {
-                sign.setLine(i, ColorParser.parse(line.get(i)));
-            }
-            sign.update();
-        }
-        if (this.signs.getMode().getBlock().getState() instanceof Sign) {
-            Sign sign = (Sign) this.signs.getMode().getBlock().getState();
-            String option;
-            switch (this.mode) {
-                case ONCE:
-                    option = Message.SIGN.OPTIONS.MODE.ONCE.parseLine(owner);
+        for (Map.Entry<SignData.Type, List<Location>> entry : this.signs.getSigns().entrySet()) {
+            List<String> lines;
+            switch (entry.getKey()) {
+                case CLEAR:
+                    lines = Message.SIGN.CLEAR.parse(owner);
                     break;
-                case CONTINUOUS:
-                    option = Message.SIGN.OPTIONS.MODE.CONTINUOUS.parseLine(owner);
+                case GROUND:
+                    lines = Message.SIGN.GROUND.parse(owner);
+                    break;
+                case MODE:
+                    String option;
+                    switch (this.mode) {
+                        case ONCE:
+                            option = Message.SIGN.OPTIONS.MODE.ONCE.parseLine(owner);
+                            break;
+                        case CONTINUOUS:
+                            option = Message.SIGN.OPTIONS.MODE.CONTINUOUS.parseLine(owner);
+                            break;
+                        default:
+                            option = Message.SIGN.OPTIONS.MODE.DEFAULT.parseLine(owner);
+                            break;
+                    }
+                    lines = Message.SIGN.MODE.parse(owner, option);
+                    break;
+                case PRESET:
+                    lines = Message.SIGN.PRESET.parse(owner);
+                    break;
+                case PREVIEW:
+                    lines = Message.SIGN.PREVIEW.parse(owner);
+                    break;
+                case RECORD:
+                    lines = Message.SIGN.RECORD.parse(owner);
+                    break;
+                case START:
+                    lines = Message.SIGN.START.parse(owner);
+                    break;
+                case TOGGLE_ZONE:
+                    lines = Message.SIGN.TOGGLE_ZONE.parse(owner);
                     break;
                 default:
-                    option = Message.SIGN.OPTIONS.MODE.DEFAULT.parseLine(owner);
-                    break;
+                    continue;
             }
-            List<String> line = Message.SIGN.MODE.parse(owner, option);
-            for (int i = 0; i <= 3; i++) {
-                sign.setLine(i, ColorParser.parse(line.get(i)));
+
+            for (Location location : entry.getValue()) {
+                BlockState state = location.getBlock().getState();
+                if (!(state instanceof Sign)) return;
+                Sign sign = (Sign) state;
+                System.arraycopy(lines.toArray(new String[0]), 0, sign.getLines(), 0, sign.getLines().length);
+                sign.update();
             }
-            sign.update();
-        }
-        if (this.signs.getPreset().getBlock().getState() instanceof Sign) {
-            Sign sign = (Sign) this.signs.getPreset().getBlock().getState();
-            List<String> line = Message.SIGN.PRESET.parse(owner);
-            for (int i = 0; i <= 3; i++) {
-                sign.setLine(i, ColorParser.parse(line.get(i)));
-            }
-            sign.update();
-        }
-        if (this.signs.getStart().getBlock().getState() instanceof Sign) {
-            Sign sign = (Sign) this.signs.getStart().getBlock().getState();
-            List<String> line = Message.SIGN.START.parse(owner);
-            for (int i = 0; i <= 3; i++) {
-                sign.setLine(i, ColorParser.parse(line.get(i)));
-            }
-            sign.update();
-        }
-        if (this.signs.getPreview().getBlock().getState() instanceof Sign) {
-            Sign sign = (Sign) this.signs.getPreview().getBlock().getState();
-            List<String> line = Message.SIGN.PREVIEW.parse(owner);
-            for (int i = 0; i <= 3; i++) {
-                sign.setLine(i, ColorParser.parse(line.get(i)));
-            }
-            sign.update();
         }
     }
 
@@ -248,7 +223,7 @@ public class SimpleIsland extends Timer implements Island {
 
             XMaterial type = XMaterial.matchXMaterial(item.getType());
             if (type == XMaterial.AIR) continue;
-            if (type != MainConfig.MATERIAL.START.resolve() && type != MainConfig.MATERIAL.CLEAR.resolve()) {
+            if (type != MainConfig.MATERIAL.START_ITEM.resolve() && type != MainConfig.MATERIAL.CLEAR_ITEM.resolve()) {
                 inventory.clear(i);
             }
         }

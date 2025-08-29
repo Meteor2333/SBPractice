@@ -31,7 +31,10 @@ public class SQLite implements Database {
             }
         }
         this.url = "jdbc:sqlite:" + file;
+    }
 
+    @Override
+    public void connect() {
         try {
             Class.forName("org.sqlite.JDBC");
             DriverManager.getConnection(this.url);
@@ -40,10 +43,7 @@ public class SQLite implements Database {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
 
-    @Override
-    public void initialize() {
         try {
             checkConnection();
             String sql = "CREATE TABLE IF NOT EXISTS stats (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid VARCHAR(36), restores INTEGER(10));";

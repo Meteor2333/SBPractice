@@ -63,7 +63,7 @@ public class BlockListener implements Listener {
         PlayerData.getData(player).ifPresent(data -> {
             if (!data.getIsland().getBuildArea().isInside(block.getLocation())) {
                 event.setCancelled(true);
-                block.update(true, false);
+                block.update(true);
             }
         });
     }

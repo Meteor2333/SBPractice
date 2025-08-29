@@ -18,7 +18,8 @@ public class MultiplayerCommand {
             aliases = {"multiplayer.help", "mp", "mp.help"}
     )
     public void help(CommandArguments arguments) {
-        Message.COMMAND.HELP.MULTIPLAYER.sendTo(arguments.getSender());
+        Player sender = arguments.getSender();
+        Message.COMMAND.HELP.MULTIPLAYER.parse(sender).forEach(sender::sendMessage);
     }
 
     @Command(

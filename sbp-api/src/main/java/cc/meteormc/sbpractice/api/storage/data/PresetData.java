@@ -26,7 +26,7 @@ public class PresetData {
             ListTag<CompoundTag> blocksTag = new ListTag<>(CompoundTag.class);
             for (BlockData block : this.blocks) {
                 CompoundTag tag = new CompoundTag();
-                tag.putString("type", block.getType().name());
+                tag.putInt("type", block.getType().ordinal());
                 tag.putByte("data", block.getData().getData());
                 if (block.getBlockEntity() != null) {
                     tag.put("entity", block.getBlockEntity());
@@ -35,7 +35,7 @@ public class PresetData {
             }
 
             compound.putString("name", this.name);
-            compound.putString("icon", this.icon.name());
+            compound.putInt("icon", this.icon.ordinal());
             compound.put("blocks", blocksTag);
             NBTUtil.write(compound, this.file);
         } catch (IOException e) {
@@ -47,16 +47,12 @@ public class PresetData {
         try {
             CompoundTag compound = (CompoundTag) NBTUtil.read(file).getTag();
             String name = compound.getString("name");
-            XMaterial icon = XMaterial.matchXMaterial(compound.getString("icon")).orElse(XMaterial.BEDROCK);
+            XMaterial icon = XMaterial.values()[compound.getInt("icon")].or(XMaterial.BEDROCK);
             List<BlockData> blocks = new ArrayList<>();
 
             ListTag<CompoundTag> blocksTag = compound.getListTag("blocks").asCompoundTagList();
             for (CompoundTag blockTag : blocksTag) {
-                Material type = XMaterial.matchXMaterial(blockTag.getString("type"))
-                        .orElse(XMaterial.AIR)
-                        .or(XMaterial.AIR)
-                        .get();
-                assert type != null;
+                Material type = Material.values()[blockTag.getInt("type")];
                 byte data = blockTag.getByte("data");
                 CompoundTag entity = null;
                 if (blockTag.containsKey("entity")) {

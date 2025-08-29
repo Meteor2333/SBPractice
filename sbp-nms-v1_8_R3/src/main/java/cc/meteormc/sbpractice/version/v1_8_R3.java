@@ -11,13 +11,10 @@ import net.querz.nbt.io.NBTDeserializer;
 import net.querz.nbt.io.NBTSerializer;
 import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.command.Command;
-import org.bukkit.craftbukkit.v1_8_R3.CraftServer;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_8_R3.block.CraftBlockState;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
@@ -42,54 +39,8 @@ import java.util.Objects;
 
 public class v1_8_R3 extends NMS {
     @Override
-    public void registerCommand(@NotNull Command command) {
-        ((CraftServer) Bukkit.getServer()).getCommandMap().register(command.getName(), command);
-    }
-
-    @Override
     public void setItemUnbreakable(@NotNull ItemMeta itemMeta) {
         itemMeta.spigot().setUnbreakable(true);
-    }
-
-    @Override
-    public @NotNull ItemStack setItemTag(@NotNull ItemStack itemStack, @NotNull String key, @NotNull String value) {
-        net.minecraft.server.v1_8_R3.ItemStack is = CraftItemStack.asNMSCopy(itemStack);
-        NBTTagCompound tag = is.getTag();
-        if (tag == null) tag = new NBTTagCompound();
-
-        tag.setString(key, value);
-        is.setTag(tag);
-        return CraftItemStack.asCraftMirror(is);
-    }
-
-    @Override
-    public @Nullable String getItemTag(@NotNull ItemStack itemStack, @NotNull String key) {
-        net.minecraft.server.v1_8_R3.ItemStack i = CraftItemStack.asNMSCopy(itemStack);
-        if (i == null) return null;
-
-        NBTTagCompound tag = i.getTag();
-        if (tag == null) return null;
-        return tag.hasKey(key) ? tag.getString(key) : null;
-    }
-
-    @Override
-    public boolean hasItemTag(@NotNull ItemStack itemStack, @NotNull String key) {
-        net.minecraft.server.v1_8_R3.ItemStack i = CraftItemStack.asNMSCopy(itemStack);
-        if (i == null) return false;
-
-        NBTTagCompound tag = i.getTag();
-        return tag != null && tag.hasKey(key);
-    }
-
-    @Override
-    public @NotNull ItemStack removeItemTag(@NotNull ItemStack itemStack, @NotNull String key) {
-        net.minecraft.server.v1_8_R3.ItemStack is = CraftItemStack.asNMSCopy(itemStack);
-        NBTTagCompound tag = is.getTag();
-        if (tag == null) tag = new NBTTagCompound();
-
-        tag.remove(key);
-        is.setTag(tag);
-        return CraftItemStack.asCraftMirror(is);
     }
 
     @Override

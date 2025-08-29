@@ -14,8 +14,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.potion.PotionEffect;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,9 +28,12 @@ public class DataListener implements Listener {
     @EventHandler
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
         UUID uuid = event.getUniqueId();
+        ArrayList<Zone> zones = new ArrayList<>(Main.get().getZones());
+        if (zones.isEmpty()) return;
+
         PlayerData data = new PlayerData(uuid, Main.get().getDb().getPlayerStats(uuid));
         data.register();
-        for (Zone zone : Main.get().getZones()) {
+        for (Zone zone : zones) {
             File presetsDir = new File(zone.getPresetFolder(), uuid.toString());
             if (!presetsDir.exists()) continue;
             if (!presetsDir.isDirectory()) continue;
@@ -47,29 +52,33 @@ public class DataListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        event.setJoinMessage(null);
         Player player = event.getPlayer();
-        Optional<PlayerData> data = PlayerData.getData(player);
-        if (!data.isPresent()) {
-            player.kickPlayer("PlayerData failed to load, rejoin later!");
-            return;
-        }
+        player.getInventory().clear();
+        player.updateInventory();
+        player.getActivePotionEffects().stream()
+                .map(PotionEffect::getType)
+                .forEach(player::removePotionEffect);
 
         if (Main.get().getZones().isEmpty()) {
-            data.get().unregister();
             player.sendMessage(ChatColor.RED + "The SBPractice plugin is not set");
             if (player.hasPermission("sbp.setup")) {
                 player.setGameMode(GameMode.CREATIVE);
                 player.setFlying(true);
                 player.sendMessage(ChatColor.YELLOW + "Please enter '/sbp setup <zoneName>' to setup a zone");
             }
-        } else {
-            try {
-                Main.get().getZones().get(0).createIsland(player);
-            } catch (Throwable e) {
-                player.kickPlayer(e.toString());
-                Main.get().getLogger().log(Level.SEVERE, "Failed to create island for player " + player.getName() + ".", e);
-            }
+            return;
+        }
+
+        Optional<PlayerData> data = PlayerData.getData(player);
+        if (!data.isPresent()) {
+            player.kickPlayer("PlayerData failed to load, rejoin later!");
+            return;
+        }
+        try {
+            Main.get().getZones().get(0).createIsland(player);
+        } catch (Throwable e) {
+            player.kickPlayer(e.toString());
+            Main.get().getLogger().log(Level.SEVERE, "Failed to create island for player " + player.getName() + ".", e);
         }
     }
 

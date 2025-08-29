@@ -2,8 +2,8 @@ package cc.meteormc.sbpractice.command;
 
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import cc.meteormc.sbpractice.config.Message;
+import cc.meteormc.sbpractice.feature.operation.*;
 import cc.meteormc.sbpractice.feature.session.SetupSession;
-import cc.meteormc.sbpractice.operation.*;
 import com.cryptomorin.xseries.XSound;
 import me.despical.commandframework.CommandArguments;
 import me.despical.commandframework.annotations.Command;
@@ -18,7 +18,8 @@ public class MainCommand {
             aliases = {"sbpractice.help", "sbp", "sbp.help"}
     )
     public void help(CommandArguments arguments) {
-        Message.COMMAND.HELP.MAIN.sendTo(arguments.getSender());
+        Player sender = arguments.getSender();
+        Message.COMMAND.HELP.MAIN.parse(sender).forEach(sender::sendMessage);
     }
 
     @Command(
@@ -139,6 +140,8 @@ public class MainCommand {
                 sender.sendMessage(e.getMessage());
                 return Optional.empty();
             }
-        }).ifPresent(s -> s.handleCommand(arguments.concatRangeOf(1, arguments.getLength())));
+        }).ifPresent(ss -> {
+            ss.handleCommand(arguments.concatRangeOf(1, arguments.getLength()));
+        });
     }
 }

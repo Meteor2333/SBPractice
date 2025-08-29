@@ -36,6 +36,8 @@ public interface Message extends Configuration {
     ConfiguredMessage<String> PREFIX = ConfiguredMessage.ofString("&8[&bSBPractice&8] ");
 
     interface BASIC extends Configuration {
+        ConfiguredMessage<String> TIME_FORMAT = asText("&b&l%(time)").params("time").build();
+
         ConfiguredMessage<String> PLAYER_NOT_FOUND = ofText("&cPlayer not found!");
 
         ConfiguredMessage<String> CANNOT_DO_THAT = ofText("&cYou cannot do that!");
@@ -59,10 +61,6 @@ public interface Message extends Configuration {
         ConfiguredTitle PERFECT_MATCH = asTitle("&a&lGreat Job", "&6&l%(time)", 5, 30, 5).params("time").build();
     }
 
-    interface ACTIONBAR extends Configuration {
-        ConfiguredMessage<String> TIME = asText("&b&l%(time)").params("time").build();
-    }
-
     interface COMMAND extends Configuration {
         ConfiguredMessage<String> USAGE = asText("&cUsage: %(usage)").params("usage").build();
 
@@ -70,14 +68,12 @@ public interface Message extends Configuration {
 
         interface HELP extends Configuration {
             ConfiguredMessage<String> MAIN = ofText(
-                    "&2▪ &7/&esbp ground &8- &aSync ground",
-                    "&2▪ &7/&esbp record &8- &aRecord current",
                     "&2▪ &7/&esbp clear &8- &aClear current",
+                    "&2▪ &7/&esbp ground &8- &aSync ground",
                     "&2▪ &7/&esbp highjump &8- &aToggle highjump",
-                    "&2▪ &7/&esbp mode &8- &aToggle mode",
-                    "&2▪ &7/&esbp preset &8- &aSelect preset",
-                    "&2▪ &7/&esbp start &8- &aStart countdown",
-                    "&2▪ &7/&esbp preview &8- &aPreview recorded"
+                    "&2▪ &7/&esbp preview &8- &aPreview recorded",
+                    "&2▪ &7/&esbp record &8- &aRecord current",
+                    "&2▪ &7/&esbp start &8- &aStart countdown"
             );
 
             ConfiguredMessage<String> MULTIPLAYER = ofText(
@@ -177,20 +173,6 @@ public interface Message extends Configuration {
     }
 
     interface SIGN extends Configuration {
-        ConfiguredMessage<String> GROUND = ofText(
-                "",
-                "Ground",
-                "",
-                ""
-        );
-
-        ConfiguredMessage<String> RECORD = ofText(
-                "",
-                "Record",
-                "",
-                ""
-        );
-
         ConfiguredMessage<String> CLEAR = ofText(
                 "",
                 "Clear",
@@ -198,9 +180,9 @@ public interface Message extends Configuration {
                 ""
         );
 
-        ConfiguredMessage<String> TOGGLE_ZONE = ofText(
+        ConfiguredMessage<String> GROUND = ofText(
                 "",
-                "Toggle Zone",
+                "Ground",
                 "",
                 ""
         );
@@ -219,6 +201,20 @@ public interface Message extends Configuration {
                 ""
         );
 
+        ConfiguredMessage<String> PREVIEW = ofText(
+                "",
+                "Preview",
+                "",
+                ""
+        );
+
+        ConfiguredMessage<String> RECORD = ofText(
+                "",
+                "Record",
+                "",
+                ""
+        );
+
         ConfiguredMessage<String> START = ofText(
                 "",
                 "Start",
@@ -226,9 +222,9 @@ public interface Message extends Configuration {
                 ""
         );
 
-        ConfiguredMessage<String> PREVIEW = ofText(
+        ConfiguredMessage<String> TOGGLE_ZONE = ofText(
                 "",
-                "Preview",
+                "Toggle Zone",
                 "",
                 ""
         );

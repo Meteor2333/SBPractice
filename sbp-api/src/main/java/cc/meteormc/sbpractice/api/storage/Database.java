@@ -5,7 +5,7 @@ import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import java.util.UUID;
 
 public interface Database {
-    void initialize();
+    void connect();
 
     PlayerData.PlayerStats getPlayerStats(UUID uuid);
 

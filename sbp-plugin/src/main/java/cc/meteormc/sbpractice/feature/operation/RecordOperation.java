@@ -1,4 +1,4 @@
-package cc.meteormc.sbpractice.operation;
+package cc.meteormc.sbpractice.feature.operation;
 
 import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;

@@ -2,7 +2,9 @@ package cc.meteormc.sbpractice.config;
 
 import cc.carm.lib.configuration.Configuration;
 import cc.carm.lib.configuration.annotation.ConfigPath;
+import cc.carm.lib.configuration.annotation.HeaderComments;
 import cc.carm.lib.configuration.source.ConfigurationHolder;
+import cc.carm.lib.configuration.value.standard.ConfiguredList;
 import cc.carm.lib.configuration.value.standard.ConfiguredValue;
 import cc.meteormc.sbpractice.api.helper.Area;
 import cc.meteormc.sbpractice.config.adapter.AreaAdapter;
@@ -13,6 +15,7 @@ import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
 @ConfigPath(root = true)
+@HeaderComments("DO NOT MODIFY ANYTHING HERE!!!")
 public class ZoneConfig implements Configuration {
     @Getter
     private final ConfigurationHolder<?> holder;
@@ -40,20 +43,20 @@ public class ZoneConfig implements Configuration {
     public final SIGN SIGN = new SIGN();
 
     public static class SIGN implements Configuration {
-        public final ConfiguredValue<Vector> GROUND = ConfiguredValue.of(Vector.class);
+        public final ConfiguredList<Vector> CLEAR = ConfiguredList.with(Vector.class).build();
 
-        public final ConfiguredValue<Vector> RECORD = ConfiguredValue.of(Vector.class);
+        public final ConfiguredList<Vector> GROUND = ConfiguredList.with(Vector.class).build();
 
-        public final ConfiguredValue<Vector> CLEAR = ConfiguredValue.of(Vector.class);
+        public final ConfiguredList<Vector> MODE = ConfiguredList.with(Vector.class).build();
 
-        public final ConfiguredValue<Vector> TOGGLE_ZONE = ConfiguredValue.of(Vector.class);
+        public final ConfiguredList<Vector> PRESET = ConfiguredList.with(Vector.class).build();
 
-        public final ConfiguredValue<Vector> MODE = ConfiguredValue.of(Vector.class);
+        public final ConfiguredList<Vector> PREVIEW = ConfiguredList.with(Vector.class).build();
 
-        public final ConfiguredValue<Vector> PRESET = ConfiguredValue.of(Vector.class);
+        public final ConfiguredList<Vector> RECORD = ConfiguredList.with(Vector.class).build();
 
-        public final ConfiguredValue<Vector> START = ConfiguredValue.of(Vector.class);
+        public final ConfiguredList<Vector> START = ConfiguredList.with(Vector.class).build();
 
-        public final ConfiguredValue<Vector> PREVIEW = ConfiguredValue.of(Vector.class);
+        public final ConfiguredList<Vector> TOGGLE_ZONE = ConfiguredList.with(Vector.class).build();
     }
 }
