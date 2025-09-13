@@ -11,6 +11,7 @@ public class ModeOperation implements Operation {
         if (index >= Island.BuildMode.values().length) index = 0;
         island.setMode(Island.BuildMode.values()[index]);
         island.setActive(false);
+        island.setCanStart(false);
         return true;
     }
 }

@@ -51,7 +51,7 @@ public class PresetGui extends PaginatedFastInv {
                         .build()
         );
 
-        this.refreshFilter();
+        this.refresh();
 
         this.setItem(
                 49,
@@ -102,7 +102,7 @@ public class PresetGui extends PaginatedFastInv {
         );
     }
 
-    private void refreshFilter() {
+    private void refresh() {
         this.setItem(
                 48,
                 new ItemBuilder(XMaterial.HOPPER)
@@ -112,7 +112,7 @@ public class PresetGui extends PaginatedFastInv {
                 event -> {
                     if (event.getClick().isRightClick()) {
                         this.filtered = null;
-                        this.refreshFilter();
+                        this.refresh();
                     } else {
                         player.closeInventory();
                         SignGUI.builder()
@@ -120,7 +120,7 @@ public class PresetGui extends PaginatedFastInv {
                                 .setLine(2, Message.GUI.PRESET.FILTER.QUERY.parseLine(player))
                                 .setHandler((p, result) -> {
                                     this.filtered = result.getLineWithoutColor(0);
-                                    this.refreshFilter();
+                                    this.refresh();
                                     this.open(p);
                                     return Collections.emptyList();
                                 })
@@ -179,19 +179,20 @@ public class PresetGui extends PaginatedFastInv {
                     Player who = (Player) event.getWhoClicked();
                     if (canRemove && event.getClick().isRightClick()) {
                         PlayerData.getData(who).ifPresent(data -> {
-                            CompletableFuture.runAsync(() -> {
-                                presetData.getFile().delete();
-                            }).thenAccept(v -> {
-                                if (global) {
-                                    island.getZone().getPresets().remove(presetData);
-                                } else {
-                                    data.getPresets().getOrDefault(island.getZone(), Collections.emptyList()).remove(presetData);
-                                }
-                                XSound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR.play(player, 1F, 0F);
-                            }).exceptionally(e -> {
-                                e.printStackTrace();
-                                return null;
-                            });
+                            CompletableFuture.runAsync(() -> presetData.getFile().delete())
+                                    .thenAccept(v -> {
+                                        if (global) {
+                                            island.getZone().getPresets().remove(presetData);
+                                        } else {
+                                            data.getPresets().getOrDefault(island.getZone(), Collections.emptyList()).remove(presetData);
+                                        }
+                                        XSound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR.play(player, 1F, 0F);
+                                    })
+                                    .thenAccept(v -> refresh())
+                                    .exceptionally(e -> {
+                                        e.printStackTrace();
+                                        return null;
+                                    });
                         });
                         return;
                     }
