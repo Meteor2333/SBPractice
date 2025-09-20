@@ -12,7 +12,6 @@ import cc.meteormc.sbpractice.api.storage.data.PresetData;
 import cc.meteormc.sbpractice.api.storage.data.SignData;
 import cc.meteormc.sbpractice.config.MainConfig;
 import cc.meteormc.sbpractice.config.Message;
-import cc.meteormc.sbpractice.feature.operation.ClearOperation;
 import cc.meteormc.sbpractice.feature.operation.GroundOperation;
 import cc.meteormc.sbpractice.feature.operation.RecordOperation;
 import cc.meteormc.sbpractice.feature.task.Checker;
@@ -256,7 +255,6 @@ public class SimpleIsland extends Timer implements Island {
             this.removeAny(guest, true);
         }
 
-        this.executeOperation(new ClearOperation());
         this.checker.shutdown();
         this.actionbarTask.cancel();
         this.zone.removeIsland(this);

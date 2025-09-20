@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Getter
-@Plugin(name = "SBPractice", version = "5.8.5")
+@Plugin(name = "SBPractice", version = "5.9.3")
 @Description("A Minecraft plugin for practicing SpeedBuilder")
 @Author("Meteor23333")
 @Website("https://github.com/Meteor2333/SBPractice")

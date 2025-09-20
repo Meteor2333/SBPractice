@@ -12,10 +12,13 @@ import cc.meteormc.sbpractice.api.storage.data.SchematicData;
 import cc.meteormc.sbpractice.api.storage.data.SignData;
 import cc.meteormc.sbpractice.config.MainConfig;
 import cc.meteormc.sbpractice.config.ZoneConfig;
+import cc.meteormc.sbpractice.feature.operation.ClearOperation;
 import lombok.Getter;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldType;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -75,6 +78,17 @@ public class SimpleZone implements Zone {
             }
 
             this.schematic = SchematicData.load(this.schematicFile);
+            if (MainConfig.ISLAND_GENERATE.PRE_GENERATE.ENABLE.resolve()) {
+                int amount = MainConfig.ISLAND_GENERATE.PRE_GENERATE.AMOUNT.resolve();
+                for (int i = 0; i < amount; i++) {
+                    Vector reference = new Vector(
+                            (double) i * (MainConfig.ISLAND_GENERATE.DISTANCE.resolve() + config.MAP.AREA.resolve().getWidth()),
+                            config.MAP.HEIGHT.resolve(),
+                            0D
+                    );
+                    this.schematic.paste(reference.toLocation(world.getWorld()));
+                }
+            }
             return this;
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to load zone " + this.name + " because of the schematic file!", e);
@@ -93,12 +107,9 @@ public class SimpleZone implements Zone {
         Area buildArea = config.MAP.BUILD_AREA.resolve().clone();
         Location spawn = config.MAP.SPAWN.resolve().clone();
         spawn.setWorld(this.getWorld());
-        Vector reference = new Vector(
-                (double) index * (MainConfig.ISLAND_GENERATE.DISTANCE.resolve() + area.getWidth()),
-                config.MAP.HEIGHT.resolve(),
-                0D
-        );
+        Vector reference = this.getReference(index);
 
+        // Not performant, but prevents players with no island
         this.schematic.paste(reference.toLocation(world.getWorld()));
 
         Island island = new SimpleIsland(
@@ -126,6 +137,14 @@ public class SimpleZone implements Zone {
         return island;
     }
 
+    private Vector getReference(int index) {
+        return new Vector(
+                (double) index * (MainConfig.ISLAND_GENERATE.DISTANCE.resolve() + config.MAP.AREA.resolve().getWidth()),
+                config.MAP.HEIGHT.resolve(),
+                0D
+        );
+    }
+
     private static List<Vector> addAll(List<Vector> vectors, Vector add) {
         return vectors.stream()
                 .map(Vector::clone)
@@ -138,6 +157,15 @@ public class SimpleZone implements Zone {
         if (this.islands.contains(island)) {
             this.islands.set(this.islands.indexOf(island), null);
             this.islands.remove(island);
+        }
+
+        island.executeOperation(new ClearOperation());
+        if (!MainConfig.ISLAND_GENERATE.PRE_GENERATE.ENABLE.resolve()) {
+            for (Vector point : island.getArea().getPoints()) {
+                Block block = point.toLocation(world.getWorld()).getBlock();
+                if (block.getType() == Material.AIR) continue;
+                block.setType(Material.AIR);
+            }
         }
     }
 
