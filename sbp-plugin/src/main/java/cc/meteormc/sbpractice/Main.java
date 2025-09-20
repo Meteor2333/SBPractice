@@ -116,6 +116,7 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
         /* Register Listeners */
         PluginManager pm = Bukkit.getPluginManager();
         pm.registerEvents(new BlockListener(), this);
+        pm.registerEvents(new CheckUpdateListener(), this);
         pm.registerEvents(new DataListener(), this);
         pm.registerEvents(new HighjumpListener(), this);
         pm.registerEvents(new PlayerListener(), this);
@@ -156,8 +157,13 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
 
     @Override
     public void onDisable() {
-        /* Unregister zone */
+        /* Unregister Zones */
         zones.forEach(Zone::unregister);
+    }
+
+    @Override
+    public File getFile() {
+        return super.getFile();
     }
 
     @Override

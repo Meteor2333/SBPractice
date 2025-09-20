@@ -9,6 +9,9 @@ import com.cryptomorin.xseries.XMaterial;
 
 @ConfigPath(root = true)
 public interface MainConfig extends Configuration {
+    @HeaderComments("Get notified of new versions instantly.")
+    ConfiguredValue<Boolean> CHECK_UPDATE = ConfiguredValue.of(true);
+
     @HeaderComments("Change the timer step from 0.001s to 0.05s, because in Minecraft 1 tick = 1/20 second.")
     ConfiguredValue<Boolean> NORMALIZE_TIME = ConfiguredValue.of(true);
 
