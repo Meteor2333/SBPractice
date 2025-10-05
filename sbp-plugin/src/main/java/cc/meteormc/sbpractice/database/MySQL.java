@@ -11,7 +11,6 @@ import java.sql.*;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings("CallToPrintStackTrace")
 public class MySQL implements Database {
     private final HikariDataSource dataSource;
 

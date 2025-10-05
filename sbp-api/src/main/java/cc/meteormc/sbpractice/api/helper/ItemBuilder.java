@@ -10,7 +10,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 
-@SuppressWarnings("unused")
 public class ItemBuilder {
     private final ItemStack item;
     private final ItemMeta meta;

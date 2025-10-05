@@ -81,17 +81,12 @@ public class SimpleZone implements Zone {
             if (MainConfig.ISLAND_GENERATE.PRE_GENERATE.ENABLE.resolve()) {
                 int amount = MainConfig.ISLAND_GENERATE.PRE_GENERATE.AMOUNT.resolve();
                 for (int i = 0; i < amount; i++) {
-                    Vector reference = new Vector(
-                            (double) i * (MainConfig.ISLAND_GENERATE.DISTANCE.resolve() + config.MAP.AREA.resolve().getWidth()),
-                            config.MAP.HEIGHT.resolve(),
-                            0D
-                    );
-                    this.schematic.paste(reference.toLocation(world.getWorld()));
+                    this.schematic.paste(this.getReference(i).toLocation(world.getWorld()));
                 }
             }
             return this;
         } catch (IOException e) {
-            throw new UncheckedIOException("Failed to load zone " + this.name + " because of the schematic file!", e);
+            throw new UncheckedIOException("Failed to load zone " + this.name + "!", e);
         }
     }
 
@@ -103,20 +98,18 @@ public class SimpleZone implements Zone {
             index = this.islands.size() - 1;
         }
 
-        Area area = config.MAP.AREA.resolve().clone();
-        Area buildArea = config.MAP.BUILD_AREA.resolve().clone();
-        Location spawn = config.MAP.SPAWN.resolve().clone();
-        spawn.setWorld(this.getWorld());
         Vector reference = this.getReference(index);
 
         // Not performant, but prevents players with no island
         this.schematic.paste(reference.toLocation(world.getWorld()));
 
+        Location spawn = config.MAP.SPAWN.resolve().clone();
+        spawn.setWorld(this.getWorld());
         Island island = new SimpleIsland(
                 player,
                 this,
-                area.add(reference),
-                buildArea.add(reference),
+                config.MAP.AREA.resolve().add(reference),
+                config.MAP.BUILD_AREA.resolve().add(reference),
                 spawn.add(reference),
                 new SignData(
                         this.getWorld(),
@@ -138,10 +131,14 @@ public class SimpleZone implements Zone {
     }
 
     private Vector getReference(int index) {
+        Area area = config.MAP.AREA.resolve();
+        int width = Math.max(1, MainConfig.ISLAND_GENERATE.WIDTH.resolve());
+        int distance = Math.max(0, MainConfig.ISLAND_GENERATE.DISTANCE.resolve());
+        int x = index % width, z = index / width;
         return new Vector(
-                (double) index * (MainConfig.ISLAND_GENERATE.DISTANCE.resolve() + config.MAP.AREA.resolve().getWidth()),
+                x * (distance + area.getWidth()),
                 config.MAP.HEIGHT.resolve(),
-                0D
+                z * (distance + area.getLength())
         );
     }
 

@@ -117,8 +117,8 @@ public interface Message extends Configuration {
             ConfiguredMessage<String> DESCRIPTION = asText(
                     "&7Blocks: %(blocks)",
                     "",
-                    "&bRight-Click to remove this preset!",
-                    "&eClick to apply!"
+                    "&eClick to apply!",
+                    "&bRight-Click to remove this preset!"
             ).params("blocks").build();
 
             ConfiguredMessage<String> DESCRIPTION_NO_PERMISSION = asText(
@@ -136,8 +136,8 @@ public interface Message extends Configuration {
                             "",
                             "&7Filtered: &e%(filtered)",
                             "",
-                            "&bRight-Click to clear!",
-                            "&eClick to edit filter!"
+                            "&eClick to edit filter!",
+                            "&bRight-Click to clear!"
                     ).params("filtered").build();
                 }
 
@@ -163,7 +163,7 @@ public interface Message extends Configuration {
 
                 ConfiguredMessage<String> SET_NAME = ofText("Enter name");
 
-                ConfiguredMessage<String> SET_ICON = ofText("&aPlease drop the icon for this preset.");
+                ConfiguredMessage<String> SET_ICON = ofText("&aPlease drop the icon for this preset!");
 
                 ConfiguredMessage<String> SUCCESS = ofText("&aPreset saved successfully!");
 
@@ -241,11 +241,11 @@ public interface Message extends Configuration {
     }
 
     interface MULTIPLAYER extends Configuration {
-        ConfiguredMessage<String> ACCEPT = ofText("&a[Accept]");
+        ConfiguredMessage<String> ACCEPT = ofText("&a&l[Accept]");
 
-        ConfiguredMessage<String> DENY = ofText("&c[Deny]");
+        ConfiguredMessage<String> DENY = ofText("&c&l[Deny]");
 
-        ConfiguredMessage<String> ALREADY_DENIED = asText("&c%(player) already denied you. Please try again later!").params("player").build();
+        ConfiguredMessage<String> ALREADY_DENIED = asText("&c%(player) already denied you! Please try again later.").params("player").build();
 
         interface INVITE extends Configuration {
             ConfiguredMessage<String> ON_INVITE = asText("&5%(player) invited you to their island!").params("player").build();
@@ -264,7 +264,7 @@ public interface Message extends Configuration {
         }
 
         interface JOIN extends Configuration {
-            ConfiguredMessage<String> ON_JOIN = asText("&5%(player) requested to join your island").params("player").build();
+            ConfiguredMessage<String> ON_JOIN = asText("&5%(player) requested to join your island!").params("player").build();
 
             ConfiguredMessage<String> ALREADY_JOINED = asText("&cYou already requested %(player)!").params("player").build();
 
@@ -280,13 +280,13 @@ public interface Message extends Configuration {
         }
 
         interface KICK extends Configuration {
-            ConfiguredMessage<String> ACTIVE = asText("&a%(player) has been kicked from your island!").params("player").build();
+            ConfiguredMessage<String> ACTIVE = asText("&a%(player) has been kicked from your island").params("player").build();
 
             ConfiguredMessage<String> PASSIVE = asText("&c%(player) kicked you from their island!").params("player").build();
         }
 
         interface LEAVE extends Configuration {
-            ConfiguredMessage<String> ACTIVE = asText("&aYou left %(player)'s island!").params("player").build();
+            ConfiguredMessage<String> ACTIVE = asText("&aYou left %(player)'s island").params("player").build();
 
             ConfiguredMessage<String> PASSIVE = asText("&c%(player) left your island!").params("player").build();
         }

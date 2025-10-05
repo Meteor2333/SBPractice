@@ -20,7 +20,7 @@ public class HighjumpListener implements Listener {
         Location location = player.getLocation();
         PlayerData.getData(player).ifPresent(data -> {
             if (!data.isEnableHighjump()) return;
-            if (!data.getIsland().getBuildArea().clone().outset(1).isInside(location)) return;
+            if (!data.getIsland().getBuildArea().outset(1).isInside(location)) return;
 
             event.setCancelled(true);
             if (System.currentTimeMillis() - data.getHighjumpCooldown() >= 1250) {

@@ -61,6 +61,7 @@ public class v1_12_R1 extends NMS {
     public void hidePlayer(@NotNull Player player) {
         CraftPlayer cPlayer = (CraftPlayer) player;
         EntityPlayer handle = cPlayer.getHandle();
+        handle.collides = false;
         cPlayer.addPotionEffect(new PotionEffect(
                 PotionEffectType.INVISIBILITY,
                 Integer.MAX_VALUE,
@@ -71,7 +72,7 @@ public class v1_12_R1 extends NMS {
 
         try {
             PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(
-                    PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_GAME_MODE
+                    PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER
             );
             Field field = PacketPlayOutPlayerInfo.class.getDeclaredField("b");
             field.setAccessible(true);
@@ -100,11 +101,13 @@ public class v1_12_R1 extends NMS {
     @Override
     public void showPlayer(@NotNull Player player) {
         CraftPlayer cPlayer = (CraftPlayer) player;
+        EntityPlayer handle = cPlayer.getHandle();
+        handle.collides = true;
         cPlayer.removePotionEffect(PotionEffectType.INVISIBILITY);
         player.getWorld().getPlayers().forEach(p -> {
             p.showPlayer(SBPracticeAPI.getInstance().getPlugin(), player);
         });
-        cPlayer.getHandle().playerInteractManager.setGameMode(EnumGamemode.CREATIVE);
+        handle.playerInteractManager.setGameMode(EnumGamemode.CREATIVE);
     }
 
     @Override
@@ -154,8 +157,8 @@ public class v1_12_R1 extends NMS {
     }
 
     @Override
-    public BlockData toFullBlock(@NotNull Block block) {
-        if (block.getType() == null) return null;
+    public @NotNull BlockData toFullBlock(@NotNull Block block) {
+        if (block.getType() == Material.AIR) return BlockData.of(Material.AIR);
         BlockData newBlock;
         Location location = block.getLocation();
 
@@ -458,7 +461,7 @@ public class v1_12_R1 extends NMS {
             return this.getBlockDataAt(location);
         }
 
-        return newBlock;
+        return newBlock != null ? newBlock : BlockData.of(XMaterial.AIR);
     }
 
     private IBlockData getBlock(World world, BlockPosition position) {

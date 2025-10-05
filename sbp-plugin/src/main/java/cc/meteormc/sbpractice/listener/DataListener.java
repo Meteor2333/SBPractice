@@ -1,6 +1,7 @@
 package cc.meteormc.sbpractice.listener;
 
 import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.Zone;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import cc.meteormc.sbpractice.api.storage.data.PresetData;
@@ -89,9 +90,13 @@ public class DataListener implements Listener {
         MultiplayerSession.getSession(player).ifPresent(MultiplayerSession::close);
 
         PlayerData.getData(player).ifPresent(data -> {
-            data.unregister();
-            data.getIsland().removeAny(player, false);
+            Island island = data.getIsland();
+            if (island != null) {
+                island.removeAny(player, false);
+            }
+
             Main.get().getDb().setPlayerStats(data.getStats());
+            data.unregister();
         });
     }
 }

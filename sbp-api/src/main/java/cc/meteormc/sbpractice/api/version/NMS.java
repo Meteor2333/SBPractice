@@ -39,7 +39,7 @@ public abstract class NMS {
 
     public abstract boolean isSimilarBlock(@NotNull BlockData b1, @NotNull BlockData b2);
 
-    public abstract BlockData toFullBlock(@NotNull Block block);
+    public abstract @NotNull BlockData toFullBlock(@NotNull Block block);
 
     public abstract @Nullable CompoundTag getBlockEntityNBT(@NotNull Block block);
 

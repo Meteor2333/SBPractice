@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
-public class PlaceholderAPIHook extends PlaceholderExpansion {
+public class PapiHook extends PlaceholderExpansion {
     @Override
     public @NotNull String getIdentifier() {
         return "sbp";

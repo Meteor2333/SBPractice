@@ -552,8 +552,8 @@ public class SetupSession extends BukkitRunnable {
         if (!this.isComplete()) return;
 
         try {
-            Area area = config.MAP.AREA.resolve().clone();
-            Area buildArea = config.MAP.BUILD_AREA.resolve().clone();
+            Area area = config.MAP.AREA.resolve();
+            Area buildArea = config.MAP.BUILD_AREA.resolve();
             Location spawn = config.MAP.SPAWN.resolve().clone();
             SimpleZone zone = new SimpleZone(this.name);
 

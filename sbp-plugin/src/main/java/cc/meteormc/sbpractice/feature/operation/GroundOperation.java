@@ -9,6 +9,7 @@ import cc.meteormc.sbpractice.api.storage.data.BlockData;
 import cc.meteormc.sbpractice.api.version.NMS;
 import cc.meteormc.sbpractice.config.MainConfig;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 
 public class GroundOperation implements Operation {
@@ -22,15 +23,16 @@ public class GroundOperation implements Operation {
             for (int z = area.getMinimumPos().getBlockZ(); z <= area.getMaximumPos().getBlockZ(); z++) {
                 Location location = new Location(world, x, area.getYMin(), z);
                 Location down = location.clone().subtract(0, 1, 0);
+                BlockData block = nms.getBlockDataAt(location);
                 if (MainConfig.AUTO_TO_FULL_BLOCK.resolve()) {
-                    BlockData fullBlock = nms.toFullBlock(location.getBlock());
-                    if (fullBlock != null) {
-                        nms.setBlock(down, fullBlock);
-                        continue;
-                    }
+                    block = nms.toFullBlock(location.getBlock());
                 }
 
-                nms.setBlock(down, BlockData.of(MainConfig.MATERIAL.GROUND_BLOCK.resolve()));
+                if (block.getType() == Material.AIR) {
+                    block = BlockData.of(MainConfig.MATERIAL.GROUND_BLOCK.resolve());
+                }
+
+                nms.setBlock(down, block);
             }
         }
         return true;

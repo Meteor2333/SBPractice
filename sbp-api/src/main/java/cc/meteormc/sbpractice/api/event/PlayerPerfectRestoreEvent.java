@@ -8,7 +8,6 @@ import org.bukkit.event.HandlerList;
 
 @Getter
 @RequiredArgsConstructor
-@SuppressWarnings("unused")
 public class PlayerPerfectRestoreEvent extends Event {
     private final Island island;
 

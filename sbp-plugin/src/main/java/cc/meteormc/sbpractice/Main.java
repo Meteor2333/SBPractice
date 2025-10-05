@@ -13,7 +13,7 @@ import cc.meteormc.sbpractice.config.adapter.XMaterialAdapter;
 import cc.meteormc.sbpractice.database.MySQL;
 import cc.meteormc.sbpractice.database.SQLite;
 import cc.meteormc.sbpractice.feature.SimpleZone;
-import cc.meteormc.sbpractice.hook.PlaceholderAPIHook;
+import cc.meteormc.sbpractice.hook.PapiHook;
 import cc.meteormc.sbpractice.listener.*;
 import com.cryptomorin.xseries.XSound;
 import fr.mrmicky.fastinv.FastInvManager;
@@ -36,6 +36,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static me.despical.commandframework.Message.*;
 
 @Getter
 @Plugin(name = "SBPractice", version = "5.9.3")
@@ -75,12 +77,6 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
     }
 
     @Override
-    public void onLoad() {
-        /* Connect Database */
-        this.db.connect();
-    }
-
-    @Override
     public void onEnable() {
         /* Display Info */
         this.getLogger().info("------------------------------------------------");
@@ -91,14 +87,17 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
         this.getLogger().info("/____/_____/_/   /_/   \\__,_/\\___/\\__/_/\\___/\\___/ ");
         this.getLogger().info("");
         this.getLogger().info("Author: Meteor23333");
-        this.getLogger().info("Version: " + getDescription().getVersion());
-        this.getLogger().info("Running on: " + getServer().getVersion());
+        this.getLogger().info("Version: " + this.getDescription().getVersion());
+        this.getLogger().info("Running on: " + this.getServer().getVersion());
         this.getLogger().info("Java Version: " + System.getProperty("java.version"));
         this.getLogger().info("------------------------------------------------");
 
         /* Init Services */
         new Metrics(this, 24481);
         FastInvManager.register(this);
+
+        /* Connect Database */
+        this.db.connect();
 
         /* Load Zones */
         File[] files = SimpleZone.ZONES_DIR.listFiles(File::isDirectory);
@@ -127,7 +126,7 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
         CommandFramework cf = new CommandFramework(this);
         cf.registerCommands(new MainCommand());
         cf.registerCommands(new MultiplayerCommand());
-        me.despical.commandframework.Message.SHORT_ARG_SIZE.setMessage((command, arguments) -> {
+        SHORT_ARG_SIZE.setMessage((command, arguments) -> {
             CommandSender sender = arguments.getSender();
             Message.COMMAND.USAGE.sendTo(sender, command.usage());
             if (sender instanceof Entity) {
@@ -135,7 +134,7 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
             }
             return true;
         });
-        me.despical.commandframework.Message.LONG_ARG_SIZE.setMessage((command, arguments) -> {
+        LONG_ARG_SIZE.setMessage((command, arguments) -> {
             CommandSender sender = arguments.getSender();
             Message.COMMAND.USAGE.sendTo(sender, command.usage());
             if (sender instanceof Entity) {
@@ -143,14 +142,14 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
             }
             return true;
         });
-        me.despical.commandframework.Message.NO_PERMISSION.setMessage((command, arguments) -> {
+        NO_PERMISSION.setMessage((command, arguments) -> {
             Message.COMMAND.NO_PERMISSION.sendTo(arguments.getSender());
             return true;
         });
 
         /* Register Hooks */
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            new PlaceholderAPIHook().register();
+            new PapiHook().register();
             this.getLogger().info("Hooked into PlaceholderAPI support!");
         }
     }

@@ -15,7 +15,7 @@ public class ClearOperation implements Operation {
     public boolean execute(Island island) {
         Area buildArea = island.getBuildArea();
         for (Entity entity : island.getSpawnPoint().getWorld().getEntities()) {
-            if (!buildArea.clone().outset(1).isInside(entity.getLocation())) continue;
+            if (!buildArea.outset(1).isInside(entity.getLocation())) continue;
             if (entity.getType().equals(EntityType.PLAYER)) continue;
             entity.remove();
         }

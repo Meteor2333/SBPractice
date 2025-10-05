@@ -9,7 +9,7 @@ public class XMaterialAdapter extends ValueAdapter<XMaterial> {
         super(
                 ValueType.of(XMaterial.class),
                 (holder, type, value) -> value.name(),
-                (holder, type, data) -> XMaterial.matchXMaterial(data.toString()).orElse(XMaterial.AIR)
+                (holder, type, data) -> XMaterial.matchXMaterial(data.toString()).orElse(null)
         );
     }
 }

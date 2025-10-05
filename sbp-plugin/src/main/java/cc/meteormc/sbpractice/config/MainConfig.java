@@ -15,13 +15,20 @@ public interface MainConfig extends Configuration {
     @HeaderComments("Change the timer step from 0.001s to 0.05s, because in Minecraft 1 tick = 1/20 second.")
     ConfiguredValue<Boolean> NORMALIZE_TIME = ConfiguredValue.of(true);
 
+    @HeaderComments("Set island generate.")
     interface ISLAND_GENERATE extends Configuration {
         @HeaderComments("Set the interval for island generation.")
         ConfiguredValue<Integer> DISTANCE = ConfiguredValue.of(80);
 
+        @HeaderComments({
+                "Set the rectangular width for island generation.",
+                "In fact, the shape generated is a rectangle. But the default width is 1, so it appears as a linear shape."
+        })
+        ConfiguredValue<Integer> WIDTH = ConfiguredValue.of(1);
+
         interface PRE_GENERATE extends Configuration {
             @HeaderComments({
-                    "Pre-generate the specified number of islands at startup, and keep them even after players leave.",
+                    "Set the pre-generation of islands at startup.",
                     "Enable this option if you want to create a more community-friendly server."
             })
             ConfiguredValue<Boolean> ENABLE = ConfiguredValue.of(false);
@@ -31,8 +38,11 @@ public interface MainConfig extends Configuration {
         }
     }
 
-    @HeaderComments("Replace partial blocks with similar full blocks when performing certain placement actions. (BETA)")
+    @HeaderComments("Set the replacing of partial blocks with similar full blocks when performing certain placement actions. (BETA)")
     ConfiguredValue<Boolean> AUTO_TO_FULL_BLOCK = ConfiguredValue.of(true);
+
+    @HeaderComments("Set the hiding of player when they leave their island.")
+    ConfiguredValue<Boolean> HIDE_PLAYER = ConfiguredValue.of(true);
 
     @HeaderComments("Set the maximum number of presets a player can save.")
     ConfiguredValue<Integer> MAX_PRESETS_LIMIT = ConfiguredValue.of(18);

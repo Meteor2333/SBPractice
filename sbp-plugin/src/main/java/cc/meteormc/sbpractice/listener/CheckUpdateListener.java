@@ -21,35 +21,41 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Scanner;
+import java.net.URLConnection;
 
 public class CheckUpdateListener implements Listener {
-    private static final Supplier<String> CHECK = Suppliers.memoize(() -> {
+    private final Supplier<String> CHECK = Suppliers.memoize(() -> {
         try (FileInputStream stream = new FileInputStream(Main.get().getPlugin().getFile())) {
             String sha256 = DigestUtils.sha256Hex(stream);
-            URL url = new URL("https://api.github.com/repos/Meteor2333/SBPractice/releases/latest");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("Accept", "application/vnd.github+json");
+            URLConnection connection = REPO_URL.openConnection();
             connection.setRequestProperty("User-Agent", "Java-App");
-            connection.setRequestMethod("GET");
-            try (Scanner scanner = new Scanner(connection.getInputStream())) {
-                if (scanner.hasNext()) {
-                    JsonObject json = new JsonParser().parse(scanner.next()).getAsJsonObject();
-                    JsonArray assets = json.getAsJsonArray("assets");
-                    for (JsonElement asset : assets) {
-                        String digest = asset.getAsJsonObject().get("digest").getAsString();
-                        if (sha256.equalsIgnoreCase(digest.replace("sha256:", ""))) return null;
-                    }
-                    return json.get("html_url").getAsString();
-                }
+            connection.setRequestProperty("Accept", "application/vnd.github+json");
+
+            InputStreamReader reader = new InputStreamReader(connection.getInputStream());
+            JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
+            JsonArray assets = json.getAsJsonArray("assets");
+            for (JsonElement asset : assets) {
+                String digest = asset.getAsJsonObject().get("digest").getAsString();
+                if (sha256.equalsIgnoreCase(digest.replace("sha256:", ""))) return null;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            return json.get("html_url").getAsString();
+        } catch (IOException ignored) {
+            return null;
         }
-        return null;
     });
+
+    private static final URL REPO_URL;
+
+    static {
+        try {
+            REPO_URL = new URL("https://api.github.com/repos/Meteor2333/SBPractice/releases/latest");
+        } catch (MalformedURLException e) {
+            throw new IllegalStateException("Failed to create URL for repository!", e);
+        }
+    }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
