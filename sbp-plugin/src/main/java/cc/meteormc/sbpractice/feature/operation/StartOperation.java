@@ -73,7 +73,7 @@ public class StartOperation implements Operation {
                             }
                         }
                     }
-                }.runTaskTimer(Main.get(), 0L, 10L)
+                }.runTaskTimer(Main.get(), 0L, 20L)
         );
     }
 }
