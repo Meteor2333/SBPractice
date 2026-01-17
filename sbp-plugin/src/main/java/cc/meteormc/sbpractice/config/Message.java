@@ -248,7 +248,9 @@ public interface Message extends Configuration {
         ConfiguredMessage<String> ALREADY_DENIED = asText("&c%(player) already denied you! Please try again later.").params("player").build();
 
         interface INVITE extends Configuration {
-            ConfiguredMessage<String> ON_INVITE = asText("&5%(player) invited you to their island!").params("player").build();
+            ConfiguredMessage<String> ACTIVE = asText("&aYour invite has been sent to %(player)!").params("player").build();
+
+            ConfiguredMessage<String> PASSIVE = asText("&d%(player) invited you to their island!").params("player").build();
 
             ConfiguredMessage<String> ALREADY_INVITED = asText("&cYou already invited %(player)!").params("player").build();
 
@@ -264,7 +266,9 @@ public interface Message extends Configuration {
         }
 
         interface JOIN extends Configuration {
-            ConfiguredMessage<String> ON_JOIN = asText("&5%(player) requested to join your island!").params("player").build();
+            ConfiguredMessage<String> ACTIVE = asText("&aYour request has been sent to %(player)!").params("player").build();
+
+            ConfiguredMessage<String> PASSIVE = asText("&d%(player) requested to join your island!").params("player").build();
 
             ConfiguredMessage<String> ALREADY_JOINED = asText("&cYou already requested %(player)!").params("player").build();
 
