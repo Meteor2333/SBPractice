@@ -251,8 +251,11 @@ public class SimpleIsland extends Timer implements Island {
 
     @Override
     public void remove() {
-        for (Player guest : this.guests) {
-            this.removeAny(guest, true);
+        Iterator<Player> iterator = this.guests.iterator();
+        while (iterator.hasNext()) {
+            Player guest = iterator.next();
+            iterator.remove();
+            this.removeAny(guest, false);
         }
 
         this.checker.shutdown();

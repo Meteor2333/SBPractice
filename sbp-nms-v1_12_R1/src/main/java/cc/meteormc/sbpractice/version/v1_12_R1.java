@@ -57,6 +57,7 @@ public class v1_12_R1 extends NMS {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void hidePlayer(@NotNull Player player) {
         CraftPlayer cPlayer = (CraftPlayer) player;
@@ -77,11 +78,19 @@ public class v1_12_R1 extends NMS {
             Field field = PacketPlayOutPlayerInfo.class.getDeclaredField("b");
             field.setAccessible(true);
 
+            List<PacketPlayOutPlayerInfo.PlayerInfoData> entries = (List<PacketPlayOutPlayerInfo.PlayerInfoData>) field.get(packet);
             // Use reflection because @javax.annotation.Nullable causes compile-time annotation errors
-            Class<?> clazz = Class.forName("net.minecraft.server.v1_12_R1.PacketPlayOutPlayerInfo$PlayerInfoData");
-            Constructor<?> ctor = clazz.getDeclaredConstructor(GameProfile.class, int.class, EnumGamemode.class, IChatBaseComponent.class);
-            //noinspection ALL
-            ((List) field.get(packet)).add(ctor.newInstance(
+            String className = "net.minecraft.server.v1_12_R1.PacketPlayOutPlayerInfo$PlayerInfoData";
+            Class<PacketPlayOutPlayerInfo.PlayerInfoData> clazz = (Class<PacketPlayOutPlayerInfo.PlayerInfoData>) Class.forName(className);
+            Constructor<PacketPlayOutPlayerInfo.PlayerInfoData> ctor = clazz.getDeclaredConstructor(
+                    PacketPlayOutPlayerInfo.class,
+                    GameProfile.class,
+                    Integer.TYPE,
+                    EnumGamemode.class,
+                    IChatBaseComponent.class
+            );
+            entries.add(ctor.newInstance(
+                    packet,
                     handle.getProfile(),
                     handle.ping,
                     EnumGamemode.SPECTATOR,
@@ -158,310 +167,310 @@ public class v1_12_R1 extends NMS {
 
     @Override
     public @NotNull BlockData toFullBlock(@NotNull Block block) {
-        if (block.getType() == Material.AIR) return BlockData.of(Material.AIR);
-        BlockData newBlock;
+        BlockData fullBlock;
         Location location = block.getLocation();
-
         BlockPosition position = toNMSPosition(location);
         World world = ((CraftWorld) block.getWorld()).getHandle();
         IBlockData blockData = getBlock(world, position);
         net.minecraft.server.v1_12_R1.Block nmsBlock = blockData.getBlock();
-        if (nmsBlock instanceof BlockAnvil) {
-            newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+        if (nmsBlock instanceof BlockAir) {
+            fullBlock = null;
+        } else if (nmsBlock instanceof BlockAnvil) {
+            fullBlock = BlockData.of(XMaterial.IRON_BLOCK);
         } else if (nmsBlock instanceof BlockBanner) {
-            newBlock = BlockData.of(Material.WOOL, block.getData());
+            fullBlock = BlockData.of(Material.WOOL, block.getData());
         } else if (nmsBlock instanceof BlockBed) {
-            newBlock = BlockData.of(Material.WOOL, block.getData());
+            fullBlock = BlockData.of(Material.WOOL, block.getData());
         } else if (nmsBlock instanceof BlockBrewingStand) {
-            newBlock = BlockData.of(XMaterial.GOLD_BLOCK);
+            fullBlock = BlockData.of(XMaterial.GOLD_BLOCK);
         } else if (nmsBlock instanceof BlockButtonAbstract) {
             EnumDirection facing = blockData.get(BlockDirectional.FACING);
             if (facing == EnumDirection.UP || facing == EnumDirection.DOWN) {
                 if (nmsBlock instanceof BlockStoneButton) {
-                    newBlock = BlockData.of(XMaterial.STONE);
+                    fullBlock = BlockData.of(XMaterial.STONE);
                 } else if (nmsBlock instanceof BlockWoodButton) {
-                    newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+                    fullBlock = BlockData.of(XMaterial.OAK_PLANKS);
                 } else {
-                    newBlock = null;
+                    fullBlock = null;
                 }
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockCactus) {
-            newBlock = BlockData.of(XMaterial.SAND);
+            fullBlock = BlockData.of(XMaterial.SAND);
         } else if (nmsBlock instanceof BlockCake) {
-            newBlock = BlockData.of(XMaterial.WHITE_WOOL);
+            fullBlock = BlockData.of(XMaterial.WHITE_WOOL);
         } else if (nmsBlock instanceof BlockCarpet) {
-            newBlock = BlockData.of(Material.WOOL, block.getData());
+            fullBlock = BlockData.of(Material.WOOL, block.getData());
         } else if (nmsBlock instanceof BlockChest) {
-            newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+            fullBlock = BlockData.of(XMaterial.OAK_PLANKS);
         } else if (nmsBlock instanceof BlockWeb) {
-            newBlock = BlockData.of(XMaterial.WHITE_WOOL);
+            fullBlock = BlockData.of(XMaterial.WHITE_WOOL);
         } else if (nmsBlock instanceof BlockCrops) {
-            newBlock = BlockData.of(XMaterial.FARMLAND);
+            fullBlock = BlockData.of(XMaterial.FARMLAND);
         } else if (nmsBlock instanceof BlockDaylightDetector) {
-            newBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
+            fullBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
         } else if (nmsBlock instanceof BlockDeadBush) {
-            newBlock = BlockData.of(XMaterial.RED_SAND);
+            fullBlock = BlockData.of(XMaterial.RED_SAND);
         } else if (nmsBlock instanceof BlockDoor) {
             if (nmsBlock == Blocks.IRON_DOOR) {
-                newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+                fullBlock = BlockData.of(XMaterial.IRON_BLOCK);
             } else if (nmsBlock == Blocks.SPRUCE_DOOR) {
-                newBlock = BlockData.of(XMaterial.SPRUCE_PLANKS);
+                fullBlock = BlockData.of(XMaterial.SPRUCE_PLANKS);
             } else if (nmsBlock == Blocks.BIRCH_DOOR) {
-                newBlock = BlockData.of(XMaterial.BIRCH_PLANKS);
+                fullBlock = BlockData.of(XMaterial.BIRCH_PLANKS);
             } else if (nmsBlock == Blocks.JUNGLE_DOOR) {
-                newBlock = BlockData.of(XMaterial.JUNGLE_PLANKS);
+                fullBlock = BlockData.of(XMaterial.JUNGLE_PLANKS);
             } else if (nmsBlock == Blocks.ACACIA_DOOR) {
-                newBlock = BlockData.of(XMaterial.ACACIA_PLANKS);
+                fullBlock = BlockData.of(XMaterial.ACACIA_PLANKS);
             } else if (nmsBlock == Blocks.DARK_OAK_DOOR) {
-                newBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
+                fullBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
             } else if (nmsBlock == Blocks.WOODEN_DOOR) {
-                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+                fullBlock = BlockData.of(XMaterial.OAK_PLANKS);
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockTallPlant) {
-            newBlock = BlockData.of(XMaterial.GRASS_BLOCK);
+            fullBlock = BlockData.of(XMaterial.GRASS_BLOCK);
         } else if (nmsBlock instanceof BlockEnchantmentTable) {
-            newBlock = BlockData.of(XMaterial.DIAMOND_BLOCK);
+            fullBlock = BlockData.of(XMaterial.DIAMOND_BLOCK);
         } else if (nmsBlock instanceof BlockEndRod) {
             EnumDirection facing = blockData.get(BlockDirectional.FACING);
             if (facing == EnumDirection.UP || facing == EnumDirection.DOWN) {
-                newBlock = BlockData.of(XMaterial.QUARTZ_BLOCK);
+                fullBlock = BlockData.of(XMaterial.QUARTZ_BLOCK);
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockEnderChest) {
-            newBlock = BlockData.of(XMaterial.OBSIDIAN);
+            fullBlock = BlockData.of(XMaterial.OBSIDIAN);
         } else if (nmsBlock instanceof BlockEnderPortalFrame) {
-            newBlock = BlockData.of(XMaterial.END_STONE);
+            fullBlock = BlockData.of(XMaterial.END_STONE);
         } else if (nmsBlock instanceof BlockFence) {
             if (nmsBlock == Blocks.SPRUCE_FENCE) {
-                newBlock = BlockData.of(XMaterial.SPRUCE_PLANKS);
+                fullBlock = BlockData.of(XMaterial.SPRUCE_PLANKS);
             } else if (nmsBlock == Blocks.BIRCH_FENCE) {
-                newBlock = BlockData.of(XMaterial.BIRCH_PLANKS);
+                fullBlock = BlockData.of(XMaterial.BIRCH_PLANKS);
             } else if (nmsBlock == Blocks.JUNGLE_FENCE) {
-                newBlock = BlockData.of(XMaterial.JUNGLE_PLANKS);
+                fullBlock = BlockData.of(XMaterial.JUNGLE_PLANKS);
             } else if (nmsBlock == Blocks.ACACIA_FENCE) {
-                newBlock = BlockData.of(XMaterial.ACACIA_PLANKS);
+                fullBlock = BlockData.of(XMaterial.ACACIA_PLANKS);
             } else if (nmsBlock == Blocks.DARK_OAK_FENCE) {
-                newBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
+                fullBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
             } else if (nmsBlock == Blocks.FENCE) {
-                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+                fullBlock = BlockData.of(XMaterial.OAK_PLANKS);
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockFenceGate) {
             if (nmsBlock == Blocks.SPRUCE_FENCE_GATE) {
-                newBlock = BlockData.of(XMaterial.SPRUCE_PLANKS);
+                fullBlock = BlockData.of(XMaterial.SPRUCE_PLANKS);
             } else if (nmsBlock == Blocks.BIRCH_FENCE_GATE) {
-                newBlock = BlockData.of(XMaterial.BIRCH_PLANKS);
+                fullBlock = BlockData.of(XMaterial.BIRCH_PLANKS);
             } else if (nmsBlock == Blocks.JUNGLE_FENCE_GATE) {
-                newBlock = BlockData.of(XMaterial.JUNGLE_PLANKS);
+                fullBlock = BlockData.of(XMaterial.JUNGLE_PLANKS);
             } else if (nmsBlock == Blocks.ACACIA_FENCE_GATE) {
-                newBlock = BlockData.of(XMaterial.ACACIA_PLANKS);
+                fullBlock = BlockData.of(XMaterial.ACACIA_PLANKS);
             } else if (nmsBlock == Blocks.DARK_OAK_FENCE_GATE) {
-                newBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
+                fullBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
             } else if (nmsBlock == Blocks.FENCE_GATE) {
-                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+                fullBlock = BlockData.of(XMaterial.OAK_PLANKS);
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockFire) {
-            newBlock = BlockData.of(XMaterial.NETHERRACK);
+            fullBlock = BlockData.of(XMaterial.NETHERRACK);
         } else if (nmsBlock instanceof BlockFlowerPot) {
-            newBlock = null;
+            fullBlock = null;
         } else if (nmsBlock instanceof BlockFlowers) {
-            newBlock = BlockData.of(XMaterial.GRASS_BLOCK);
+            fullBlock = BlockData.of(XMaterial.GRASS_BLOCK);
         } else if (nmsBlock instanceof BlockLongGrass) {
-            newBlock = BlockData.of(XMaterial.GRASS_BLOCK);
+            fullBlock = BlockData.of(XMaterial.GRASS_BLOCK);
         } else if (nmsBlock instanceof BlockSkull) {
-            newBlock = null;
+            fullBlock = null;
         } else if (nmsBlock instanceof BlockHopper) {
-            newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+            fullBlock = BlockData.of(XMaterial.IRON_BLOCK);
         } else if (nmsBlock instanceof BlockLadder) {
-            newBlock = null;
+            fullBlock = null;
         } else if (nmsBlock instanceof BlockLever) {
             BlockLever.EnumLeverPosition facing = blockData.get(BlockLever.FACING);
             if (facing.c() == EnumDirection.UP || facing.c() == EnumDirection.DOWN) {
-                newBlock = BlockData.of(XMaterial.COBBLESTONE);
+                fullBlock = BlockData.of(XMaterial.COBBLESTONE);
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockWaterLily) {
-            newBlock = null;
+            fullBlock = null;
         } else if (nmsBlock instanceof BlockMushroom) {
-            newBlock = BlockData.of(XMaterial.MYCELIUM);
+            fullBlock = BlockData.of(XMaterial.MYCELIUM);
         } else if (nmsBlock instanceof BlockNetherWart) {
-            newBlock = BlockData.of(XMaterial.SOUL_SAND);
+            fullBlock = BlockData.of(XMaterial.SOUL_SAND);
         } else if (nmsBlock instanceof BlockThin) {
             if (nmsBlock == Blocks.GLASS_PANE) {
-                newBlock = BlockData.of(XMaterial.GLASS);
+                fullBlock = BlockData.of(XMaterial.GLASS);
             } else if (nmsBlock == Blocks.STAINED_GLASS_PANE) {
-                newBlock = BlockData.of(Material.STAINED_GLASS, block.getData());
+                fullBlock = BlockData.of(Material.STAINED_GLASS, block.getData());
             } else if (nmsBlock == Blocks.IRON_BARS) {
-                newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+                fullBlock = BlockData.of(XMaterial.IRON_BLOCK);
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockPressurePlateAbstract) {
             if (nmsBlock == Blocks.STONE_PRESSURE_PLATE) {
-                newBlock = BlockData.of(XMaterial.STONE);
+                fullBlock = BlockData.of(XMaterial.STONE);
             } else if (nmsBlock == Blocks.WOODEN_PRESSURE_PLATE) {
-                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+                fullBlock = BlockData.of(XMaterial.OAK_PLANKS);
             } else if (nmsBlock == Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE) {
-                newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+                fullBlock = BlockData.of(XMaterial.IRON_BLOCK);
             } else if (nmsBlock == Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE) {
-                newBlock = BlockData.of(XMaterial.GOLD_BLOCK);
+                fullBlock = BlockData.of(XMaterial.GOLD_BLOCK);
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockMinecartTrackAbstract) {
-            newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+            fullBlock = BlockData.of(XMaterial.IRON_BLOCK);
         } else if (nmsBlock instanceof BlockRedstoneWire) {
-            newBlock = BlockData.of(XMaterial.RED_WOOL);
+            fullBlock = BlockData.of(XMaterial.RED_WOOL);
         } else if (nmsBlock instanceof BlockRedstoneComparator) {
-            newBlock = BlockData.of(XMaterial.RED_WOOL);
+            fullBlock = BlockData.of(XMaterial.RED_WOOL);
         } else if (nmsBlock instanceof BlockRepeater) {
-            newBlock = BlockData.of(XMaterial.RED_WOOL);
+            fullBlock = BlockData.of(XMaterial.RED_WOOL);
         } else if (nmsBlock instanceof BlockSapling) {
-            newBlock = null;
+            fullBlock = null;
         } else if (nmsBlock instanceof BlockSign) {
             if (nmsBlock == Blocks.STANDING_SIGN) {
-                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+                fullBlock = BlockData.of(XMaterial.OAK_PLANKS);
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockStepAbstract) {
             if (nmsBlock instanceof BlockDoubleStepAbstract) { // Stone Slab
                 BlockDoubleStepAbstract.EnumStoneSlabVariant variant = blockData.get(BlockDoubleStepAbstract.VARIANT);
                 switch (variant) {
                     case STONE:
-                        newBlock = BlockData.of(Material.DOUBLE_STEP, (byte) 8);
+                        fullBlock = BlockData.of(Material.DOUBLE_STEP, (byte) 8);
                         break;
                     case SAND:
-                        newBlock = BlockData.of(XMaterial.SANDSTONE);
+                        fullBlock = BlockData.of(XMaterial.SANDSTONE);
                         break;
                     case COBBLESTONE:
-                        newBlock = BlockData.of(XMaterial.COBBLESTONE);
+                        fullBlock = BlockData.of(XMaterial.COBBLESTONE);
                         break;
                     case BRICK:
-                        newBlock = BlockData.of(XMaterial.BRICK);
+                        fullBlock = BlockData.of(XMaterial.BRICK);
                         break;
                     case SMOOTHBRICK:
-                        newBlock = BlockData.of(XMaterial.STONE_BRICKS);
+                        fullBlock = BlockData.of(XMaterial.STONE_BRICKS);
                         break;
                     case NETHERBRICK:
-                        newBlock = BlockData.of(XMaterial.NETHER_BRICK);
+                        fullBlock = BlockData.of(XMaterial.NETHER_BRICK);
                         break;
                     case QUARTZ:
-                        newBlock = BlockData.of(XMaterial.QUARTZ_BLOCK);
+                        fullBlock = BlockData.of(XMaterial.QUARTZ_BLOCK);
                         break;
                     default:
-                        newBlock = null;
+                        fullBlock = null;
                         break;
                 }
             } else if (nmsBlock instanceof BlockWoodenStep) { // Wood Slab
                 BlockWood.EnumLogVariant variant = blockData.get(BlockWoodenStep.VARIANT);
-                newBlock = BlockData.of(Material.WOOD, (byte) variant.a());
+                fullBlock = BlockData.of(Material.WOOD, (byte) variant.a());
             } else if (nmsBlock instanceof BlockPurpurSlab) { // Purpur Slab
-                newBlock = BlockData.of(XMaterial.PURPUR_BLOCK);
+                fullBlock = BlockData.of(XMaterial.PURPUR_BLOCK);
             } else if (nmsBlock instanceof BlockDoubleStoneStepAbstract) { // Red Sandstone Slab
-                newBlock = BlockData.of(XMaterial.RED_SANDSTONE);
+                fullBlock = BlockData.of(XMaterial.RED_SANDSTONE);
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockSnow) {
-            newBlock = BlockData.of(XMaterial.SNOW_BLOCK);
+            fullBlock = BlockData.of(XMaterial.SNOW_BLOCK);
         } else if (nmsBlock instanceof BlockStairs) {
             if (nmsBlock == Blocks.OAK_STAIRS) {
-                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+                fullBlock = BlockData.of(XMaterial.OAK_PLANKS);
             } else if (nmsBlock == Blocks.STONE_STAIRS) {
-                newBlock = BlockData.of(XMaterial.COBBLESTONE);
+                fullBlock = BlockData.of(XMaterial.COBBLESTONE);
             } else if (nmsBlock == Blocks.BRICK_STAIRS) {
-                newBlock = BlockData.of(XMaterial.BRICK);
+                fullBlock = BlockData.of(XMaterial.BRICK);
             } else if (nmsBlock == Blocks.STONE_BRICK_STAIRS) {
-                newBlock = BlockData.of(XMaterial.STONE_BRICKS);
+                fullBlock = BlockData.of(XMaterial.STONE_BRICKS);
             } else if (nmsBlock == Blocks.NETHER_BRICK_STAIRS) {
-                newBlock = BlockData.of(XMaterial.NETHER_BRICK);
+                fullBlock = BlockData.of(XMaterial.NETHER_BRICK);
             } else if (nmsBlock == Blocks.SANDSTONE_STAIRS) {
-                newBlock = BlockData.of(XMaterial.SANDSTONE);
+                fullBlock = BlockData.of(XMaterial.SANDSTONE);
             } else if (nmsBlock == Blocks.SPRUCE_STAIRS) {
-                newBlock = BlockData.of(XMaterial.SPRUCE_PLANKS);
+                fullBlock = BlockData.of(XMaterial.SPRUCE_PLANKS);
             } else if (nmsBlock == Blocks.BIRCH_STAIRS) {
-                newBlock = BlockData.of(XMaterial.BIRCH_PLANKS);
+                fullBlock = BlockData.of(XMaterial.BIRCH_PLANKS);
             } else if (nmsBlock == Blocks.JUNGLE_STAIRS) {
-                newBlock = BlockData.of(XMaterial.JUNGLE_PLANKS);
+                fullBlock = BlockData.of(XMaterial.JUNGLE_PLANKS);
             } else if (nmsBlock == Blocks.QUARTZ_STAIRS) {
-                newBlock = BlockData.of(XMaterial.QUARTZ_BLOCK);
+                fullBlock = BlockData.of(XMaterial.QUARTZ_BLOCK);
             } else if (nmsBlock == Blocks.ACACIA_STAIRS) {
-                newBlock = BlockData.of(XMaterial.ACACIA_PLANKS);
+                fullBlock = BlockData.of(XMaterial.ACACIA_PLANKS);
             } else if (nmsBlock == Blocks.DARK_OAK_STAIRS) {
-                newBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
+                fullBlock = BlockData.of(XMaterial.DARK_OAK_PLANKS);
             } else if (nmsBlock == Blocks.RED_SANDSTONE_STAIRS) {
-                newBlock = BlockData.of(XMaterial.RED_SANDSTONE);
+                fullBlock = BlockData.of(XMaterial.RED_SANDSTONE);
             } else if (nmsBlock == Blocks.PURPUR_STAIRS) {
-                newBlock = BlockData.of(XMaterial.PURPUR_BLOCK);
+                fullBlock = BlockData.of(XMaterial.PURPUR_BLOCK);
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockStem) {
-            newBlock = BlockData.of(XMaterial.FARMLAND);
+            fullBlock = BlockData.of(XMaterial.FARMLAND);
         } else if (nmsBlock instanceof BlockReed) {
-            newBlock = null;
+            fullBlock = null;
         } else if (nmsBlock instanceof BlockTorch) {
             if (nmsBlock instanceof BlockRedstoneTorch) {
-                newBlock = BlockData.of(XMaterial.RED_WOOL);
+                fullBlock = BlockData.of(XMaterial.RED_WOOL);
             } else {
-                newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+                fullBlock = BlockData.of(XMaterial.OAK_PLANKS);
             }
         } else if (nmsBlock instanceof BlockTrapdoor) {
             boolean open = blockData.get(BlockTrapdoor.OPEN);
             BlockTrapdoor.EnumTrapdoorHalf half = blockData.get(BlockTrapdoor.HALF);
             if (!open && half == BlockTrapdoor.EnumTrapdoorHalf.BOTTOM) {
                 if (nmsBlock == Blocks.TRAPDOOR) {
-                    newBlock = BlockData.of(XMaterial.OAK_PLANKS);
+                    fullBlock = BlockData.of(XMaterial.OAK_PLANKS);
                 } else if (nmsBlock == Blocks.IRON_TRAPDOOR) {
-                    newBlock = BlockData.of(XMaterial.IRON_BLOCK);
+                    fullBlock = BlockData.of(XMaterial.IRON_BLOCK);
                 } else {
-                    newBlock = null;
+                    fullBlock = null;
                 }
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else if (nmsBlock instanceof BlockTripwire) {
-            newBlock = BlockData.of(XMaterial.WHITE_WOOL);
+            fullBlock = BlockData.of(XMaterial.WHITE_WOOL);
         } else if (nmsBlock instanceof BlockTripwireHook) {
-            newBlock = null;
+            fullBlock = null;
         } else if (nmsBlock instanceof BlockVine) {
-            newBlock = null;
+            fullBlock = null;
         } else if (nmsBlock instanceof BlockCobbleWall) {
             BlockCobbleWall.EnumCobbleVariant variant = blockData.get(BlockCobbleWall.VARIANT);
             switch (variant) {
                 case NORMAL:
-                    newBlock = BlockData.of(XMaterial.COBBLESTONE);
+                    fullBlock = BlockData.of(XMaterial.COBBLESTONE);
                     break;
                 case MOSSY:
-                    newBlock = BlockData.of(XMaterial.MOSSY_COBBLESTONE);
+                    fullBlock = BlockData.of(XMaterial.MOSSY_COBBLESTONE);
                     break;
                 default:
-                    newBlock = null;
+                    fullBlock = null;
                     break;
             }
         } else if (nmsBlock instanceof BlockFluids) {
             if (nmsBlock == Blocks.WATER || nmsBlock == Blocks.FLOWING_WATER) {
-                newBlock = BlockData.of(XMaterial.LIGHT_BLUE_WOOL);
+                fullBlock = BlockData.of(XMaterial.LIGHT_BLUE_WOOL);
             } else if (nmsBlock == Blocks.LAVA || nmsBlock == Blocks.FLOWING_LAVA) {
-                newBlock = BlockData.of(XMaterial.ORANGE_WOOL);
+                fullBlock = BlockData.of(XMaterial.ORANGE_WOOL);
             } else {
-                newBlock = null;
+                fullBlock = null;
             }
         } else {
             return this.getBlockDataAt(location);
         }
 
-        return newBlock != null ? newBlock : BlockData.of(XMaterial.AIR);
+        return fullBlock != null ? fullBlock : BlockData.of(XMaterial.AIR);
     }
 
     private IBlockData getBlock(World world, BlockPosition position) {
