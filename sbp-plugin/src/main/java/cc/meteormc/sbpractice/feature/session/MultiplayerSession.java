@@ -31,7 +31,7 @@ public class MultiplayerSession {
     }
 
     public static MultiplayerSession getOrCreateSession(Player player) {
-        return getSession(player).orElse(new MultiplayerSession(player));
+        return getSession(player).orElseGet(() -> new MultiplayerSession(player));
     }
 
     public void acceptPlayer(Player target) {
@@ -80,26 +80,26 @@ public class MultiplayerSession {
         } else Message.BASIC.PLAYER_NOT_FOUND.sendTo(this.player);
     }
 
-    public void invitePlayer(Player player) {
+    public void invitePlayer(Player target) {
         PlayerData.getData(this.player).ifPresent(data -> {
             Island island = data.getIsland();
             if (island.getOwner().equals(this.player)) {
-                if (this.inviteList.containsKey(player) && System.currentTimeMillis() - this.inviteList.get(player) < 60000L) {
-                    Message.MULTIPLAYER.INVITE.ALREADY_INVITED.sendTo(this.player, player.getName());
-                } else if (this.joinList.containsKey(player) && System.currentTimeMillis() - this.joinList.get(player) < 60000L) {
-                    Message.MULTIPLAYER.JOIN.ALREADY_JOINED.sendTo(this.player, player.getName());
-                } else if (this.denyList.containsKey(player) && System.currentTimeMillis() - this.denyList.get(player) < 60000L) {
-                    Message.MULTIPLAYER.ALREADY_DENIED.sendTo(this.player, player.getName());
-                } else if (island.getGuests().contains(player)) {
-                    Message.MULTIPLAYER.INVITE.ALREADY_ON_ISLAND.sendTo(this.player, player.getName());
+                if (this.inviteList.containsKey(target) && System.currentTimeMillis() - this.inviteList.get(target) < 60000L) {
+                    Message.MULTIPLAYER.INVITE.ALREADY_INVITED.sendTo(this.player, target.getName());
+                } else if (this.joinList.containsKey(target) && System.currentTimeMillis() - this.joinList.get(target) < 60000L) {
+                    Message.MULTIPLAYER.JOIN.ALREADY_JOINED.sendTo(this.player, target.getName());
+                } else if (this.denyList.containsKey(target) && System.currentTimeMillis() - this.denyList.get(target) < 60000L) {
+                    Message.MULTIPLAYER.ALREADY_DENIED.sendTo(this.player, target.getName());
+                } else if (island.getGuests().contains(target)) {
+                    Message.MULTIPLAYER.INVITE.ALREADY_ON_ISLAND.sendTo(this.player, target.getName());
                 } else {
-                    this.inviteList.put(player, System.currentTimeMillis());
-                    Message.MULTIPLAYER.INVITE.ON_INVITE.sendTo(player, this.player.getName());
-                    TextComponent accept = new TextComponent(Message.MULTIPLAYER.ACCEPT.parseLine(player));
+                    this.inviteList.put(target, System.currentTimeMillis());
+                    Message.MULTIPLAYER.INVITE.ON_INVITE.sendTo(target, this.player.getName());
+                    TextComponent accept = new TextComponent(Message.MULTIPLAYER.ACCEPT.parseLine(target));
                     accept.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mp accept " + this.player.getName()));
-                    TextComponent deny = new TextComponent(Message.MULTIPLAYER.DENY.parseLine(player));
+                    TextComponent deny = new TextComponent(Message.MULTIPLAYER.DENY.parseLine(target));
                     deny.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mp deny " + this.player.getName()));
-                    player.spigot().sendMessage(accept, new TextComponent("   "), deny);
+                    target.spigot().sendMessage(accept, new TextComponent("   "), deny);
                 }
             } else Message.BASIC.CANNOT_DO_THAT.sendTo(this.player);
         });
