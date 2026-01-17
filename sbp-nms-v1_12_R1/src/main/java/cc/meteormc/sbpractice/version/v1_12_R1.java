@@ -57,7 +57,6 @@ public class v1_12_R1 extends NMS {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void hidePlayer(@NotNull Player player) {
         CraftPlayer cPlayer = (CraftPlayer) player;
@@ -78,19 +77,11 @@ public class v1_12_R1 extends NMS {
             Field field = PacketPlayOutPlayerInfo.class.getDeclaredField("b");
             field.setAccessible(true);
 
-            List<PacketPlayOutPlayerInfo.PlayerInfoData> entries = (List<PacketPlayOutPlayerInfo.PlayerInfoData>) field.get(packet);
             // Use reflection because @javax.annotation.Nullable causes compile-time annotation errors
-            String className = "net.minecraft.server.v1_12_R1.PacketPlayOutPlayerInfo$PlayerInfoData";
-            Class<PacketPlayOutPlayerInfo.PlayerInfoData> clazz = (Class<PacketPlayOutPlayerInfo.PlayerInfoData>) Class.forName(className);
-            Constructor<PacketPlayOutPlayerInfo.PlayerInfoData> ctor = clazz.getDeclaredConstructor(
-                    PacketPlayOutPlayerInfo.class,
-                    GameProfile.class,
-                    Integer.TYPE,
-                    EnumGamemode.class,
-                    IChatBaseComponent.class
-            );
-            entries.add(ctor.newInstance(
-                    packet,
+            Class<?> clazz = Class.forName("net.minecraft.server.v1_12_R1.PacketPlayOutPlayerInfo$PlayerInfoData");
+            Constructor<?> ctor = clazz.getDeclaredConstructor(GameProfile.class, int.class, EnumGamemode.class, IChatBaseComponent.class);
+            //noinspection ALL
+            ((List) field.get(packet)).add(ctor.newInstance(
                     handle.getProfile(),
                     handle.ping,
                     EnumGamemode.SPECTATOR,
