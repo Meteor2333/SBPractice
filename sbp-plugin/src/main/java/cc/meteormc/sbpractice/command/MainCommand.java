@@ -5,13 +5,36 @@ import cc.meteormc.sbpractice.config.Message;
 import cc.meteormc.sbpractice.feature.operation.*;
 import cc.meteormc.sbpractice.feature.session.SetupSession;
 import com.cryptomorin.xseries.XSound;
+import com.google.common.collect.ImmutableList;
 import me.despical.commandframework.CommandArguments;
 import me.despical.commandframework.annotations.Command;
+import me.despical.commandframework.annotations.Completer;
 import org.bukkit.entity.Player;
 
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Optional;
 
 public class MainCommand {
+    private static final ImmutableList<String> SUB_COMMANDS;
+
+    static {
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        for (Method method : MainCommand.class.getMethods()) {
+            if (!method.isAnnotationPresent(Command.class)) continue;
+            builder.add(method.getName());
+        }
+        SUB_COMMANDS = builder.build();
+    }
+
+    @Completer(
+            name = "sbpractice",
+            aliases = "sbp"
+    )
+    public List<String> onTabComplete() {
+        return SUB_COMMANDS;
+    }
+
     @Command(
             name = "sbpractice",
             fallbackPrefix = "sbpractice",

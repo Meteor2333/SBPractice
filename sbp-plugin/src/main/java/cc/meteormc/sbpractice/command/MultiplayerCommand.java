@@ -4,14 +4,37 @@ import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import cc.meteormc.sbpractice.config.Message;
 import cc.meteormc.sbpractice.feature.session.MultiplayerSession;
+import com.google.common.collect.ImmutableList;
 import me.despical.commandframework.CommandArguments;
 import me.despical.commandframework.annotations.Command;
+import me.despical.commandframework.annotations.Completer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 public class MultiplayerCommand {
+    private static final ImmutableList<String> SUB_COMMANDS;
+
+    static {
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        for (Method method : MultiplayerCommand.class.getMethods()) {
+            if (!method.isAnnotationPresent(Command.class)) continue;
+            builder.add(method.getName());
+        }
+        SUB_COMMANDS = builder.build();
+    }
+
+    @Completer(
+            name = "multiplayer",
+            aliases = "mp"
+    )
+    public List<String> onTabComplete() {
+        return SUB_COMMANDS;
+    }
+
     @Command(
             name = "multiplayer",
             fallbackPrefix = "sbpractice",
