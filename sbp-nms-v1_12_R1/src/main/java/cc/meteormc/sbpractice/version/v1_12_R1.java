@@ -78,10 +78,17 @@ public class v1_12_R1 extends NMS {
             field.setAccessible(true);
 
             // Use reflection because @javax.annotation.Nullable causes compile-time annotation errors
-            Class<?> clazz = Class.forName("net.minecraft.server.v1_12_R1.PacketPlayOutPlayerInfo$PlayerInfoData");
-            Constructor<?> ctor = clazz.getDeclaredConstructor(GameProfile.class, int.class, EnumGamemode.class, IChatBaseComponent.class);
-            //noinspection ALL
+            Class<?> clazz = Class.forName(PacketPlayOutPlayerInfo.class.getName() + "$PlayerInfoData");
+            Constructor<?> ctor = clazz.getDeclaredConstructor(
+                    PacketPlayOutPlayerInfo.class,
+                    GameProfile.class,
+                    Integer.TYPE,
+                    EnumGamemode.class,
+                    IChatBaseComponent.class
+            );
+            //noinspection unchecked,rawtypes
             ((List) field.get(packet)).add(ctor.newInstance(
+                    packet,
                     handle.getProfile(),
                     handle.ping,
                     EnumGamemode.SPECTATOR,
