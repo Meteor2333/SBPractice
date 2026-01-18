@@ -22,15 +22,18 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.net.URLConnection;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class CheckUpdateListener implements Listener {
-    private final Supplier<String> CHECK = Suppliers.memoize(() -> {
+    private final Supplier<String> CHECK = Suppliers.memoizeWithExpiration(() -> {
         try (FileInputStream stream = new FileInputStream(Main.get().getPlugin().getFile())) {
             String sha256 = DigestUtils.sha256Hex(stream);
-            URLConnection connection = REPO_URL.openConnection();
+            URLConnection connection = REPO_URI.toURL().openConnection();
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(10000);
             connection.setRequestProperty("User-Agent", "Java-App");
             connection.setRequestProperty("Accept", "application/vnd.github+json");
 
@@ -45,16 +48,12 @@ public class CheckUpdateListener implements Listener {
         } catch (IOException ignored) {
             return null;
         }
-    });
+    }, 1L, TimeUnit.DAYS);
 
-    private static final URL REPO_URL;
+    private static final URI REPO_URI;
 
     static {
-        try {
-            REPO_URL = new URL("https://api.github.com/repos/Meteor2333/SBPractice/releases/latest");
-        } catch (MalformedURLException e) {
-            throw new IllegalStateException("Failed to create URL for repository!", e);
-        }
+        REPO_URI = URI.create("https://api.github.com/repos/Meteor2333/SBPractice/releases/latest");
     }
 
     @EventHandler
@@ -62,8 +61,7 @@ public class CheckUpdateListener implements Listener {
         Player player = event.getPlayer();
         if (!player.isOp()) return;
         if (!MainConfig.CHECK_UPDATE.resolve()) return;
-        Bukkit.getScheduler().runTaskAsynchronously(Main.get().getPlugin(), () -> {
-            String result = CHECK.get();
+        CompletableFuture.supplyAsync(CHECK::get).thenAcceptAsync(result -> {
             if (result == null) return;
             player.spigot().sendMessage(
                     new ComponentBuilder(Message.PREFIX.parseLine(player))
@@ -77,6 +75,6 @@ public class CheckUpdateListener implements Listener {
                             .underlined(false)
                             .create()
             );
-        });
+        }, runnable -> Bukkit.getScheduler().runTask(Main.get(), runnable));
     }
 }

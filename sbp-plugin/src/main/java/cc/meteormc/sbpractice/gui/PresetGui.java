@@ -238,9 +238,7 @@ public class PresetGui extends PaginatedFastInv {
                     .collect(Collectors.toList());
         }).thenApplyAsync( // Ensure subsequent operations run on the main thread
                 Function.identity(),
-                runnable -> {
-                    Bukkit.getScheduler().runTask(Main.get(), runnable);
-                }
+                runnable -> Bukkit.getScheduler().runTask(Main.get(), runnable)
         );
     }
 
