@@ -18,7 +18,6 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.5.0</version>
                 <configuration>
-                    <shadedArtifactAttached>false</shadedArtifactAttached>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <relocations>
                         <relocation>
