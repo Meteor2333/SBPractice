@@ -91,12 +91,6 @@ public interface Message extends Configuration {
     interface OPERATION extends Configuration {
         ConfiguredMessage<String> PRESET = asText("&aPreset applied: %(preset)").params("preset").build();
 
-        interface HIGHJUMP extends Configuration {
-            ConfiguredMessage<String> ENABLE = ofText("&aHighjump has been enabled!");
-
-            ConfiguredMessage<String> DISABLE = ofText("&cHigh jump has been disabled!");
-        }
-
         interface CONTINUOUS extends Configuration {
             ConfiguredMessage<String> ACTIVE = ofText("&aTimer has been active!");
 
@@ -168,6 +162,31 @@ public interface Message extends Configuration {
                 ConfiguredMessage<String> SUCCESS = ofText("&aPreset saved successfully!");
 
                 ConfiguredMessage<String> FAILED = ofText("&cFailed to save preset! Please check the console for more!");
+            }
+        }
+
+        interface SETTINGS extends Configuration {
+            ConfiguredMessage<String> TITLE = ofText("Settings");
+
+            interface HIGHJUMP extends Configuration {
+                interface ITEM extends Configuration {
+                    ConfiguredMessage<String> NAME = ofText("&aHighjump state");
+
+                    ConfiguredMessage<String> LORE = asText(
+                            "&7Toggle your highjump state.",
+                            "",
+                            "&7Current state: %(state)",
+                            "",
+                            "&eLeft-Click to increase!",
+                            "&eRight-Click to decrease!"
+                    ).params("state").build();
+                }
+
+                interface STATE extends Configuration {
+                    ConfiguredMessage<String> ENABLED = asText("&aEnabled &7(&e%(height) blocks&7)").params("height").build();
+
+                    ConfiguredMessage<String> DISABLED = ofText("&cDisabled");
+                }
             }
         }
     }

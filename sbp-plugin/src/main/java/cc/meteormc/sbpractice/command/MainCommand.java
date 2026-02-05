@@ -4,6 +4,7 @@ import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import cc.meteormc.sbpractice.config.Message;
 import cc.meteormc.sbpractice.feature.operation.*;
 import cc.meteormc.sbpractice.feature.session.SetupSession;
+import cc.meteormc.sbpractice.gui.SettingsGui;
 import com.cryptomorin.xseries.XSound;
 import com.google.common.collect.ImmutableList;
 import me.despical.commandframework.CommandArguments;
@@ -76,28 +77,6 @@ public class MainCommand {
     }
 
     @Command(
-            name = "sbpractice.highjump",
-            fallbackPrefix = "sbpractice",
-            aliases = "sbp.highjump",
-            desc = "Toggle highjump",
-            usage = "/sbp highjump",
-            senderType = Command.SenderType.PLAYER
-    )
-    public void highjump(CommandArguments arguments) {
-        Player sender = arguments.getSender();
-        PlayerData.getData(sender).ifPresent(data -> {
-            XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(sender);
-            if (data.isEnableHighjump()) {
-                data.setEnableHighjump(false);
-                Message.OPERATION.HIGHJUMP.DISABLE.sendTo(sender);
-            } else {
-                data.setEnableHighjump(true);
-                Message.OPERATION.HIGHJUMP.ENABLE.sendTo(sender);
-            }
-        });
-    }
-
-    @Command(
             name = "sbpractice.preview",
             fallbackPrefix = "sbpractice",
             aliases = "sbp.preview",
@@ -141,6 +120,19 @@ public class MainCommand {
         PlayerData.getData(sender).ifPresent(data -> {
             data.getIsland().executeOperation(new StartOperation());
         });
+    }
+
+    @Command(
+            name = "sbpractice.settings",
+            fallbackPrefix = "sbpractice",
+            aliases = "sbp.settings",
+            desc = "Open settings gui",
+            usage = "/sbp settings",
+            senderType = Command.SenderType.PLAYER
+    )
+    public void settings(CommandArguments arguments) {
+        Player sender = arguments.getSender();
+        new SettingsGui(sender).open(sender);
     }
 
     @Command(

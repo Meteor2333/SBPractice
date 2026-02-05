@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlayerData {
     private Island island;
     private boolean hidden = false;
-    private boolean enableHighjump = true;
+    private int highjumpHeight = 7;
     private long highjumpCooldown = System.currentTimeMillis();
     private Map<Zone, List<PresetData>> presets = new HashMap<>();
 

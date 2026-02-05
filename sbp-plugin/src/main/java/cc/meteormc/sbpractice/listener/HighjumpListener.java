@@ -19,15 +19,16 @@ public class HighjumpListener implements Listener {
         Player player = event.getPlayer();
         Location location = player.getLocation();
         PlayerData.getData(player).ifPresent(data -> {
-            if (!data.isEnableHighjump()) return;
+            int height = data.getHighjumpHeight();
+            if (height <= 0) return;
             if (!data.getIsland().getBuildArea().outset(1).isInside(location)) return;
 
             event.setCancelled(true);
-            if (System.currentTimeMillis() - data.getHighjumpCooldown() >= 1250) {
+            if (System.currentTimeMillis() - data.getHighjumpCooldown() >= 1000) {
                 player.setAllowFlight(false);
                 data.setHighjumpCooldown(System.currentTimeMillis());
                 XSound.ENTITY_GHAST_SHOOT.play(player);
-                player.setVelocity(new Vector(0D, 1.2D, 0D));
+                player.setVelocity(new Vector(0D, (height + 1) * 0.15D, 0D));
                 new BukkitRunnable() {
                     @Override
                     public void run() {
