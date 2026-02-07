@@ -140,7 +140,19 @@ public class SimpleIsland extends Timer implements Island {
         }
 
         if (createNew) {
-            this.zone.createIsland(player);
+            if (!this.zone.isFull()) {
+                this.zone.createIsland(player);
+                return;
+            }
+
+            for (Zone zonex : Main.get().getZones()) {
+                if (!zonex.isFull()) {
+                    zonex.createIsland(player);
+                    return;
+                }
+            }
+
+            player.kickPlayer("All zones are currently full, please try again later!");
         }
     }
 

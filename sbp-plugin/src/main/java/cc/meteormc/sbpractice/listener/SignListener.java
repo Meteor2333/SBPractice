@@ -67,10 +67,19 @@ public class SignListener implements Listener {
                 case TOGGLE_ZONE:
                     List<Zone> zones = Main.get().getZones();
                     if (!zones.contains(island.getZone())) break;
-                    int index = zones.indexOf(island.getZone()) + 1;
-                    if (index >= zones.size()) index = 0;
-                    island.removeAny(player, false);
-                    zones.get(index).createIsland(player);
+
+                    int size = zones.size();
+                    int index = zones.indexOf(island.getZone());
+                    // index+1 → size-1 → 0 → index-1
+                    for (int i = 1; i < size; i++) {
+                        Zone zone = zones.get((index + i) % size);
+                        if (!zone.isFull()) {
+                            island.removeAny(player, false);
+                            zone.createIsland(player);
+                            break;
+                        }
+                    }
+
                     break;
                 default:
                     return;
