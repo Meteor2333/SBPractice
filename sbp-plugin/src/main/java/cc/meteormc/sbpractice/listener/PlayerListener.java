@@ -27,6 +27,7 @@ public class PlayerListener implements Listener {
             Island island = data.getIsland();
             Action action = event.getAction();
             if (item == null) return;
+            if (island == null) return;
             if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
 
             XMaterial material = XMaterial.matchXMaterial(item);
@@ -52,6 +53,7 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         PlayerData.getData(player).ifPresent(data -> {
             Island island = data.getIsland();
+            if (island == null) return;
             if (event.getTo().getY() < island.getArea().getYMin() - 10) {
                 player.teleport(island.getSpawnPoint());
             }
@@ -73,7 +75,7 @@ public class PlayerListener implements Listener {
         if (!MainConfig.HIDE_PLAYER.resolve()) return;
         PlayerData.getData(player).ifPresent(data -> {
             Island island = data.getIsland();
-            if (island.getArea().isInsideIgnoreYaxis(player.getLocation())) {
+            if (island == null || island.getArea().isInsideIgnoreYaxis(player.getLocation())) {
                 if (data.isHidden()) {
                     data.setHidden(false);
                     Main.get().getNms().showPlayer(player);

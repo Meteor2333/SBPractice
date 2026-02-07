@@ -1,5 +1,9 @@
 package cc.meteormc.sbpractice.command;
 
+import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.api.Island;
+import cc.meteormc.sbpractice.api.Zone;
+import cc.meteormc.sbpractice.api.helper.Operation;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import cc.meteormc.sbpractice.config.Message;
 import cc.meteormc.sbpractice.feature.operation.*;
@@ -55,10 +59,7 @@ public class MainCommand {
             senderType = Command.SenderType.PLAYER
     )
     public void clear(CommandArguments arguments) {
-        Player sender = arguments.getSender();
-        PlayerData.getData(sender).ifPresent(data -> {
-            data.getIsland().executeOperation(new ClearOperation());
-        });
+        this.execute(arguments.getSender(), new ClearOperation());
     }
 
     @Command(
@@ -70,10 +71,7 @@ public class MainCommand {
             senderType = Command.SenderType.PLAYER
     )
     public void ground(CommandArguments arguments) {
-        Player sender = arguments.getSender();
-        PlayerData.getData(sender).ifPresent(data -> {
-            data.getIsland().executeOperation(new GroundOperation());
-        });
+        this.execute(arguments.getSender(), new GroundOperation());
     }
 
     @Command(
@@ -85,10 +83,7 @@ public class MainCommand {
             senderType = Command.SenderType.PLAYER
     )
     public void preview(CommandArguments arguments) {
-        Player sender = arguments.getSender();
-        PlayerData.getData(sender).ifPresent(data -> {
-            data.getIsland().executeOperation(new PreviewOperation());
-        });
+        this.execute(arguments.getSender(), new PreviewOperation());
     }
 
     @Command(
@@ -101,10 +96,8 @@ public class MainCommand {
     )
     public void record(CommandArguments arguments) {
         Player sender = arguments.getSender();
-        PlayerData.getData(sender).ifPresent(data -> {
-            data.getIsland().executeOperation(new RecordOperation());
-            XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(sender);
-        });
+        this.execute(sender, new RecordOperation());
+        XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(sender);
     }
 
     @Command(
@@ -116,10 +109,7 @@ public class MainCommand {
             senderType = Command.SenderType.PLAYER
     )
     public void start(CommandArguments arguments) {
-        Player sender = arguments.getSender();
-        PlayerData.getData(sender).ifPresent(data -> {
-            data.getIsland().executeOperation(new StartOperation());
-        });
+        this.execute(arguments.getSender(), new StartOperation());
     }
 
     @Command(
@@ -133,6 +123,41 @@ public class MainCommand {
     public void settings(CommandArguments arguments) {
         Player sender = arguments.getSender();
         new SettingsGui(sender).open(sender);
+    }
+
+    @Command(
+            name = "sbpractice.admin",
+            fallbackPrefix = "sbpractice",
+            aliases = "sbp.admin",
+            desc = "Toggle admin mode",
+            usage = "/sbp admin",
+            onlyOp = true,
+            senderType = Command.SenderType.PLAYER
+    )
+    public void admin(CommandArguments arguments) {
+        Player player = arguments.getSender();
+        PlayerData.getData(player).ifPresent(data -> {
+            boolean mode = !data.isAdminMode();
+            XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player);
+            if (mode) {
+                Island island = data.getIsland();
+                if (island != null) island.removeAny(player, false);
+                data.setIsland(null);
+                data.setAdminMode(mode);
+            } else {
+                for (Zone zone : Main.get().getZones()) {
+                    if (zone.isFull()) continue;
+                    try {
+                        zone.createIsland(player);
+                        data.setAdminMode(mode);
+                        return;
+                    } catch (Throwable ignored) {
+                    }
+                }
+
+                Message.BASIC.CANNOT_DO_THAT.sendTo(player);
+            }
+        });
     }
 
     @Command(
@@ -157,6 +182,15 @@ public class MainCommand {
             }
         }).ifPresent(ss -> {
             ss.handleCommand(arguments.concatRangeOf(1, arguments.getLength()));
+        });
+    }
+
+    private void execute(Player player, Operation operation) {
+        PlayerData.getData(player).ifPresent(data -> {
+            Island island = data.getIsland();
+            if (island != null) {
+                data.getIsland().executeOperation(operation);
+            }
         });
     }
 }

@@ -117,7 +117,8 @@ public class SimpleIsland extends Timer implements Island {
     @Override
     public void addGuest(Player player) {
         PlayerData.getData(player).ifPresent(data -> {
-            data.getIsland().removeAny(player, false);
+            Island island = data.getIsland();
+            if (island != null) island.removeAny(player, false);
             data.setIsland(SimpleIsland.this);
         });
         this.guests.add(player);

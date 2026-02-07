@@ -122,7 +122,7 @@ public class MultiplayerCommand {
         Player sender = arguments.getSender();
         PlayerData.getData(sender).ifPresent(data -> {
             Island island = data.getIsland();
-            if (island.getOwner().equals(sender)) {
+            if (island == null || island.getOwner().equals(sender)) {
                 Message.BASIC.CANNOT_DO_THAT.sendTo(sender);
             } else {
                 island.removeAny(sender, true);

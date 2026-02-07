@@ -58,11 +58,12 @@ public class WorldManager {
         if (this.world == null) return;
         this.world.getPlayers().forEach(player -> player.kickPlayer("The world you are in has been unloaded!"));
         Bukkit.unloadWorld(this.world, false);
-        try {
-            FileUtils.deleteDirectory(this.world.getWorldFolder());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // for #4
+//        try {
+//            FileUtils.deleteDirectory(this.world.getWorldFolder());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         this.world = null;
     }
 }

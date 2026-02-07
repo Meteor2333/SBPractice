@@ -1,5 +1,6 @@
 package cc.meteormc.sbpractice.listener;
 
+import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
@@ -61,7 +62,9 @@ public class BlockListener implements Listener {
 
     private void handleBlock(Player player, BlockState block, Cancellable event) {
         PlayerData.getData(player).ifPresent(data -> {
-            if (!data.getIsland().getBuildArea().isInside(block.getLocation())) {
+            Island island = data.getIsland();
+            if (island == null) return;
+            if (!island.getBuildArea().isInside(block.getLocation())) {
                 event.setCancelled(true);
                 block.update(true);
             }

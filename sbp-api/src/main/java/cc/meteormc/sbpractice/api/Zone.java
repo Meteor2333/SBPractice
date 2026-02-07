@@ -16,6 +16,8 @@ public interface Zone {
 
     World getWorld();
 
+    boolean isFull();
+
     Island createIsland(Player player);
 
     void removeIsland(Island island);

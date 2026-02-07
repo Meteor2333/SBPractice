@@ -1,5 +1,6 @@
 package cc.meteormc.sbpractice.gui;
 
+import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.helper.ItemBuilder;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import cc.meteormc.sbpractice.config.Message;
@@ -55,7 +56,11 @@ public class SettingsGui extends FastInv {
                     break;
             }
 
-            int maxHeight = data.getIsland().getBuildArea().getHeight() + 3;
+            int maxHeight;
+            Island island = data.getIsland();
+            if (island != null) maxHeight = island.getBuildArea().getHeight() + 3;
+            else maxHeight = 10;
+
             if (height < 0) height = maxHeight;
             if (height > maxHeight) height = 0;
 

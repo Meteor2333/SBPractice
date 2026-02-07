@@ -31,29 +31,33 @@ public class PapiHook extends PlaceholderExpansion {
 
     @Override
     public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
-        Optional<PlayerData> optionalData = PlayerData.getData(player.getPlayer());
+        Optional<PlayerData> optionalData = PlayerData.getData(player);
         if (optionalData.isPresent()) {
             PlayerData data = optionalData.get();
             Island island = data.getIsland();
-            switch (params) {
-                case "restores":
-                    return String.valueOf(data.getStats().getRestores());
-                case "owner":
-                    return island.getOwner().getName();
-                case "total-player":
-                    return String.valueOf(island.getGuests().size() + 1);
-                case "time":
-                    return island.getFormattedTime();
-                case "blocks":
-                    int num = 0;
-                    for (BlockData block : island.getRecordedBlocks().values()) {
-                        if (block != null && block.getType() != Material.AIR) num++;
-                    }
-                    return String.valueOf(num);
-                default:
-                    return null;
+            if (island != null) {
+                switch (params) {
+                    case "restores":
+                        return String.valueOf(data.getStats().getRestores());
+                    case "owner":
+                        return island.getOwner().getName();
+                    case "total-player":
+                        return String.valueOf(island.getGuests().size() + 1);
+                    case "time":
+                        return island.getFormattedTime();
+                    case "blocks":
+                        int num = 0;
+                        for (BlockData block : island.getRecordedBlocks().values()) {
+                            if (block != null && block.getType() != Material.AIR) num++;
+                        }
+                        return String.valueOf(num);
+                    default:
+                        return null;
+                }
             }
-        } else return "None";
+        }
+
+        return "None";
     }
 
     @Override

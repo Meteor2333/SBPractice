@@ -38,24 +38,30 @@ public class MultiplayerSession {
         MultiplayerSession session = getOrCreateSession(target);
         if (session.inviteList.containsKey(this.player) && System.currentTimeMillis() - session.inviteList.get(this.player) < 60000L) {
             session.inviteList.remove(this.player);
-            PlayerData.getData(this.player).ifPresent(data -> {
-                data.getIsland().removeAny(this.player, false);
-            });
-
             PlayerData.getData(target).ifPresent(data -> {
                 Island island = data.getIsland();
+                if (island == null) return;
+
+                PlayerData.getData(this.player).ifPresent(selfData -> {
+                    Island selfIsland = selfData.getIsland();
+                    if (selfIsland != null) selfIsland.removeAny(this.player, false);
+                });
+
                 island.addGuest(this.player);
                 Message.MULTIPLAYER.INVITE.ACCEPTED_ACTIVE.sendTo(this.player, target.getName());
                 Message.MULTIPLAYER.INVITE.ACCEPTED_PASSIVE.sendTo(target, this.player.getName());
             });
         } else if (session.joinList.containsKey(this.player) && System.currentTimeMillis() - session.joinList.get(this.player) < 60000L) {
             session.joinList.remove(this.player);
-            PlayerData.getData(target).ifPresent(data -> {
-                data.getIsland().removeAny(target, false);
-            });
-
             PlayerData.getData(this.player).ifPresent(data -> {
                 Island island = data.getIsland();
+                if (island == null) return;
+
+                PlayerData.getData(target).ifPresent(targetData -> {
+                    Island targetIsland = targetData.getIsland();
+                    if (targetIsland != null) targetIsland.removeAny(target, false);
+                });
+
                 island.addGuest(target);
                 Message.MULTIPLAYER.JOIN.ACCEPTED_ACTIVE.sendTo(this.player, target.getName());
                 Message.MULTIPLAYER.JOIN.ACCEPTED_PASSIVE.sendTo(target, this.player.getName());
@@ -86,6 +92,11 @@ public class MultiplayerSession {
 
         PlayerData data = optionalData.get();
         Island island = data.getIsland();
+        if (island == null) {
+            Message.BASIC.CANNOT_DO_THAT.sendTo(this.player);
+            return;
+        }
+
         if (island.getOwner().equals(this.player)) {
             if (this.inviteList.containsKey(target) && System.currentTimeMillis() - this.inviteList.get(target) < 60000L) {
                 Message.MULTIPLAYER.INVITE.ALREADY_INVITED.sendTo(this.player, target.getName());
@@ -114,6 +125,11 @@ public class MultiplayerSession {
 
         PlayerData data = optionalData.get();
         Island island = data.getIsland();
+        if (island == null) {
+            Message.BASIC.CANNOT_DO_THAT.sendTo(this.player);
+            return;
+        }
+
         target = island.getOwner();
         if (this.inviteList.containsKey(target) && System.currentTimeMillis() - this.inviteList.get(target) < 60000L) {
             Message.MULTIPLAYER.INVITE.ALREADY_INVITED.sendTo(this.player, target.getName());
@@ -138,7 +154,7 @@ public class MultiplayerSession {
     public void kickPlayer(Player target) {
         PlayerData.getData(this.player).ifPresent(data -> {
             Island island = data.getIsland();
-            if (island.getOwner().equals(this.player)) {
+            if (island != null && island.getOwner().equals(this.player)) {
                 if (island.getGuests().contains(target)) {
                     island.removeAny(target, true);
                     Message.MULTIPLAYER.KICK.ACTIVE.sendTo(player, target.getName());

@@ -75,12 +75,19 @@ public class DataListener implements Listener {
             player.kickPlayer("PlayerData failed to load, rejoin later!");
             return;
         }
-        try {
-            Main.get().getZones().get(0).createIsland(player);
-        } catch (Throwable e) {
-            player.kickPlayer(e.toString());
-            Main.get().getLogger().log(Level.SEVERE, "Failed to create island for player " + player.getName() + ".", e);
+
+        for (Zone zone : Main.get().getZones()) {
+            if (zone.isFull()) continue;
+            try {
+                zone.createIsland(player);
+            } catch (Throwable e) {
+                player.kickPlayer(e.toString());
+                Main.get().getLogger().log(Level.SEVERE, "Failed to create island for player " + player.getName() + ".", e);
+            }
+            return;
         }
+
+        player.kickPlayer("All zones are currently full, please try again later!");
     }
 
     @EventHandler

@@ -78,8 +78,19 @@ public class SimpleZone implements Zone {
             }
 
             this.schematic = SchematicData.load(this.schematicFile);
-            if (MainConfig.ISLAND_GENERATE.PRE_GENERATE.ENABLE.resolve()) {
-                int amount = MainConfig.ISLAND_GENERATE.PRE_GENERATE.AMOUNT.resolve();
+            if (MainConfig.ISLAND_GENERATE.PRE_GENERATE.resolve()) {
+                int amount = MainConfig.ISLAND_GENERATE.AMOUNT.resolve();
+                if (amount <= 0) {
+                    if (!MainConfig.ISLAND_GENERATE.WIDTH.isDefault()) {
+                        // 如果没有岛屿数量限制 就使用宽度*宽度的值
+                        int width = MainConfig.ISLAND_GENERATE.WIDTH.resolve();
+                        amount = width * width;
+                    } else {
+                        // 如果生成宽度也没有设置 就默认12
+                        amount = 12;
+                    }
+                }
+
                 for (int i = 0; i < amount; i++) {
                     this.schematic.paste(this.getReference(i).toLocation(world.getWorld()));
                 }
@@ -91,7 +102,15 @@ public class SimpleZone implements Zone {
     }
 
     @Override
+    public boolean isFull() {
+        int maxCount = MainConfig.ISLAND_GENERATE.AMOUNT.resolve();
+        return maxCount > 0 && this.islands.stream().filter(Objects::nonNull).count() >= maxCount;
+    }
+
+    @Override
     public Island createIsland(Player player) {
+        if (this.isFull()) throw new RuntimeException("The zone is full!");
+
         int index = this.islands.indexOf(null);
         if (index == -1) {
             this.islands.add(null);
@@ -157,7 +176,7 @@ public class SimpleZone implements Zone {
         }
 
         island.executeOperation(new ClearOperation());
-        if (!MainConfig.ISLAND_GENERATE.PRE_GENERATE.ENABLE.resolve()) {
+        if (!MainConfig.ISLAND_GENERATE.PRE_GENERATE.resolve()) {
             for (Vector point : island.getArea().getPoints()) {
                 Block block = point.toLocation(world.getWorld()).getBlock();
                 if (block.getType() == Material.AIR) continue;

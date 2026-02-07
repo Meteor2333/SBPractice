@@ -29,6 +29,7 @@ public class SignListener implements Listener {
 
         PlayerData.getData(player).ifPresent(data -> {
             Island island = data.getIsland();
+            if (island == null) return;
             if (data.isHidden()) {
                 event.setCancelled(true);
                 return;

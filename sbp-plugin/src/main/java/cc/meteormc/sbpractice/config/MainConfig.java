@@ -9,45 +9,43 @@ import com.cryptomorin.xseries.XMaterial;
 
 @ConfigPath(root = true)
 public interface MainConfig extends Configuration {
-    @HeaderComments("Get notified of new versions instantly.")
+    @HeaderComments("Enable automatic update checking to get notified of new versions.")
     ConfiguredValue<Boolean> CHECK_UPDATE = ConfiguredValue.of(true);
 
-    @HeaderComments("Change the timer step from 0.001s to 0.05s, because in Minecraft 1 tick = 1/20 second.")
+    @HeaderComments("Normalize timer step from 0.001s to 0.05s (1 Minecraft tick = 1/20 second).")
     ConfiguredValue<Boolean> NORMALIZE_TIME = ConfiguredValue.of(true);
 
-    @HeaderComments("Set island generate.")
+    @HeaderComments("Island generation settings.")
     interface ISLAND_GENERATE extends Configuration {
-        @HeaderComments("Set the interval for island generation.")
-        ConfiguredValue<Integer> DISTANCE = ConfiguredValue.of(80);
+        @HeaderComments("Set the distance interval between generated islands.")
+        ConfiguredValue<Integer> DISTANCE = ConfiguredValue.of(50);
 
         @HeaderComments({
                 "Set the rectangular width for island generation.",
-                "In fact, the shape generated is a rectangle. But the default width is 1, so it appears as a linear shape."
+                "Note: The default width is 1, which creates a linear layout. Increase this value for a rectangular grid."
         })
         ConfiguredValue<Integer> WIDTH = ConfiguredValue.of(1);
 
-        interface PRE_GENERATE extends Configuration {
-            @HeaderComments({
-                    "Set the pre-generation of islands at startup.",
-                    "Enable this option if you want to create a more community-friendly server."
-            })
-            ConfiguredValue<Boolean> ENABLE = ConfiguredValue.of(false);
+        @HeaderComments("Set the maximum number of islands per zone. (Set to -1 for unlimited)")
+        ConfiguredValue<Integer> AMOUNT = ConfiguredValue.of(-1);
 
-            @HeaderComments("Set the number of islands to pre-generate")
-            ConfiguredValue<Integer> AMOUNT = ConfiguredValue.of(10);
-        }
+        @HeaderComments({
+                "Enable pre-generation of islands at server startup.",
+                "Recommended for community servers to improve initial player experience."
+        })
+        ConfiguredValue<Boolean> PRE_GENERATE = ConfiguredValue.of(false);
     }
 
-    @HeaderComments("Set the replacing of partial blocks with similar full blocks when performing certain placement actions. (BETA)")
+    @HeaderComments("Automatically replace partial blocks with similar full blocks during placement. (BETA)")
     ConfiguredValue<Boolean> AUTO_TO_FULL_BLOCK = ConfiguredValue.of(true);
 
-    @HeaderComments("Set the hiding of player when they leave their island.")
+    @HeaderComments("Hide players when they leave their island.")
     ConfiguredValue<Boolean> HIDE_PLAYER = ConfiguredValue.of(true);
 
     @HeaderComments("Set the maximum number of presets a player can save.")
     ConfiguredValue<Integer> MAX_PRESETS_LIMIT = ConfiguredValue.of(18);
 
-    @HeaderComments("Set MySQL database service.")
+    @HeaderComments("MySQL database configuration.")
     interface MYSQL extends Configuration {
         ConfiguredValue<Boolean> ENABLE = ConfiguredValue.of(false);
 
@@ -64,7 +62,7 @@ public interface MainConfig extends Configuration {
         ConfiguredValue<Boolean> USESSL = ConfiguredValue.of(false);
     }
 
-    @HeaderComments("Set in-game material.")
+    @HeaderComments("In-game material configuration.")
     interface MATERIAL extends Configuration {
         ConfiguredValue<XMaterial> START_ITEM = ConfiguredValue.of(XMaterial.EGG);
 

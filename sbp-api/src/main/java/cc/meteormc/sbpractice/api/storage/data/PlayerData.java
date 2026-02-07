@@ -5,15 +5,18 @@ import cc.meteormc.sbpractice.api.Zone;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 public class PlayerData {
+    @Nullable
     private Island island;
     private boolean hidden = false;
+    private boolean adminMode = false;
     private int highjumpHeight = 7;
     private long highjumpCooldown = System.currentTimeMillis();
     private Map<Zone, List<PresetData>> presets = new HashMap<>();
@@ -31,8 +34,8 @@ public class PlayerData {
         PLAYERS.remove(this.uuid);
     }
 
-    public static Optional<PlayerData> getData(Player player) {
-        return Optional.ofNullable(PLAYERS.getOrDefault(player.getUniqueId(), null));
+    public static Optional<PlayerData> getData(OfflinePlayer player) {
+        return Optional.ofNullable(PLAYERS.get(player.getUniqueId()));
     }
 
     @Getter

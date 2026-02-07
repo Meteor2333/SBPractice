@@ -1,6 +1,7 @@
 package cc.meteormc.sbpractice.listener;
 
 import cc.meteormc.sbpractice.Main;
+import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.storage.data.PlayerData;
 import com.cryptomorin.xseries.XSound;
 import org.bukkit.Location;
@@ -19,9 +20,11 @@ public class HighjumpListener implements Listener {
         Player player = event.getPlayer();
         Location location = player.getLocation();
         PlayerData.getData(player).ifPresent(data -> {
+            Island island = data.getIsland();
             int height = data.getHighjumpHeight();
             if (height <= 0) return;
-            if (!data.getIsland().getBuildArea().outset(1).isInside(location)) return;
+            if (island == null) return;
+            if (!island.getBuildArea().outset(1).isInside(location)) return;
 
             event.setCancelled(true);
             if (System.currentTimeMillis() - data.getHighjumpCooldown() >= 1000) {
