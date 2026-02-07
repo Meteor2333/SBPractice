@@ -32,16 +32,28 @@ public class HighjumpListener implements Listener {
                 data.setHighjumpCooldown(System.currentTimeMillis());
                 XSound.ENTITY_GHAST_SHOOT.play(player);
                 player.setVelocity(new Vector(0D, (height + 1) * 0.15D, 0D));
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if (player.isOnGround()) {
-                            player.setAllowFlight(true);
-                            this.cancel();
-                        } else player.setAllowFlight(false);
-                    }
-                }.runTaskTimer(Main.get(), 3L, 0L);
+                new AntiDoubleHighjumpTask(player).runTaskTimer(Main.get(), 3L, 0L);
             }
         });
+    }
+
+    private static class AntiDoubleHighjumpTask extends BukkitRunnable {
+        private final Player player;
+        private final long startTime;
+
+        AntiDoubleHighjumpTask(Player player) {
+            this.player = player;
+            this.startTime = System.currentTimeMillis();
+        }
+
+        @Override
+        public void run() {
+            if (this.player.isOnGround() || System.currentTimeMillis() - this.startTime >= 1500) {
+                this.player.setAllowFlight(true);
+                this.cancel();
+            } else {
+                this.player.setAllowFlight(false);
+            }
+        }
     }
 }
