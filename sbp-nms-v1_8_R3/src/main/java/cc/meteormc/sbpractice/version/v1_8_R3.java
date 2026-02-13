@@ -336,13 +336,13 @@ public class v1_8_R3 extends NMS {
                         newBlock = BlockData.of(XMaterial.COBBLESTONE);
                         break;
                     case BRICK:
-                        newBlock = BlockData.of(XMaterial.BRICK);
+                        newBlock = BlockData.of(XMaterial.BRICKS);
                         break;
                     case SMOOTHBRICK:
                         newBlock = BlockData.of(XMaterial.STONE_BRICKS);
                         break;
                     case NETHERBRICK:
-                        newBlock = BlockData.of(XMaterial.NETHER_BRICK);
+                        newBlock = BlockData.of(XMaterial.NETHER_BRICKS);
                         break;
                     case QUARTZ:
                         newBlock = BlockData.of(XMaterial.QUARTZ_BLOCK);
@@ -367,11 +367,11 @@ public class v1_8_R3 extends NMS {
             } else if (nmsBlock == Blocks.STONE_STAIRS) {
                 newBlock = BlockData.of(XMaterial.COBBLESTONE);
             } else if (nmsBlock == Blocks.BRICK_STAIRS) {
-                newBlock = BlockData.of(XMaterial.BRICK);
+                newBlock = BlockData.of(XMaterial.BRICKS);
             } else if (nmsBlock == Blocks.STONE_BRICK_STAIRS) {
                 newBlock = BlockData.of(XMaterial.STONE_BRICKS);
             } else if (nmsBlock == Blocks.NETHER_BRICK_STAIRS) {
-                newBlock = BlockData.of(XMaterial.NETHER_BRICK);
+                newBlock = BlockData.of(XMaterial.NETHER_BRICKS);
             } else if (nmsBlock == Blocks.SANDSTONE_STAIRS) {
                 newBlock = BlockData.of(XMaterial.SANDSTONE);
             } else if (nmsBlock == Blocks.SPRUCE_STAIRS) {
