@@ -59,7 +59,7 @@ public class v1_8_R3 extends NMS {
     public void hidePlayer(@NotNull Player player) {
         CraftPlayer cPlayer = (CraftPlayer) player;
         EntityPlayer handle = cPlayer.getHandle();
-        handle.collidesWithEntities = false;
+        handle.k = false;
         cPlayer.addPotionEffect(new PotionEffect(
                 PotionEffectType.INVISIBILITY,
                 Integer.MAX_VALUE,
@@ -98,7 +98,7 @@ public class v1_8_R3 extends NMS {
     public void showPlayer(@NotNull Player player) {
         CraftPlayer cPlayer = (CraftPlayer) player;
         EntityPlayer handle = cPlayer.getHandle();
-        handle.collidesWithEntities = true;
+        handle.k = true;
         cPlayer.removePotionEffect(PotionEffectType.INVISIBILITY);
         player.getWorld().getPlayers().forEach(p -> {
             p.showPlayer(player);
