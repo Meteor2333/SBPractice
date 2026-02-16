@@ -40,7 +40,7 @@ import java.util.Optional;
 import static me.despical.commandframework.Message.*;
 
 @Getter
-@Plugin(name = "SBPractice", version = "6.2.3")
+@Plugin(name = "SBPractice", version = "6.2.4")
 @Description("A Minecraft plugin for practicing SpeedBuilder")
 @Author("Meteor23333")
 @Website("https://github.com/Meteor2333/SBPractice")
