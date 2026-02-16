@@ -59,7 +59,6 @@ public class SimpleZone implements Zone {
             this.world.load(true);
             World w = this.world.getWorld();
             if (w != null) {
-                w.setAutoSave(false);
                 w.setGameRuleValue("announceAdvancements", "false");
                 w.setGameRuleValue("doDaylightCycle", "false");
                 w.setGameRuleValue("doFireTick", "false");
