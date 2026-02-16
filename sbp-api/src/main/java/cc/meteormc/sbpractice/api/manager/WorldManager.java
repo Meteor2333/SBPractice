@@ -2,7 +2,6 @@ package cc.meteormc.sbpractice.api.manager;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
@@ -10,9 +9,6 @@ import org.bukkit.WorldType;
 import org.bukkit.generator.ChunkGenerator;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Random;
 
 @Getter
@@ -28,15 +24,16 @@ public class WorldManager {
     public void load(boolean isVoid) {
         World oldWorld = Bukkit.getWorld(this.name);
         if (oldWorld != null) {
-            Bukkit.unloadWorld(oldWorld, false);
+            Bukkit.unloadWorld(oldWorld, true);
         }
 
-        File file = new File(Bukkit.getWorldContainer(), this.name);
-        try {
-            FileUtils.deleteDirectory(file);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        // for #4
+//        File file = new File(Bukkit.getWorldContainer(), this.name);
+//        try {
+//            FileUtils.deleteDirectory(file);
+//        } catch (IOException e) {
+//            throw new UncheckedIOException(e);
+//        }
 
         this.world = new WorldCreator(this.name)
                 .environment(this.environment)
