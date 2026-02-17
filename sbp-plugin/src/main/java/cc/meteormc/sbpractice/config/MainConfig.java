@@ -3,12 +3,18 @@ package cc.meteormc.sbpractice.config;
 import cc.carm.lib.configuration.Configuration;
 import cc.carm.lib.configuration.annotation.ConfigPath;
 import cc.carm.lib.configuration.annotation.HeaderComments;
+import cc.carm.lib.configuration.source.ConfigurationHolder;
 import cc.carm.lib.configuration.value.standard.ConfiguredList;
 import cc.carm.lib.configuration.value.standard.ConfiguredValue;
+import cc.meteormc.sbpractice.config.adapter.XMaterialAdapter;
 import com.cryptomorin.xseries.XMaterial;
 
 @ConfigPath(root = true)
 public interface MainConfig extends Configuration {
+    static void initialize(ConfigurationHolder<?> holder) {
+        holder.adapters().register(new XMaterialAdapter());
+    }
+
     @HeaderComments("Enable automatic update checking to get notified of new versions.")
     ConfiguredValue<Boolean> CHECK_UPDATE = ConfiguredValue.of(true);
 

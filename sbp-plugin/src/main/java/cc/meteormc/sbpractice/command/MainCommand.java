@@ -161,6 +161,19 @@ public class MainCommand {
     }
 
     @Command(
+            name = "sbpractice.reload",
+            fallbackPrefix = "sbpractice",
+            aliases = "sbp.reload",
+            desc = "Reload plugin",
+            usage = "/sbp reload",
+            onlyOp = true,
+            senderType = Command.SenderType.PLAYER
+    )
+    public void reload(CommandArguments arguments) {
+        Main.get().onReload();
+    }
+
+    @Command(
             name = "sbpractice.setup",
             fallbackPrefix = "sbpractice",
             aliases = "sbp.setup",

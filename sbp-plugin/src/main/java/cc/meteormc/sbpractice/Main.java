@@ -9,7 +9,6 @@ import cc.meteormc.sbpractice.command.MainCommand;
 import cc.meteormc.sbpractice.command.MultiplayerCommand;
 import cc.meteormc.sbpractice.config.MainConfig;
 import cc.meteormc.sbpractice.config.Message;
-import cc.meteormc.sbpractice.config.adapter.XMaterialAdapter;
 import cc.meteormc.sbpractice.database.MySQL;
 import cc.meteormc.sbpractice.database.SQLite;
 import cc.meteormc.sbpractice.feature.SimpleZone;
@@ -48,6 +47,7 @@ import static me.despical.commandframework.Message.*;
 public class Main extends JavaPlugin implements SBPracticeAPI {
     private final NMS nms;
     private final Database db;
+    private final MineConfiguration cfg;
     private final List<Zone> zones = new ArrayList<>();
 
     public static Main get() {
@@ -68,8 +68,9 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
         }
 
         /* Init Configs */
-        MineConfiguration config = new MineConfiguration(this, MainConfig.class, Message.class);
-        config.getConfig().adapters().register(new XMaterialAdapter());
+        this.cfg = new MineConfiguration(this, MainConfig.class, Message.class);
+        MainConfig.initialize(cfg.getConfig());
+        Message.initialize(cfg.getConfig());
 
         /* Init Database */
         if (MainConfig.MYSQL.ENABLE.resolve()) this.db = new MySQL();
@@ -77,7 +78,7 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
     }
 
     @Override
-    public void onEnable() {
+    public void onLoad() {
         /* Display Info */
         this.getLogger().info("------------------------------------------------");
         this.getLogger().info("   _____ ____  ____                  __  _         ");
@@ -91,7 +92,23 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
         this.getLogger().info("Running on: " + this.getServer().getVersion());
         this.getLogger().info("Java Version: " + System.getProperty("java.version"));
         this.getLogger().info("------------------------------------------------");
+    }
 
+    public void onReload() {
+        /* Reload Configs */
+        try {
+            this.cfg.reload();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        /* Reload Zones */
+        this.unloadZones();
+        this.loadZones();
+    }
+
+    @Override
+    public void onEnable() {
         /* Init Services */
         new Metrics(this, 24481);
         FastInvManager.register(this);
@@ -100,17 +117,7 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
         this.db.connect();
 
         /* Load Zones */
-        File[] files = SimpleZone.ZONES_DIR.listFiles(File::isDirectory);
-        for (File file : Optional.ofNullable(files).orElse(new File[]{})) {
-            try {
-                String name = file.getName();
-                zones.add(new SimpleZone(name).load());
-                this.getLogger().info("Loaded Zone " + name);
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        }
-        this.getLogger().info("Loaded " + zones.size() + " Zones!");
+        this.loadZones();
 
         /* Register Listeners */
         PluginManager pm = Bukkit.getPluginManager();
@@ -156,8 +163,8 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
 
     @Override
     public void onDisable() {
-        /* Unregister Zones */
-        zones.forEach(Zone::unregister);
+        /* Unload Zones */
+        this.unloadZones();
     }
 
     @Override
@@ -168,5 +175,25 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
     @Override
     public Main getPlugin() {
         return this;
+    }
+
+    private void loadZones() {
+        File[] files = SimpleZone.ZONES_DIR.listFiles(File::isDirectory);
+        for (File file : Optional.ofNullable(files).orElse(new File[]{})) {
+            try {
+                String name = file.getName();
+                zones.add(new SimpleZone(name).load());
+                this.getLogger().info("Loaded Zone " + name);
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+
+        this.getLogger().info("Loaded " + zones.size() + " Zones!");
+    }
+
+    private void unloadZones() {
+        zones.forEach(Zone::unregister);
+        zones.clear();
     }
 }
