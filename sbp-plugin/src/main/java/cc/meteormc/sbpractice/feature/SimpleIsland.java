@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
@@ -33,10 +34,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -270,6 +268,18 @@ public class SimpleIsland extends Timer implements Island {
             iterator.remove();
             this.removeAny(guest, false);
         }
+
+        this.signs.getSigns().values()
+                .stream()
+                .flatMap(Collection::stream)
+                .map(Location::getBlock)
+                .map(Block::getState)
+                .filter(Sign.class::isInstance)
+                .map(Sign.class::cast)
+                .forEach(sign -> {
+                    Arrays.fill(sign.getLines(), "");
+                    sign.update();
+                });
 
         this.checker.shutdown();
         this.actionbarTask.cancel();
