@@ -82,7 +82,7 @@ public class DataListener implements Listener {
                 zone.createIsland(player);
             } catch (Throwable e) {
                 player.kickPlayer(e.toString());
-                Main.get().getLogger().log(Level.SEVERE, "Failed to create island for player " + player.getName() + ".", e);
+                throw new IllegalStateException("Failed to create island for player " + player.getName() + "!", e);
             }
             return;
         }
