@@ -5,12 +5,11 @@ import cc.carm.lib.configuration.annotation.ConfigPath;
 import cc.carm.lib.configuration.source.ConfigurationHolder;
 import cc.carm.lib.mineconfiguration.bukkit.value.ConfiguredMessage;
 import cc.carm.lib.mineconfiguration.bukkit.value.ConfiguredTitle;
-import cc.meteormc.sbpractice.config.adapter.XMaterialAdapter;
 
 @ConfigPath(root = true)
 public interface Message extends Configuration {
     static void initialize(ConfigurationHolder<?> holder) {
-        holder.adapters().register(new XMaterialAdapter());
+        
     }
 
     static ConfiguredMessage.Builder<String> asText(String... defaults) {

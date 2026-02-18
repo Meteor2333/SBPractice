@@ -70,7 +70,7 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
         /* Init Configs */
         this.cfg = new MineConfiguration(this, MainConfig.class, Message.class);
         MainConfig.initialize(cfg.getConfig());
-        Message.initialize(cfg.getConfig());
+        Message.initialize(cfg.getMessage());
 
         /* Init Database */
         if (MainConfig.MYSQL.ENABLE.resolve()) this.db = new MySQL();
