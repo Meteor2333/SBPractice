@@ -72,6 +72,12 @@ public interface Message extends Configuration {
 
         ConfiguredMessage<String> NO_PERMISSION = ofText("&cYou do not have permission to use this command!");
 
+        interface ADMIN extends Configuration {
+            ConfiguredMessage<String> ENABLE = ofText("&aAdmin mode enabled!");
+
+            ConfiguredMessage<String> DISABLE = ofText("&cAdmin mode disabled!");
+        }
+
         interface HELP extends Configuration {
             ConfiguredMessage<String> MAIN = ofText(
                     "&2▪ &7/&esbp clear &8- &aClear current",
@@ -91,7 +97,6 @@ public interface Message extends Configuration {
                     "&2▪ &7/&emp leave &8- &aLeave your current island"
             );
         }
-
     }
 
     interface OPERATION extends Configuration {

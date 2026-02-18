@@ -144,12 +144,14 @@ public class MainCommand {
                 if (island != null) island.removeAny(player, false);
                 data.setIsland(null);
                 data.setAdminMode(mode);
+                Message.COMMAND.ADMIN.ENABLE.sendTo(player);
             } else {
                 for (Zone zone : Main.get().getZones()) {
                     if (zone.isFull()) continue;
                     try {
                         zone.createIsland(player);
                         data.setAdminMode(mode);
+                        Message.COMMAND.ADMIN.DISABLE.sendTo(player);
                         return;
                     } catch (Throwable ignored) {
                     }
