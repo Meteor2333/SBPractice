@@ -108,7 +108,7 @@ public class SimpleZone implements Zone {
 
     @Override
     public Island createIsland(Player player) {
-        if (this.isFull()) throw new RuntimeException("The zone is full!");
+        if (this.isFull()) throw new IllegalStateException("The zone is full!");
 
         int index = this.islands.indexOf(null);
         if (index == -1) {
