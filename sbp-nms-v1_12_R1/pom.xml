@@ -12,7 +12,7 @@
     <artifactId>sbp-nms-v1_12_R1</artifactId>
 
     <dependencies>
-        <!-- Spigot API  -->
+        <!-- Spigot  -->
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot</artifactId>

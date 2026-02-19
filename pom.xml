@@ -34,6 +34,20 @@
             <version>12.1.0</version>
             <scope>compile</scope>
         </dependency>
+        <!-- NBT API -->
+        <dependency>
+            <groupId>com.github.Querz</groupId>
+            <artifactId>NBT</artifactId>
+            <version>6.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- ORMLite -->
+        <dependency>
+            <groupId>com.j256.ormlite</groupId>
+            <artifactId>ormlite-jdbc</artifactId>
+            <version>6.1</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- Jetbrains Annotations -->
         <dependency>
             <groupId>org.jetbrains</groupId>

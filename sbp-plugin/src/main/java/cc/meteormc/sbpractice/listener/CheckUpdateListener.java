@@ -5,6 +5,8 @@ import cc.meteormc.sbpractice.config.MainConfig;
 import cc.meteormc.sbpractice.config.Message;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -12,14 +14,13 @@ import com.google.gson.JsonParser;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -29,8 +30,11 @@ import java.util.concurrent.TimeUnit;
 
 public class CheckUpdateListener implements Listener {
     private final Supplier<String> CHECK = Suppliers.memoizeWithExpiration(() -> {
-        try (FileInputStream stream = new FileInputStream(Main.get().getPlugin().getFile())) {
-            String sha256 = DigestUtils.sha256Hex(stream);
+        try {
+
+            File file = Main.get().getPlugin().getFile();
+            //noinspection VulnerableCodeUsages
+            String sha256 = Files.asByteSource(file).hash(Hashing.sha256()).toString();
             URLConnection connection = REPO_URI.toURL().openConnection();
             connection.setConnectTimeout(10000);
             connection.setReadTimeout(10000);

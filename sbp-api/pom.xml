@@ -11,28 +11,35 @@
 
     <artifactId>sbp-api</artifactId>
 
+    <repositories>
+        <repository>
+            <id>spigotmc-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>sonatype-repo</id>
+            <url>https://oss.sonatype.org/content/groups/public/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <!-- Spigot API  -->
         <dependency>
             <groupId>org.spigotmc</groupId>
-            <artifactId>spigot</artifactId>
+            <artifactId>spigot-api</artifactId>
             <version>1.8.8-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.googlecode.json-simple</groupId>
+                    <artifactId>json-simple</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.avaje</groupId>
+                    <artifactId>ebean</artifactId>
+                </exclusion>
+            </exclusions>
             <optional>true</optional>
-        </dependency>
-        <!-- NBT API -->
-        <dependency>
-            <groupId>com.github.Querz</groupId>
-            <artifactId>NBT</artifactId>
-            <version>6.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <!-- ORMLite -->
-        <dependency>
-            <groupId>com.j256.ormlite</groupId>
-            <artifactId>ormlite-jdbc</artifactId>
-            <version>6.1</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
