@@ -2,9 +2,9 @@ package cc.meteormc.sbpractice.api;
 
 import cc.meteormc.sbpractice.api.helper.Area;
 import cc.meteormc.sbpractice.api.helper.Operation;
-import cc.meteormc.sbpractice.api.storage.data.BlockData;
-import cc.meteormc.sbpractice.api.storage.data.PresetData;
-import cc.meteormc.sbpractice.api.storage.data.SignData;
+import cc.meteormc.sbpractice.api.storage.BlockData;
+import cc.meteormc.sbpractice.api.storage.PresetData;
+import cc.meteormc.sbpractice.api.storage.SignData;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;

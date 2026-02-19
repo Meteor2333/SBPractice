@@ -4,7 +4,7 @@ import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.Zone;
 import cc.meteormc.sbpractice.api.helper.Operation;
-import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.api.storage.PlayerData;
 import cc.meteormc.sbpractice.config.Message;
 import cc.meteormc.sbpractice.feature.operation.*;
 import cc.meteormc.sbpractice.feature.session.SetupSession;

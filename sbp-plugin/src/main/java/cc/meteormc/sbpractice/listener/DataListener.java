@@ -3,10 +3,14 @@ package cc.meteormc.sbpractice.listener;
 import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.Zone;
-import cc.meteormc.sbpractice.api.storage.data.PlayerData;
-import cc.meteormc.sbpractice.api.storage.data.PresetData;
+import cc.meteormc.sbpractice.api.storage.PlayerData;
+import cc.meteormc.sbpractice.api.storage.PresetData;
 import cc.meteormc.sbpractice.feature.session.MultiplayerSession;
 import cc.meteormc.sbpractice.feature.session.SetupSession;
+import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.support.ConnectionSource;
+import com.j256.ormlite.table.TableUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
@@ -18,21 +22,55 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.potion.PotionEffect;
 
 import java.io.File;
+import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.logging.Level;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class DataListener implements Listener {
+    private final Dao<PlayerData.PlayerSettings, UUID> settingsDao;
+    private final Dao<PlayerData.PlayerStats, UUID> statsDao;
+    private final ExecutorService executor = Executors.newFixedThreadPool(4);
+
+    public DataListener() {
+        ConnectionSource source = Main.get().getDbSource();
+        try {
+            Method method = TableUtils.class.getDeclaredMethod("doCreateTable", Dao.class, boolean.class);
+            method.setAccessible(true);
+
+            this.settingsDao = DaoManager.createDao(source, PlayerData.PlayerSettings.class);
+            method.invoke(null, this.settingsDao, true);
+            this.statsDao = DaoManager.createDao(source, PlayerData.PlayerStats.class);
+            method.invoke(null, this.statsDao, true);
+        } catch (ReflectiveOperationException | SQLException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     @EventHandler
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
         UUID uuid = event.getUniqueId();
         ArrayList<Zone> zones = new ArrayList<>(Main.get().getZones());
         if (zones.isEmpty()) return;
 
-        PlayerData data = new PlayerData(uuid, Main.get().getDb().getPlayerStats(uuid));
+        PlayerData.PlayerSettings settings;
+        PlayerData.PlayerStats stats;
+        try {
+            settings = Optional.ofNullable(settingsDao.queryForId(uuid)).orElse(new PlayerData.PlayerSettings());
+            settings.setUuid(uuid);
+            stats = Optional.ofNullable(statsDao.queryForId(uuid)).orElse(new PlayerData.PlayerStats());
+            stats.setUuid(uuid);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        PlayerData data = new PlayerData(uuid, settings, stats);
         data.register();
         for (Zone zone : zones) {
             File presetsDir = new File(zone.getPresetFolder(), uuid.toString());
@@ -102,7 +140,17 @@ public class DataListener implements Listener {
                 island.removeAny(player, false);
             }
 
-            Main.get().getDb().setPlayerStats(data.getStats());
+            CompletableFuture.runAsync(() -> {
+                try {
+                    settingsDao.createOrUpdate(data.getSettings());
+                    statsDao.createOrUpdate(data.getStats());
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }, this.executor).exceptionally(e -> {
+                e.printStackTrace();
+                return null;
+            });
             data.unregister();
         });
     }

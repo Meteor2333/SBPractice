@@ -2,7 +2,7 @@ package cc.meteormc.sbpractice.listener;
 
 import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
-import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.api.storage.PlayerData;
 import cc.meteormc.sbpractice.config.MainConfig;
 import cc.meteormc.sbpractice.feature.operation.ClearOperation;
 import cc.meteormc.sbpractice.feature.operation.StartOperation;

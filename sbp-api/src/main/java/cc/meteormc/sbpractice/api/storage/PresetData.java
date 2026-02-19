@@ -1,4 +1,4 @@
-package cc.meteormc.sbpractice.api.storage.data;
+package cc.meteormc.sbpractice.api.storage;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Data;

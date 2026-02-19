@@ -1,7 +1,7 @@
 package cc.meteormc.sbpractice.command;
 
 import cc.meteormc.sbpractice.api.Island;
-import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.api.storage.PlayerData;
 import cc.meteormc.sbpractice.config.Message;
 import cc.meteormc.sbpractice.feature.session.MultiplayerSession;
 import com.google.common.collect.ImmutableList;

@@ -1,7 +1,7 @@
 package cc.meteormc.sbpractice.listener;
 
 import cc.meteormc.sbpractice.api.Island;
-import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.api.storage.PlayerData;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;

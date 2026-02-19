@@ -1,4 +1,4 @@
-package cc.meteormc.sbpractice.api.storage.data;
+package cc.meteormc.sbpractice.api.storage;
 
 import cc.meteormc.sbpractice.api.SBPracticeAPI;
 import cc.meteormc.sbpractice.api.helper.Area;

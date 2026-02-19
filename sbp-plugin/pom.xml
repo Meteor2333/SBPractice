@@ -41,6 +41,10 @@
                             <shadedPattern>cc.meteormc.sbpractice.lib.xseries</shadedPattern>
                         </relocation>
                         <relocation>
+                            <pattern>com.j256.ormlite</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.ormlite</shadedPattern>
+                        </relocation>
+                        <relocation>
                             <pattern>com.zaxxer.hikari</pattern>
                             <shadedPattern>cc.meteormc.sbpractice.lib.hikari</shadedPattern>
                         </relocation>
@@ -169,6 +173,13 @@
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>4.0.3</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- ORMLite -->
+        <dependency>
+            <groupId>com.j256.ormlite</groupId>
+            <artifactId>ormlite-jdbc</artifactId>
+            <version>6.1</version>
             <scope>compile</scope>
         </dependency>
         <!-- Command Framework -->

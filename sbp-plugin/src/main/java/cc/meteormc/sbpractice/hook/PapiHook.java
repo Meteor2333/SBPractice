@@ -2,8 +2,8 @@ package cc.meteormc.sbpractice.hook;
 
 import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Island;
-import cc.meteormc.sbpractice.api.storage.data.BlockData;
-import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.api.storage.BlockData;
+import cc.meteormc.sbpractice.api.storage.PlayerData;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;

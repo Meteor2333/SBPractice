@@ -5,7 +5,7 @@ import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.Zone;
 import cc.meteormc.sbpractice.api.helper.Area;
 import cc.meteormc.sbpractice.api.helper.Operation;
-import cc.meteormc.sbpractice.api.storage.data.BlockData;
+import cc.meteormc.sbpractice.api.storage.BlockData;
 import cc.meteormc.sbpractice.api.version.NMS;
 import cc.meteormc.sbpractice.config.MainConfig;
 import org.bukkit.Location;

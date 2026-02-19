@@ -3,18 +3,18 @@ package cc.meteormc.sbpractice;
 import cc.carm.lib.mineconfiguration.bukkit.MineConfiguration;
 import cc.meteormc.sbpractice.api.SBPracticeAPI;
 import cc.meteormc.sbpractice.api.Zone;
-import cc.meteormc.sbpractice.api.storage.Database;
 import cc.meteormc.sbpractice.api.version.NMS;
 import cc.meteormc.sbpractice.command.MainCommand;
 import cc.meteormc.sbpractice.command.MultiplayerCommand;
 import cc.meteormc.sbpractice.config.MainConfig;
 import cc.meteormc.sbpractice.config.Message;
-import cc.meteormc.sbpractice.database.MySQL;
-import cc.meteormc.sbpractice.database.SQLite;
+import cc.meteormc.sbpractice.database.MySQLSource;
+import cc.meteormc.sbpractice.database.SQLiteSource;
 import cc.meteormc.sbpractice.feature.SimpleZone;
 import cc.meteormc.sbpractice.hook.PapiHook;
 import cc.meteormc.sbpractice.listener.*;
 import com.cryptomorin.xseries.XSound;
+import com.j256.ormlite.support.ConnectionSource;
 import fr.mrmicky.fastinv.FastInvManager;
 import lombok.Getter;
 import me.despical.commandframework.CommandFramework;
@@ -32,6 +32,9 @@ import org.bukkit.plugin.java.annotation.plugin.Website;
 import org.bukkit.plugin.java.annotation.plugin.author.Author;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -46,8 +49,8 @@ import static me.despical.commandframework.Message.*;
 @SoftDependency("PlaceholderAPI")
 public class Main extends JavaPlugin implements SBPracticeAPI {
     private final NMS nms;
-    private final Database db;
     private final MineConfiguration cfg;
+    private final ConnectionSource dbSource;
     private final List<Zone> zones = new ArrayList<>();
 
     public static Main get() {
@@ -73,8 +76,14 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
         Message.initialize(cfg.getMessage());
 
         /* Init Database */
-        if (MainConfig.MYSQL.ENABLE.resolve()) this.db = new MySQL();
-        else this.db = new SQLite();
+        try {
+            if (MainConfig.MYSQL.ENABLE.resolve()) this.dbSource = new MySQLSource();
+            else this.dbSource = new SQLiteSource();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to connect to the database!", e);
+        }
     }
 
     @Override
@@ -112,9 +121,6 @@ public class Main extends JavaPlugin implements SBPracticeAPI {
         /* Init Services */
         new Metrics(this, 24481);
         FastInvManager.register(this);
-
-        /* Connect Database */
-        this.db.connect();
 
         /* Load Zones */
         this.loadZones();

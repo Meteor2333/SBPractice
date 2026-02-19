@@ -1,7 +1,7 @@
 package cc.meteormc.sbpractice.version;
 
 import cc.meteormc.sbpractice.api.SBPracticeAPI;
-import cc.meteormc.sbpractice.api.storage.data.BlockData;
+import cc.meteormc.sbpractice.api.storage.BlockData;
 import cc.meteormc.sbpractice.api.version.NMS;
 import com.cryptomorin.xseries.XMaterial;
 import com.google.common.io.ByteArrayDataInput;

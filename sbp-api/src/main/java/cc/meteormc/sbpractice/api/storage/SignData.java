@@ -1,4 +1,4 @@
-package cc.meteormc.sbpractice.api.storage.data;
+package cc.meteormc.sbpractice.api.storage;
 
 import lombok.Data;
 import org.bukkit.Location;

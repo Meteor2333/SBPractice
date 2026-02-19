@@ -1,6 +1,6 @@
 package cc.meteormc.sbpractice.api.version;
 
-import cc.meteormc.sbpractice.api.storage.data.BlockData;
+import cc.meteormc.sbpractice.api.storage.BlockData;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
 import lombok.Setter;

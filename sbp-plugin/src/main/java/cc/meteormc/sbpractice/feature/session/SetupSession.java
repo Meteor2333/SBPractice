@@ -9,7 +9,7 @@ import cc.meteormc.sbpractice.Main;
 import cc.meteormc.sbpractice.api.Zone;
 import cc.meteormc.sbpractice.api.helper.Area;
 import cc.meteormc.sbpractice.api.helper.ItemBuilder;
-import cc.meteormc.sbpractice.api.storage.data.SchematicData;
+import cc.meteormc.sbpractice.api.storage.SchematicData;
 import cc.meteormc.sbpractice.config.ZoneConfig;
 import cc.meteormc.sbpractice.feature.SimpleZone;
 import com.cryptomorin.xseries.XMaterial;

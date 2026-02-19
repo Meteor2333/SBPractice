@@ -2,7 +2,7 @@ package cc.meteormc.sbpractice.gui;
 
 import cc.meteormc.sbpractice.api.Island;
 import cc.meteormc.sbpractice.api.helper.ItemBuilder;
-import cc.meteormc.sbpractice.api.storage.data.PlayerData;
+import cc.meteormc.sbpractice.api.storage.PlayerData;
 import cc.meteormc.sbpractice.config.Message;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
@@ -23,7 +23,7 @@ public class SettingsGui extends FastInv {
     private void refresh() {
         PlayerData.getData(this.player).ifPresent(data -> {
             String state;
-            int height = data.getHighjumpHeight();
+            int height = data.getSettings().getHighjumpHeight();
             if (height <= 0) {
                 state = Message.GUI.SETTINGS.HIGHJUMP.STATE.DISABLED.parseLine(this.player);
             } else {
@@ -44,7 +44,7 @@ public class SettingsGui extends FastInv {
 
     private void switchHeight(ClickType type) {
         PlayerData.getData(this.player).ifPresent(data -> {
-            int height = data.getHighjumpHeight();
+            int height = data.getSettings().getHighjumpHeight();
             switch (type) {
                 case LEFT:
                 case SHIFT_LEFT:
@@ -64,7 +64,7 @@ public class SettingsGui extends FastInv {
             if (height < 0) height = maxHeight;
             if (height > maxHeight) height = 0;
 
-            data.setHighjumpHeight(height);
+            data.getSettings().setHighjumpHeight(height);
             this.refresh();
             XSound.BLOCK_NOTE_BLOCK_HAT.play(player);
         });

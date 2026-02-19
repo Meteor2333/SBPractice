@@ -1,6 +1,6 @@
 package cc.meteormc.sbpractice.api;
 
-import cc.meteormc.sbpractice.api.storage.data.PresetData;
+import cc.meteormc.sbpractice.api.storage.PresetData;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
