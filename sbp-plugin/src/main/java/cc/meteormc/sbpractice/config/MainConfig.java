@@ -61,9 +61,9 @@ public interface MainConfig extends Configuration {
 
         ConfiguredValue<String> DATABASE = ConfiguredValue.of("sbpractice");
 
-        ConfiguredValue<String> USER = ConfiguredValue.of(String.class);
+        ConfiguredValue<String> USER = ConfiguredValue.of("");
 
-        ConfiguredValue<String> PASSWORD = ConfiguredValue.of(String.class);
+        ConfiguredValue<String> PASSWORD = ConfiguredValue.of("");
 
         ConfiguredValue<Boolean> USESSL = ConfiguredValue.of(false);
     }
