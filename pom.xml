@@ -17,8 +17,8 @@
 
     <repositories>
         <repository>
-            <id>codemc-nms</id>
-            <url>https://repo.codemc.io/repository/nms/</url>
+            <id>aikar-repo</id>
+            <url>https://repo.aikar.co/nexus/content/groups/aikar/</url>
         </repository>
         <repository>
             <id>jitpack</id>
