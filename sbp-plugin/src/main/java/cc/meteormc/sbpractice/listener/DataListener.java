@@ -22,7 +22,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.potion.PotionEffect;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,14 +40,11 @@ public class DataListener implements Listener {
     public DataListener() {
         ConnectionSource source = Main.get().getDbSource();
         try {
-            Method method = TableUtils.class.getDeclaredMethod("doCreateTable", Dao.class, boolean.class);
-            method.setAccessible(true);
-
             this.settingsDao = DaoManager.createDao(source, PlayerData.PlayerSettings.class);
-            method.invoke(null, this.settingsDao, true);
+            TableUtils.createTableIfNotExists(source, PlayerData.PlayerSettings.class);
             this.statsDao = DaoManager.createDao(source, PlayerData.PlayerStats.class);
-            method.invoke(null, this.statsDao, true);
-        } catch (ReflectiveOperationException | SQLException e) {
+            TableUtils.createTableIfNotExists(source, PlayerData.PlayerStats.class);
+        } catch (SQLException e) {
             throw new IllegalStateException(e);
         }
     }
