@@ -37,6 +37,10 @@
                             <shadedPattern>cc.meteormc.sbpractice.lib.yamlcommentupdater</shadedPattern>
                         </relocation>
                         <relocation>
+                            <pattern>cc.meteormc.packetlistener</pattern>
+                            <shadedPattern>cc.meteormc.sbpractice.lib.packetlistener</shadedPattern>
+                        </relocation>
+                        <relocation>
                             <pattern>com.cryptomorin.xseries</pattern>
                             <shadedPattern>cc.meteormc.sbpractice.lib.xseries</shadedPattern>
                         </relocation>
@@ -47,10 +51,6 @@
                         <relocation>
                             <pattern>com.zaxxer.hikari</pattern>
                             <shadedPattern>cc.meteormc.sbpractice.lib.hikari</shadedPattern>
-                        </relocation>
-                        <relocation>
-                            <pattern>de.rapha149.signgui</pattern>
-                            <shadedPattern>cc.meteormc.sbpractice.lib.signgui</shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern>dev.rollczi.litecommands</pattern>
@@ -196,13 +196,6 @@
             <groupId>com.github.MrMicky-FR</groupId>
             <artifactId>FastParticles</artifactId>
             <version>2.0.2</version>
-            <scope>compile</scope>
-        </dependency>
-        <!-- SignGui -->
-        <dependency>
-            <groupId>de.rapha149.signgui</groupId>
-            <artifactId>signgui</artifactId>
-            <version>2.3.2</version>
             <scope>compile</scope>
         </dependency>
         <!-- bStat -->

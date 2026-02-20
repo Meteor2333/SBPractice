@@ -11,7 +11,6 @@ import cc.meteormc.sbpractice.config.Message;
 import cc.meteormc.sbpractice.feature.session.BuildPresetSession;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
-import de.rapha149.signgui.SignGUI;
 import fr.mrmicky.fastinv.PaginatedFastInv;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -115,17 +114,15 @@ public class PresetGui extends PaginatedFastInv {
                         this.refresh();
                     } else {
                         player.closeInventory();
-                        SignGUI.builder()
-                                .setLine(1, "^^^^^")
-                                .setLine(2, Message.GUI.PRESET.FILTER.QUERY.parseLine(player))
-                                .setHandler((p, result) -> {
-                                    this.filtered = result.getLineWithoutColor(0);
+                        Main.get().getNms().openSign(
+                                player,
+                                new String[]{"", "^^^^^^", Message.GUI.PRESET.FILTER.QUERY.parseLine(player), ""},
+                                lines -> {
+                                    this.filtered = lines[0];
                                     this.refresh();
-                                    this.open(p);
-                                    return Collections.emptyList();
-                                })
-                                .build()
-                                .open(player);
+                                    this.open(player);
+                                }
+                        );
                     }
                 }
         );
@@ -210,7 +207,7 @@ public class PresetGui extends PaginatedFastInv {
     }
 
     private static CompletableFuture<List<PresetData>> filterAndSort(List<PresetData> presets, String filtered) {
-        if (filtered == null) {
+        if (filtered == null || filtered.isEmpty()) {
             return CompletableFuture.completedFuture(presets);
         }
 

@@ -1,5 +1,7 @@
 package cc.meteormc.sbpractice.version;
 
+import cc.meteormc.packetlistener.PacketListener;
+import cc.meteormc.packetlistener.event.PacketInboundEvent;
 import cc.meteormc.sbpractice.api.SBPracticeAPI;
 import cc.meteormc.sbpractice.api.storage.BlockData;
 import cc.meteormc.sbpractice.api.version.NMS;
@@ -13,6 +15,7 @@ import net.querz.nbt.io.NBTDeserializer;
 import net.querz.nbt.io.NBTSerializer;
 import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -22,6 +25,11 @@ import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
@@ -36,10 +44,16 @@ import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class v1_12_R1 extends NMS {
+    static {
+        PacketListener.init(SBPracticeAPI.getInstance().getPlugin());
+    }
+
     @Override
     public void setItemUnbreakable(@NotNull ItemMeta itemMeta) {
         itemMeta.setUnbreakable(true);
@@ -115,6 +129,54 @@ public class v1_12_R1 extends NMS {
             p.showPlayer(SBPracticeAPI.getInstance().getPlugin(), player);
         });
         handle.playerInteractManager.setGameMode(EnumGamemode.CREATIVE);
+    }
+
+    @Override
+    public void openSign(@NotNull Player player, String[] lines, Consumer<String[]> callback) {
+        Location location = player.getLocation();
+        World world = ((CraftWorld) player.getWorld()).getHandle();
+        PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
+        BlockPosition position = this.toNMSPosition(location.clone().add(location.getDirection().multiply(-10)));
+        ChatComponentText[] signLines = Arrays.stream(lines).map(ChatComponentText::new).toArray(ChatComponentText[]::new);
+
+        PacketPlayOutBlockChange blockPacket = new PacketPlayOutBlockChange(world, position);
+        blockPacket.block = Blocks.WALL_SIGN.getBlockData();
+        connection.sendPacket(blockPacket);
+        TileEntitySign sign = new TileEntitySign();
+        sign.a(world);
+        sign.setPosition(position);
+        System.arraycopy(signLines, 0, sign.lines, 0, 4);
+        connection.sendPacket(sign.getUpdatePacket());
+        connection.sendPacket(new PacketPlayOutOpenSignEditor(position));
+
+        Bukkit.getPluginManager().registerEvents(new Listener() {
+            @EventHandler
+            public void onClose(PacketInboundEvent event) {
+                if (!player.equals(event.getPlayer())) return;
+                Object packet = event.getPacket().getHandle();
+                if (packet instanceof PacketPlayInUpdateSign) {
+                    PacketPlayInUpdateSign signPacket = (PacketPlayInUpdateSign) packet;
+                    if (!signPacket.a().equals(position)) return;
+                    String[] result = new String[4];
+                    System.arraycopy(signPacket.b(), 0, result, 0, result.length);
+                    callback.accept(result);
+                    connection.sendPacket(new PacketPlayOutBlockChange(world, position));
+                    HandlerList.unregisterAll(this);
+                }
+            }
+
+            @EventHandler
+            public void onCancel(PlayerChangedWorldEvent event) {
+                if (!player.equals(event.getPlayer())) return;
+                HandlerList.unregisterAll(this);
+            }
+
+            @EventHandler
+            public void onCancel(PlayerQuitEvent event) {
+                if (!player.equals(event.getPlayer())) return;
+                HandlerList.unregisterAll(this);
+            }
+        }, SBPracticeAPI.getInstance().getPlugin());
     }
 
     @Override

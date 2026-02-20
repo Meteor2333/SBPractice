@@ -9,7 +9,6 @@ import cc.meteormc.sbpractice.api.storage.PresetData;
 import cc.meteormc.sbpractice.config.Message;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
-import de.rapha149.signgui.SignGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -23,7 +22,6 @@ import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -48,16 +46,14 @@ public class BuildPresetSession {
 
     private void setupName() {
         XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player);
-        SignGUI.builder()
-                .setLine(1, "^^^^^")
-                .setLine(2, Message.GUI.PRESET.SAVE.SET_NAME.parseLine(player))
-                .setHandler((p, result) -> {
-                    this.name = result.getLine(0);
+        Main.get().getNms().openSign(
+                player,
+                new String[]{"", "^^^^^^", Message.GUI.PRESET.SAVE.SET_NAME.parseLine(player), ""},
+                lines -> {
+                    this.name = lines[0];
                     this.setupIcon();
-                    return Collections.emptyList();
-                })
-                .build()
-                .open(player);
+                }
+        );
     }
 
     private void setupIcon() {

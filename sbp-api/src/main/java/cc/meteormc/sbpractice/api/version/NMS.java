@@ -16,6 +16,8 @@ import org.bukkit.material.Stairs;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Consumer;
+
 public abstract class NMS {
     /* ---------------------- Item ----------------------- */
 
@@ -30,6 +32,8 @@ public abstract class NMS {
     public abstract void hidePlayer(@NotNull Player player);
 
     public abstract void showPlayer(@NotNull Player player);
+
+    public abstract void openSign(@NotNull Player player, String[] lines, Consumer<String[]> callback);
 
     /* --------------------------------------------------- */
 

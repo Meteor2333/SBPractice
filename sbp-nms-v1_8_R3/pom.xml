@@ -20,6 +20,13 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+        <!-- PacketListener -->
+        <dependency>
+            <groupId>cc.meteormc</groupId>
+            <artifactId>packetlistener</artifactId>
+            <version>1.3</version>
+            <scope>compile</scope>
+        </dependency>
         <!-- SBPractice API -->
         <dependency>
             <groupId>cc.meteormc</groupId>
