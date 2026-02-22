@@ -12,11 +12,14 @@ import cc.meteormc.sbpractice.api.storage.PresetData;
 import cc.meteormc.sbpractice.api.storage.SignData;
 import cc.meteormc.sbpractice.config.MainConfig;
 import cc.meteormc.sbpractice.config.Message;
+import cc.meteormc.sbpractice.feature.operation.ClearOperation;
 import cc.meteormc.sbpractice.feature.operation.GroundOperation;
+import cc.meteormc.sbpractice.feature.operation.PreviewOperation;
 import cc.meteormc.sbpractice.feature.operation.RecordOperation;
 import cc.meteormc.sbpractice.feature.task.Checker;
 import cc.meteormc.sbpractice.feature.task.Timer;
 import com.cryptomorin.xseries.XMaterial;
+import com.cryptomorin.xseries.XSound;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -207,6 +210,46 @@ public class SimpleIsland extends Timer implements Island {
                 sign.update();
             }
         }
+    }
+
+    @Override
+    public void refreshCountdown() {
+        if (this.modeTask != null) this.modeTask.cancel();
+        this.modeTask = null;
+
+        if (this.mode == Island.BuildMode.CONTINUOUS && !isActive) {
+            return;
+        }
+
+        if (this.mode == Island.BuildMode.DEFAULT) {
+            return;
+        }
+
+        this.setCanStart(false);
+        this.executeOperation(new PreviewOperation());
+        this.modeTask = new BukkitRunnable() {
+            private int times = 3;
+
+            @Override
+            public void run() {
+                if (this.times-- <= 0) {
+                    this.cancel();
+                    modeTask = null;
+                    for (Player player : SimpleIsland.this.getNearbyPlayers()) {
+                        Message.TITLE.START.send(player);
+                        XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player);
+                    }
+                    executeOperation(new ClearOperation());
+                    setCanStart(true);
+                    startTimer();
+                } else {
+                    for (Player player : SimpleIsland.this.getNearbyPlayers()) {
+                        Message.TITLE.COUNTDOWN.send(player, this.times + 1);
+                        XSound.BLOCK_NOTE_BLOCK_PLING.play(player, 0.5F, 1.0F - 0.2F * times);
+                    }
+                }
+            }
+        }.runTaskTimer(Main.get(), 0L, 20L);
     }
 
     @Override

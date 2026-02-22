@@ -71,6 +71,8 @@ public interface Island {
 
     void refreshSigns();
 
+    void refreshCountdown();
+
     boolean executeOperation(Operation... operations);
 
     void applyPreset(PresetData preset);

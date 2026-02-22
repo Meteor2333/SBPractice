@@ -6,7 +6,6 @@ import cc.meteormc.sbpractice.api.event.PlayerPerfectRestoreEvent;
 import cc.meteormc.sbpractice.api.storage.BlockData;
 import cc.meteormc.sbpractice.api.storage.PlayerData;
 import cc.meteormc.sbpractice.config.Message;
-import cc.meteormc.sbpractice.feature.operation.StartOperation;
 import com.cryptomorin.xseries.XSound;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -115,9 +114,7 @@ public class Checker implements Runnable {
         });
 
         if (island.getMode() == Island.BuildMode.CONTINUOUS && island.isActive()) {
-            Bukkit.getScheduler().runTaskLater(Main.get(), () -> {
-                StartOperation.refreshCountdown(island);
-            }, 20L);
+            Bukkit.getScheduler().runTaskLater(Main.get(), island::refreshCountdown, 20L);
         }
     }
 }
